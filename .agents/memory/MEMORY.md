@@ -1,0 +1,2 @@
+- [AMHARC Phase 0 Architecture](amharc-architecture.md) — local-first, Windows agent is production, Replit is dev only; dual-clock invariant is critical
+- [AMHARC Codegen Setup](amharc-codegen.md) — Orval collision fix: remove query params from getMatchEvents to prevent GetMatchEventsParams duplicate export

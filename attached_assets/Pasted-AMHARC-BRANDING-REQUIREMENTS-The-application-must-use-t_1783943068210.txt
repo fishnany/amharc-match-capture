@@ -1,0 +1,450 @@
+AMHARC BRANDING REQUIREMENTS
+
+The application must use the official AMHARC brand identity.
+
+CANONICAL BRAND ASSETS
+
+Use the following supplied assets:
+
+1. AMHARC [Transparent].png
+
+Purpose:
+
+- Primary logo
+- Light-background use
+- Documentation
+- Login screens
+- About screens
+- Reports
+- Exported match packages
+- Broadcast overlays where a transparent logo is required
+
+2. AMHARC.png
+
+Purpose:
+
+- Application icon
+- Dark-background branding
+- Desktop shortcut
+- Windows application icon
+- Splash screen
+- Stream Deck branding
+- Favicon
+- Compact product badge
+- Broadcast graphics where a dark branded tile is appropriate
+
+Do not redraw, reinterpret or replace the supplied logos without explicit approval.
+
+Do not distort the logos.
+
+Maintain the original aspect ratio.
+
+Do not stretch, skew, rotate, crop or recolour the logos.
+
+Do not place text, icons or controls over the logos.
+
+Maintain sufficient clear space around each logo.
+
+CORE COLOUR PALETTE
+
+The canonical AMHARC core colours are:
+
+- Black: #000000
+- AMHARC Green: #1C8551
+- AMHARC Lime: #B6DC46
+- White: #FFFFFF
+
+These colours must form the primary design system for:
+
+- Operator interface
+- Desktop application
+- Splash screen
+- Login screen
+- Navigation
+- Buttons
+- Status indicators
+- Broadcast overlays
+- Reports
+- Documentation
+- Stream Deck profiles
+- Icons
+- Charts
+- Match-day dashboards
+- Exported media graphics
+
+COLOUR ROLES
+
+Use the palette as follows.
+
+Black — #000000
+
+Use for:
+
+- Primary dark backgrounds
+- High-contrast text on light backgrounds
+- Header and navigation backgrounds
+- Broadcast graphics
+- Video control surfaces
+- Full-screen operator mode
+- Application chrome
+
+AMHARC Green — #1C8551
+
+Use for:
+
+- Primary actions
+- Active navigation
+- Confirmed operational states
+- Selected controls
+- Progress indicators
+- Primary brand accents
+- Match-ready state
+- Connected device state
+- Successful export state
+
+AMHARC Lime — #B6DC46
+
+Use for:
+
+- Secondary highlights
+- Attention indicators
+- Active match clock accents
+- Current period
+- Selected Stream Deck state
+- Timeline markers
+- Event highlights
+- Focus indicators
+- Secondary graphical accents
+- Score or event animations where appropriate
+
+White — #FFFFFF
+
+Use for:
+
+- Primary text on dark backgrounds
+- Light interface backgrounds
+- Logo contrast
+- Overlay text
+- Form fields
+- Cards
+- Reports
+- Clean print layouts
+
+DESIGN TOKENS
+
+Create a central theme file containing the following tokens:
+
+{
+  "brand": {
+    "black": "#000000",
+    "green": "#1C8551",
+    "lime": "#B6DC46",
+    "white": "#FFFFFF"
+  }
+}
+
+Use these values through semantic design tokens rather than hard-coding colours throughout the application.
+
+Example semantic tokens:
+
+{
+  "backgroundPrimary": "#000000",
+  "backgroundSecondary": "#FFFFFF",
+  "textOnDark": "#FFFFFF",
+  "textOnLight": "#000000",
+  "actionPrimary": "#1C8551",
+  "actionSecondary": "#B6DC46",
+  "statusConnected": "#1C8551",
+  "statusActive": "#B6DC46",
+  "borderDark": "#000000",
+  "borderLight": "#FFFFFF"
+}
+
+Create the following implementation files where appropriate:
+
+- theme.ts
+- branding.ts
+- colours.css
+- design-tokens.json
+- overlay-theme.json
+
+ACCESSIBILITY
+
+The branding must not reduce accessibility.
+
+Requirements:
+
+- Maintain WCAG-compliant text contrast.
+- Do not use green or lime as the sole indicator of status.
+- Combine colour with text, icons or patterns.
+- Use white text on black where strong contrast is required.
+- Use black text on lime where appropriate.
+- Validate contrast before using white text on AMHARC Green.
+- Provide visible keyboard focus states.
+- Ensure critical warnings are not represented only by colour.
+
+Do not introduce additional decorative colours without approval.
+
+Where a warning or error state requires a colour outside the AMHARC palette, use the minimum necessary supporting colour and document it as a functional accessibility colour rather than part of the AMHARC brand palette.
+
+APPLICATION VISUAL STYLE
+
+The visual style should be:
+
+- Professional
+- Modern
+- Technical
+- Sport-focused
+- High contrast
+- Suitable for outdoor use
+- Suitable for low-light match environments
+- Clear at a glance
+- Free from unnecessary decoration
+- Consistent across desktop, web and overlays
+
+The operator interface should favour a dark operational theme because it will frequently be used:
+
+- Outdoors
+- At night
+- In commentary positions
+- Near video equipment
+- During live production
+
+Use black as the dominant background in live capture mode.
+
+Use white for primary text.
+
+Use AMHARC Green for primary actions and healthy connected states.
+
+Use AMHARC Lime for live activity, active timing and selected event states.
+
+LIGHT AND DARK THEMES
+
+Support both themes.
+
+Dark theme:
+
+- Background: #000000
+- Primary text: #FFFFFF
+- Primary action: #1C8551
+- Highlight: #B6DC46
+
+Light theme:
+
+- Background: #FFFFFF
+- Primary text: #000000
+- Primary action: #1C8551
+- Highlight: #B6DC46
+
+The default theme for Live Capture mode must be dark.
+
+The default theme for documentation and printed reports must be light.
+
+LOGO USAGE
+
+Use AMHARC [Transparent].png for:
+
+- Light backgrounds
+- White report covers
+- Exported PDF or HTML reports
+- Transparent broadcast overlays
+- Documentation headers
+- About screen
+- Login screen
+
+Use AMHARC.png for:
+
+- Application icon
+- Favicon
+- Windows executable icon
+- Splash screen
+- Dark operator dashboard
+- Stream Deck welcome screen
+- Installer
+- Desktop shortcut
+- Compact navigation branding
+
+Create reusable components:
+
+- AmharcLogo
+- AmharcAppIcon
+- AmharcBrandHeader
+- AmharcSplashScreen
+- AmharcOverlayBrandMark
+
+APPLICATION HEADER
+
+The application header should display:
+
+AMHARC Match Capture
+
+Use the official AMHARC logo to the left of the product name.
+
+Do not use the logo as a replacement for the full product title in configuration, accessibility labels or application metadata.
+
+WINDOWS APPLICATION METADATA
+
+Use:
+
+Product name:
+AMHARC Match Capture
+
+Company or publisher:
+AMHARC
+
+Executable name:
+Amharc.MatchCapture.exe
+
+Application identifier:
+com.amharc.matchcapture
+
+Repository:
+amharc-match-capture
+
+Default namespace:
+Amharc.MatchCapture
+
+BROADCAST OVERLAY BRANDING
+
+Broadcast overlays must support:
+
+- AMHARC logo placement
+- Sponsor logo placement
+- Team crests
+- Competition branding
+- Configurable logo visibility
+- Safe margins
+- Transparent backgrounds
+- Clean-feed mode without branding
+- Programme-feed mode with branding
+
+The AMHARC logo must not obstruct:
+
+- Match score
+- Match clock
+- Player identification
+- Ball visibility
+- Critical playing area
+- Team crests
+- Sponsor obligations
+
+Provide at least the following branded overlay templates:
+
+1. AMHARC Standard Scoreboard
+2. AMHARC Compact Scoreboard
+3. AMHARC Lower Third
+4. AMHARC Goal Graphic
+5. AMHARC Point Graphic
+6. AMHARC Two-Point Graphic
+7. AMHARC Card Graphic
+8. AMHARC Substitution Graphic
+9. AMHARC Half-Time Graphic
+10. AMHARC Full-Time Graphic
+11. AMHARC Technical Interruption Graphic
+12. AMHARC Starting Soon Graphic
+
+STREAM DECK BRANDING
+
+The Stream Deck profile should use:
+
+- Black button backgrounds
+- White button text
+- AMHARC Green for primary actions
+- AMHARC Lime for active or selected event states
+
+Recommended examples:
+
+- Record: AMHARC Green
+- Recording active: AMHARC Lime with a visible text indicator
+- Highlight: AMHARC Lime
+- Connected camera: AMHARC Green
+- Period active: AMHARC Lime
+- Disabled control: black background with reduced-opacity white text
+
+Do not rely only on colour to distinguish button state.
+
+Use icons and labels.
+
+REPORTS AND EXPORTS
+
+All generated reports and match packages should support AMHARC branding.
+
+Include:
+
+- AMHARC logo
+- Product title
+- Match title
+- Export timestamp
+- Application version
+- Manifest version
+- Black, green, lime and white styling
+- Consistent typography
+- Accessible tables
+- Clear page hierarchy
+
+Do not place the dark app icon on a dark background without a visible boundary.
+
+BRANDING ASSET MANAGEMENT
+
+Create a dedicated asset structure:
+
+apps/
+  operator-ui/
+    public/
+      branding/
+        amharc-logo-transparent.png
+        amharc-app-icon.png
+
+apps/
+  overlay-renderer/
+    public/
+      branding/
+        amharc-logo-transparent.png
+        amharc-app-icon.png
+
+apps/
+  local-agent/
+    Assets/
+      Branding/
+        amharc-logo-transparent.png
+        amharc-app-icon.png
+
+docs/
+  branding/
+    BRAND_GUIDELINES.md
+
+Create BRAND_GUIDELINES.md containing:
+
+- Official assets
+- Colour palette
+- Logo usage
+- Clear-space guidance
+- Minimum logo size
+- Dark-background usage
+- Light-background usage
+- Overlay usage
+- Stream Deck usage
+- Accessibility guidance
+- Prohibited treatments
+- Asset naming
+- Version control requirements
+
+BRANDING ACCEPTANCE CRITERIA
+
+Branding is accepted only when:
+
+1. Both supplied AMHARC logo assets are included in the repository.
+2. The logos retain their original proportions.
+3. The application uses the four canonical core colours.
+4. Colours are implemented through central design tokens.
+5. The Live Capture interface defaults to a dark theme.
+6. The printed or report interface defaults to a light theme.
+7. The AMHARC logo appears on the splash screen.
+8. The AMHARC app icon is used for the Windows application.
+9. Broadcast overlay templates use the AMHARC palette.
+10. Stream Deck profiles use the AMHARC palette.
+11. Accessibility contrast tests pass.
+12. Status indicators include text or icons as well as colour.
+13. No unapproved brand colours are introduced.
+14. A formal BRAND_GUIDELINES.md file is created.
+15. All references use the product name “AMHARC Match Capture”.

@@ -1,45 +1,85 @@
-# [Project name]
+# AMHARC Match Capture
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+A hybrid, local-first sports video capture, recording, PTZ control, event-tagging and streaming platform for Gaelic games.
 
-## Run & Operate
+## Project Overview
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
-- `pnpm run typecheck` — full typecheck across all packages
-- `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+**Phase:** 0 — Foundation (complete)  
+**Production target:** Windows 11 laptop with AXIS Q6128-E PTZ camera  
+**Replit role:** Operator interface prototype, mock API, documentation, architecture
 
-## Stack
+### What is built
 
-- pnpm workspaces, Node.js 24, TypeScript 5.9
-- API: Express 5
-- DB: PostgreSQL + Drizzle ORM
-- Validation: Zod (`zod/v4`), `drizzle-zod`
-- API codegen: Orval (from OpenAPI spec)
-- Build: esbuild (CJS bundle)
+- Operator interface (React + Vite) — 11 pages, AMHARC brand palette, full API integration
+- Mock API (Express 5) — all 40+ endpoints with in-memory state
+- OpenAPI spec — canonical `lib/api-spec/openapi.yaml`
+- Generated React Query hooks — `lib/api-client-react/`
+- Generated Zod schemas — `lib/api-zod/`
+- TypeScript domain interfaces — `packages/domain-model/src/interfaces.ts`
+- Mock implementations — `packages/domain-model/src/mock-implementations.ts`
+- Full documentation suite — requirements, architecture, API, data model, security, testing, operations, ADRs
+- Sample data — matches, events, overlay configs, mock stream setup
 
-## Where things live
+### Workflows
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+| Workflow | Service |
+|----------|---------|
+| `artifacts/operator-ui: web` | Operator interface (React + Vite, Wouter routing) |
+| `artifacts/api-server: API Server` | Mock local agent API (Express 5) |
 
-## Architecture decisions
+---
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+## Architecture
 
-## Product
+```
+Browser (Operator Interface — React + Vite)
+    ↕ HTTP/WebSocket
+Mock API (Express — Replit dev only)
+    |
+    ↓ (production path, not in Replit)
+Windows Local Agent (C# / ASP.NET Core)
+    ↕ RTSP / VAPIX / ONVIF
+AXIS Q6128-E PTZ Camera
+```
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+---
 
-## User preferences
+## Key Technical Decisions
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- **Local-first**: core match operations (recording, tagging, clock, PTZ) work without Internet
+- **Camera adapter pattern**: `ICameraAdapter` + `IPtzController` isolate all camera-specific code
+- **MKV segments**: recoverable recordings; final remux to MP4 after match
+- **Dual clock model**: `matchClockSeconds` and `recordingElapsedSeconds` are always independent (ADR-004)
+- **OpenAPI-first**: `lib/api-spec/openapi.yaml` → codegen → React Query hooks + Zod schemas
+- **SQLite (local) / PostgreSQL (cloud)**: SQLite for Windows agent, Postgres available for cloud sync
 
-## Gotchas
+---
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+## Brand
 
-## Pointers
+| Token | Hex | Role |
+|-------|-----|------|
+| Black | `#000000` | Dominant background |
+| AMHARC Green | `#1C8551` | Primary actions, connected states, recording active |
+| AMHARC Lime | `#B6DC46` | Live clock, active period, highlights |
+| White | `#FFFFFF` | Text on dark |
 
-- See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details
+---
+
+## Development Commands
+
+```bash
+pnpm install                                     # Install dependencies
+pnpm --filter @workspace/api-spec run codegen    # Regenerate hooks + schemas from OpenAPI
+pnpm run typecheck                               # Type-check all packages
+```
+
+---
+
+## User Preferences
+
+- Product name is always **AMHARC Match Capture** (never abbreviated or varied)
+- No emojis in the operator interface
+- Dark theme is default; never use colour alone to convey status
+- Score format: goals-points (e.g. 1-12 means 1 goal 12 points, total = 15)
+- `matchClockSeconds` and `recordingElapsedSeconds` must always be treated as independent values

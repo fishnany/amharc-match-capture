@@ -3,20 +3,40 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: AMHARC Match Capture — Local Agent API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: system
+    description: System status and monitoring
+  - name: cameras
+    description: Camera management
+  - name: matches
+    description: Match management
+  - name: events
+    description: Match event tagging
+  - name: recording
+    description: Recording control
+  - name: streaming
+    description: Live streaming control
+  - name: storage
+    description: Storage monitoring
+  - name: devices
+    description: Peripheral device management
+  - name: overlays
+    description: Broadcast overlay management
+  - name: exports
+    description: Data export
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +44,886 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /system/status:
+    get:
+      operationId: getSystemStatus
+      tags: [system]
+      summary: Get full system status
+      responses:
+        "200":
+          description: System status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SystemStatus"
+
+  /cameras:
+    get:
+      operationId: getCameras
+      tags: [cameras]
+      summary: List all configured cameras
+      responses:
+        "200":
+          description: Camera list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Camera"
+    post:
+      operationId: createCamera
+      tags: [cameras]
+      summary: Add a new camera
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CameraInput"
+      responses:
+        "201":
+          description: Camera created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Camera"
+
+  /cameras/{cameraId}:
+    get:
+      operationId: getCamera
+      tags: [cameras]
+      summary: Get camera details
+      parameters:
+        - name: cameraId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Camera
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Camera"
+        "404":
+          description: Not found
+    put:
+      operationId: updateCamera
+      tags: [cameras]
+      summary: Update camera configuration
+      parameters:
+        - name: cameraId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CameraInput"
+      responses:
+        "200":
+          description: Camera updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Camera"
+    delete:
+      operationId: deleteCamera
+      tags: [cameras]
+      summary: Remove a camera
+      parameters:
+        - name: cameraId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+
+  /cameras/{cameraId}/connect:
+    post:
+      operationId: connectCamera
+      tags: [cameras]
+      summary: Connect to camera
+      parameters:
+        - name: cameraId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Connection result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CameraConnectionResult"
+
+  /cameras/{cameraId}/disconnect:
+    post:
+      operationId: disconnectCamera
+      tags: [cameras]
+      summary: Disconnect from camera
+      parameters:
+        - name: cameraId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Disconnected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OperationResult"
+
+  /cameras/{cameraId}/test:
+    post:
+      operationId: testCamera
+      tags: [cameras]
+      summary: Test camera connection
+      parameters:
+        - name: cameraId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Test result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CameraTestResult"
+
+  /cameras/{cameraId}/ptz:
+    post:
+      operationId: sendPtzCommand
+      tags: [cameras]
+      summary: Send PTZ command to camera
+      parameters:
+        - name: cameraId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PtzCommand"
+      responses:
+        "200":
+          description: PTZ command sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OperationResult"
+
+  /cameras/{cameraId}/presets:
+    get:
+      operationId: getCameraPresets
+      tags: [cameras]
+      summary: List PTZ presets for camera
+      parameters:
+        - name: cameraId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Presets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PtzPreset"
+    post:
+      operationId: saveCameraPreset
+      tags: [cameras]
+      summary: Save PTZ preset
+      parameters:
+        - name: cameraId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PtzPresetInput"
+      responses:
+        "201":
+          description: Preset saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PtzPreset"
+
+  /matches:
+    get:
+      operationId: getMatches
+      tags: [matches]
+      summary: List all matches
+      responses:
+        "200":
+          description: Match list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Match"
+    post:
+      operationId: createMatch
+      tags: [matches]
+      summary: Create a new match
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MatchInput"
+      responses:
+        "201":
+          description: Match created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Match"
+
+  /matches/{matchId}:
+    get:
+      operationId: getMatch
+      tags: [matches]
+      summary: Get match details
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Match
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Match"
+        "404":
+          description: Not found
+    put:
+      operationId: updateMatch
+      tags: [matches]
+      summary: Update match details
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MatchUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Match"
+
+  /matches/{matchId}/start:
+    post:
+      operationId: startMatch
+      tags: [matches]
+      summary: Start a match
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Match started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OperationResult"
+
+  /matches/{matchId}/stop:
+    post:
+      operationId: stopMatch
+      tags: [matches]
+      summary: Stop a match
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Match stopped
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OperationResult"
+
+  /matches/{matchId}/clock/start:
+    post:
+      operationId: startMatchClock
+      tags: [matches]
+      summary: Start match clock
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Clock started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClockState"
+
+  /matches/{matchId}/clock/pause:
+    post:
+      operationId: pauseMatchClock
+      tags: [matches]
+      summary: Pause match clock
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Clock paused
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClockState"
+
+  /matches/{matchId}/clock/resume:
+    post:
+      operationId: resumeMatchClock
+      tags: [matches]
+      summary: Resume match clock
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Clock resumed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClockState"
+
+  /matches/{matchId}/clock/correct:
+    post:
+      operationId: correctMatchClock
+      tags: [matches]
+      summary: Manually correct match clock
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClockCorrection"
+      responses:
+        "200":
+          description: Clock corrected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClockState"
+
+  /matches/{matchId}/clock:
+    get:
+      operationId: getMatchClock
+      tags: [matches]
+      summary: Get match clock state
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Clock state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClockState"
+
+  /matches/{matchId}/score:
+    get:
+      operationId: getMatchScore
+      tags: [matches]
+      summary: Get current match score
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Score state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScoreState"
+    put:
+      operationId: updateMatchScore
+      tags: [matches]
+      summary: Update match score
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScoreUpdate"
+      responses:
+        "200":
+          description: Score updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScoreState"
+
+  /matches/{matchId}/events:
+    get:
+      operationId: getMatchEvents
+      tags: [events]
+      summary: Get match events
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Event list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MatchEvent"
+    post:
+      operationId: createMatchEvent
+      tags: [events]
+      summary: Create a match event
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MatchEventInput"
+      responses:
+        "201":
+          description: Event created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MatchEvent"
+
+  /matches/{matchId}/events/{eventId}:
+    put:
+      operationId: updateMatchEvent
+      tags: [events]
+      summary: Update a match event
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: eventId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MatchEventUpdate"
+      responses:
+        "200":
+          description: Event updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MatchEvent"
+    delete:
+      operationId: deleteMatchEvent
+      tags: [events]
+      summary: Delete a match event
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: eventId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+
+  /matches/{matchId}/events/undo:
+    post:
+      operationId: undoLastEvent
+      tags: [events]
+      summary: Undo the last event
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Undo result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OperationResult"
+
+  /matches/{matchId}/recording/start:
+    post:
+      operationId: startRecording
+      tags: [recording]
+      summary: Start recording
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Recording started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecordingStatus"
+
+  /matches/{matchId}/recording/stop:
+    post:
+      operationId: stopRecording
+      tags: [recording]
+      summary: Stop recording
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Recording stopped
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecordingStatus"
+
+  /matches/{matchId}/recording/status:
+    get:
+      operationId: getRecordingStatus
+      tags: [recording]
+      summary: Get recording status
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Recording status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecordingStatus"
+
+  /matches/{matchId}/streaming/start:
+    post:
+      operationId: startStreaming
+      tags: [streaming]
+      summary: Start live stream
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Stream started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StreamingStatus"
+
+  /matches/{matchId}/streaming/stop:
+    post:
+      operationId: stopStreaming
+      tags: [streaming]
+      summary: Stop live stream
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Stream stopped
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StreamingStatus"
+
+  /matches/{matchId}/streaming/status:
+    get:
+      operationId: getStreamingStatus
+      tags: [streaming]
+      summary: Get streaming status
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Streaming status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StreamingStatus"
+
+  /matches/{matchId}/export:
+    post:
+      operationId: exportMatch
+      tags: [exports]
+      summary: Export match data package
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExportRequest"
+      responses:
+        "200":
+          description: Export result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExportResult"
+
+  /storage/status:
+    get:
+      operationId: getStorageStatus
+      tags: [storage]
+      summary: Get storage status
+      responses:
+        "200":
+          description: Storage status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StorageStatus"
+
+  /devices:
+    get:
+      operationId: getDevices
+      tags: [devices]
+      summary: List all connected devices
+      responses:
+        "200":
+          description: Device list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeviceStatus"
+
+  /devices/stream-deck:
+    get:
+      operationId: getStreamDeckStatus
+      tags: [devices]
+      summary: Get Stream Deck status
+      responses:
+        "200":
+          description: Stream Deck status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StreamDeckStatus"
+
+  /devices/joystick:
+    get:
+      operationId: getJoystickStatus
+      tags: [devices]
+      summary: Get joystick status
+      responses:
+        "200":
+          description: Joystick status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JoystickStatus"
+
+  /stream-deck/profiles:
+    get:
+      operationId: getStreamDeckProfiles
+      tags: [devices]
+      summary: List Stream Deck profiles
+      responses:
+        "200":
+          description: Profiles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StreamDeckProfile"
+    post:
+      operationId: createStreamDeckProfile
+      tags: [devices]
+      summary: Create a Stream Deck profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StreamDeckProfileInput"
+      responses:
+        "201":
+          description: Profile created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StreamDeckProfile"
+
+  /overlays/templates:
+    get:
+      operationId: getOverlayTemplates
+      tags: [overlays]
+      summary: List overlay templates
+      responses:
+        "200":
+          description: Templates
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OverlayTemplate"
+
+  /overlays/state:
+    get:
+      operationId: getOverlayState
+      tags: [overlays]
+      summary: Get current overlay state
+      responses:
+        "200":
+          description: Overlay state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OverlayState"
+
+  /streaming/destinations:
+    get:
+      operationId: getStreamingDestinations
+      tags: [streaming]
+      summary: List streaming destinations
+      responses:
+        "200":
+          description: Destinations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StreamingDestination"
+    post:
+      operationId: createStreamingDestination
+      tags: [streaming]
+      summary: Create a streaming destination
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StreamingDestinationInput"
+      responses:
+        "201":
+          description: Destination created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StreamingDestination"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +934,783 @@ components:
       required:
         - status
 
+    SystemStatus:
+      type: object
+      required: [version, uptime, camera, recording, streaming, storage, streamDeck, joystick, overlay, audio]
+      properties:
+        version:
+          type: string
+        uptime:
+          type: integer
+        camera:
+          type: string
+          enum: [connected, disconnected, connecting, error]
+        recording:
+          type: string
+          enum: [idle, recording, paused, stopping, error]
+        streaming:
+          type: string
+          enum: [idle, streaming, connecting, error]
+        storage:
+          $ref: "#/components/schemas/StorageStatus"
+        streamDeck:
+          type: string
+          enum: [connected, disconnected, error]
+        joystick:
+          type: string
+          enum: [connected, disconnected]
+        overlay:
+          type: string
+          enum: [active, inactive, error]
+        audio:
+          type: string
+          enum: [active, muted, error, none]
+        warnings:
+          type: array
+          items:
+            type: string
+
+    Camera:
+      type: object
+      required: [cameraId, name, manufacturer, adapter, ipAddress, rtspUrl, connectionState, createdAt]
+      properties:
+        cameraId:
+          type: string
+        name:
+          type: string
+        manufacturer:
+          type: string
+          enum: [axis, canon, panasonic, sony, ptzoptics, birddog, aver, bolin, onvif, generic-rtsp]
+        adapter:
+          type: string
+        model:
+          type: ["string", "null"]
+        ipAddress:
+          type: string
+        rtspUrl:
+          type: string
+        username:
+          type: ["string", "null"]
+        streamProfile:
+          type: ["string", "null"]
+        codec:
+          type: ["string", "null"]
+        resolution:
+          type: ["string", "null"]
+        frameRate:
+          type: ["integer", "null"]
+        connectionState:
+          type: string
+          enum: [connected, disconnected, connecting, error]
+        healthState:
+          type: ["string", "null"]
+        firmwareVersion:
+          type: ["string", "null"]
+        serialNumber:
+          type: ["string", "null"]
+        bitRate:
+          type: ["integer", "null"]
+        droppedFrames:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: ["string", "null"]
+          format: date-time
+
+    CameraInput:
+      type: object
+      required: [name, manufacturer, adapter, ipAddress, rtspUrl]
+      properties:
+        name:
+          type: string
+        manufacturer:
+          type: string
+          enum: [axis, canon, panasonic, sony, ptzoptics, birddog, aver, bolin, onvif, generic-rtsp]
+        adapter:
+          type: string
+        model:
+          type: string
+        ipAddress:
+          type: string
+        rtspUrl:
+          type: string
+        username:
+          type: string
+        password:
+          type: string
+        streamProfile:
+          type: string
+        codec:
+          type: string
+        resolution:
+          type: string
+        frameRate:
+          type: integer
+
+    CameraConnectionResult:
+      type: object
+      required: [success, connectionState]
+      properties:
+        success:
+          type: boolean
+        connectionState:
+          type: string
+        message:
+          type: ["string", "null"]
+        cameraId:
+          type: string
+
+    CameraTestResult:
+      type: object
+      required: [success, latencyMs]
+      properties:
+        success:
+          type: boolean
+        latencyMs:
+          type: ["integer", "null"]
+        resolution:
+          type: ["string", "null"]
+        frameRate:
+          type: ["number", "null"]
+        bitRate:
+          type: ["integer", "null"]
+        message:
+          type: ["string", "null"]
+
+    PtzCommand:
+      type: object
+      required: [action]
+      properties:
+        action:
+          type: string
+          enum: [pan-left, pan-right, tilt-up, tilt-down, zoom-in, zoom-out, stop, home, preset-recall, preset-save, emergency-wide]
+        panSpeed:
+          type: ["number", "null"]
+        tiltSpeed:
+          type: ["number", "null"]
+        zoomSpeed:
+          type: ["number", "null"]
+        presetId:
+          type: ["string", "null"]
+        presetName:
+          type: ["string", "null"]
+
+    PtzPreset:
+      type: object
+      required: [presetId, name, cameraId]
+      properties:
+        presetId:
+          type: string
+        name:
+          type: string
+        cameraId:
+          type: string
+        description:
+          type: ["string", "null"]
+        isDefault:
+          type: boolean
+
+    PtzPresetInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        isDefault:
+          type: boolean
+
+    Match:
+      type: object
+      required: [matchId, humanId, sport, competition, season, homeTeam, awayTeam, date, status, createdAt]
+      properties:
+        matchId:
+          type: string
+        humanId:
+          type: string
+        sport:
+          type: string
+          enum: [gaelic-football, hurling, ladies-football, camogie]
+        competition:
+          type: string
+        season:
+          type: string
+        round:
+          type: ["string", "null"]
+        date:
+          type: string
+          format: date
+        venue:
+          type: ["string", "null"]
+        homeTeam:
+          type: string
+        awayTeam:
+          type: string
+        homeTeamShort:
+          type: ["string", "null"]
+        awayTeamShort:
+          type: ["string", "null"]
+        homeTeamColour:
+          type: ["string", "null"]
+        awayTeamColour:
+          type: ["string", "null"]
+        operator:
+          type: ["string", "null"]
+        scheduledStart:
+          type: ["string", "null"]
+          format: date-time
+        periodStructure:
+          type: string
+          enum: [halves, quarters, custom]
+        expectedDurationMinutes:
+          type: ["integer", "null"]
+        recordingDirectory:
+          type: ["string", "null"]
+        cameraId:
+          type: ["string", "null"]
+        streamProfile:
+          type: ["string", "null"]
+        overlayTemplate:
+          type: ["string", "null"]
+        streamDestination:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [setup, ready, active, halftime, complete, cancelled]
+        currentPeriod:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: ["string", "null"]
+          format: date-time
+
+    MatchInput:
+      type: object
+      required: [sport, competition, season, homeTeam, awayTeam, date]
+      properties:
+        sport:
+          type: string
+          enum: [gaelic-football, hurling, ladies-football, camogie]
+        competition:
+          type: string
+        season:
+          type: string
+        round:
+          type: string
+        date:
+          type: string
+          format: date
+        venue:
+          type: string
+        homeTeam:
+          type: string
+        awayTeam:
+          type: string
+        homeTeamShort:
+          type: string
+        awayTeamShort:
+          type: string
+        homeTeamColour:
+          type: string
+        awayTeamColour:
+          type: string
+        operator:
+          type: string
+        scheduledStart:
+          type: string
+          format: date-time
+        periodStructure:
+          type: string
+          enum: [halves, quarters, custom]
+        expectedDurationMinutes:
+          type: integer
+        recordingDirectory:
+          type: string
+        cameraId:
+          type: string
+        streamProfile:
+          type: string
+        overlayTemplate:
+          type: string
+        streamDestination:
+          type: string
+        notes:
+          type: string
+
+    MatchUpdate:
+      type: object
+      properties:
+        competition:
+          type: string
+        round:
+          type: string
+        venue:
+          type: string
+        notes:
+          type: string
+        status:
+          type: string
+          enum: [setup, ready, active, halftime, complete, cancelled]
+
+    ClockState:
+      type: object
+      required: [matchId, matchClockSeconds, recordingElapsedSeconds, isRunning, currentPeriod, clockMode]
+      properties:
+        matchId:
+          type: string
+        matchClockSeconds:
+          type: integer
+        recordingElapsedSeconds:
+          type: integer
+        isRunning:
+          type: boolean
+        currentPeriod:
+          type: integer
+        clockMode:
+          type: string
+          enum: [count-up, count-down]
+        updatedAt:
+          type: string
+          format: date-time
+
+    ClockCorrection:
+      type: object
+      required: [matchClockSeconds]
+      properties:
+        matchClockSeconds:
+          type: integer
+        reason:
+          type: string
+
+    ScoreState:
+      type: object
+      required: [matchId, homeGoals, homePoints, awayGoals, awayPoints, homeTotal, awayTotal]
+      properties:
+        matchId:
+          type: string
+        homeGoals:
+          type: integer
+        homePoints:
+          type: integer
+        awayGoals:
+          type: integer
+        awayPoints:
+          type: integer
+        homeTotal:
+          type: integer
+        awayTotal:
+          type: integer
+        updatedAt:
+          type: ["string", "null"]
+          format: date-time
+
+    ScoreUpdate:
+      type: object
+      required: [team, scoreType, delta]
+      properties:
+        team:
+          type: string
+          enum: [home, away]
+        scoreType:
+          type: string
+          enum: [goal, point, two-point]
+        delta:
+          type: integer
+        reason:
+          type: ["string", "null"]
+
+    MatchEvent:
+      type: object
+      required: [eventId, matchId, eventType, period, matchClockSeconds, recordingElapsedSeconds, systemTimestamp, source, reviewStatus, createdAt, updatedAt]
+      properties:
+        eventId:
+          type: string
+        matchId:
+          type: string
+        eventType:
+          type: string
+          enum: [match-start, match-end, period-start, period-end, half-time-start, half-time-end, score, goal, point, two-point-score, shot, kick-out, puck-out, turnover, free, mark, sideline-cut, hook, block, substitution, card, injury, major-incident, highlight, technical-issue, custom-event]
+        team:
+          type: ["string", "null"]
+          enum: [home, away, null]
+        playerId:
+          type: ["string", "null"]
+        playerNumber:
+          type: ["integer", "null"]
+        period:
+          type: integer
+        matchClockSeconds:
+          type: integer
+        recordingElapsedSeconds:
+          type: integer
+        systemTimestamp:
+          type: string
+          format: date-time
+        source:
+          type: string
+          enum: [operator-ui, stream-deck, joystick, system, imported, api, automatic]
+        operator:
+          type: ["string", "null"]
+        note:
+          type: ["string", "null"]
+        scoreBefore:
+          type: ["string", "null"]
+        scoreAfter:
+          type: ["string", "null"]
+        clipRequested:
+          type: boolean
+        reviewStatus:
+          type: string
+          enum: [unreviewed, reviewed, corrected, rejected, flagged]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    MatchEventInput:
+      type: object
+      required: [eventType, period, matchClockSeconds, recordingElapsedSeconds, source]
+      properties:
+        eventType:
+          type: string
+          enum: [match-start, match-end, period-start, period-end, half-time-start, half-time-end, score, goal, point, two-point-score, shot, kick-out, puck-out, turnover, free, mark, sideline-cut, hook, block, substitution, card, injury, major-incident, highlight, technical-issue, custom-event]
+        team:
+          type: string
+          enum: [home, away]
+        playerId:
+          type: string
+        playerNumber:
+          type: integer
+        period:
+          type: integer
+        matchClockSeconds:
+          type: integer
+        recordingElapsedSeconds:
+          type: integer
+        source:
+          type: string
+          enum: [operator-ui, stream-deck, joystick, system, imported, api, automatic]
+        note:
+          type: string
+        clipRequested:
+          type: boolean
+
+    MatchEventUpdate:
+      type: object
+      properties:
+        team:
+          type: string
+          enum: [home, away]
+        playerId:
+          type: string
+        playerNumber:
+          type: integer
+        note:
+          type: string
+        reviewStatus:
+          type: string
+          enum: [unreviewed, reviewed, corrected, rejected, flagged]
+        clipRequested:
+          type: boolean
+        matchClockSeconds:
+          type: integer
+
+    RecordingStatus:
+      type: object
+      required: [isRecording, elapsedSeconds, segmentCount]
+      properties:
+        isRecording:
+          type: boolean
+        elapsedSeconds:
+          type: integer
+        segmentCount:
+          type: integer
+        currentSegmentFile:
+          type: ["string", "null"]
+        recordingDirectory:
+          type: ["string", "null"]
+        bitRate:
+          type: ["integer", "null"]
+        droppedFrames:
+          type: ["integer", "null"]
+        startedAt:
+          type: ["string", "null"]
+          format: date-time
+        stoppedAt:
+          type: ["string", "null"]
+          format: date-time
+
+    StreamingStatus:
+      type: object
+      required: [isStreaming, destination]
+      properties:
+        isStreaming:
+          type: boolean
+        destination:
+          type: ["string", "null"]
+        uptimeSeconds:
+          type: ["integer", "null"]
+        outgoingBitRate:
+          type: ["integer", "null"]
+        droppedFrames:
+          type: ["integer", "null"]
+        reconnectCount:
+          type: integer
+        error:
+          type: ["string", "null"]
+        startedAt:
+          type: ["string", "null"]
+          format: date-time
+
+    StorageStatus:
+      type: object
+      required: [totalBytes, usedBytes, availableBytes, availableMinutes, recordingDirectory, warningLevel]
+      properties:
+        totalBytes:
+          type: integer
+        usedBytes:
+          type: integer
+        availableBytes:
+          type: integer
+        availableMinutes:
+          type: integer
+        recordingDirectory:
+          type: string
+        warningLevel:
+          type: string
+          enum: [ok, warning, critical]
+        isExternalStorage:
+          type: boolean
+
+    DeviceStatus:
+      type: object
+      required: [streamDeck, joystick]
+      properties:
+        streamDeck:
+          $ref: "#/components/schemas/StreamDeckStatus"
+        joystick:
+          $ref: "#/components/schemas/JoystickStatus"
+
+    StreamDeckStatus:
+      type: object
+      required: [connected, deviceName, buttonCount]
+      properties:
+        connected:
+          type: boolean
+        deviceName:
+          type: ["string", "null"]
+        buttonCount:
+          type: integer
+        activeProfileId:
+          type: ["string", "null"]
+        firmwareVersion:
+          type: ["string", "null"]
+
+    JoystickStatus:
+      type: object
+      required: [connected, axisCount, buttonCount]
+      properties:
+        connected:
+          type: boolean
+        deviceName:
+          type: ["string", "null"]
+        axisCount:
+          type: integer
+        buttonCount:
+          type: integer
+        vendorId:
+          type: ["string", "null"]
+        productId:
+          type: ["string", "null"]
+
+    StreamDeckProfile:
+      type: object
+      required: [profileId, name, sport, buttons, createdAt]
+      properties:
+        profileId:
+          type: string
+        name:
+          type: string
+        sport:
+          type: string
+          enum: [gaelic-football, hurling, ladies-football, camogie, custom]
+        isDefault:
+          type: boolean
+        buttons:
+          type: array
+          items:
+            $ref: "#/components/schemas/StreamDeckButton"
+        createdAt:
+          type: string
+          format: date-time
+
+    StreamDeckProfileInput:
+      type: object
+      required: [name, sport, buttons]
+      properties:
+        name:
+          type: string
+        sport:
+          type: string
+          enum: [gaelic-football, hurling, ladies-football, camogie, custom]
+        isDefault:
+          type: boolean
+        buttons:
+          type: array
+          items:
+            $ref: "#/components/schemas/StreamDeckButton"
+
+    StreamDeckButton:
+      type: object
+      required: [buttonNumber, label, eventType]
+      properties:
+        buttonNumber:
+          type: integer
+        label:
+          type: string
+        icon:
+          type: ["string", "null"]
+        colour:
+          type: ["string", "null"]
+        eventType:
+          type: string
+        team:
+          type: ["string", "null"]
+          enum: [home, away, null]
+        scoreEffect:
+          type: ["string", "null"]
+        overlayEffect:
+          type: ["string", "null"]
+        clipRequest:
+          type: boolean
+        enabled:
+          type: boolean
+
+    OverlayTemplate:
+      type: object
+      required: [templateId, name, type]
+      properties:
+        templateId:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum: [standard-scoreboard, compact-scoreboard, lower-third, goal, point, two-point, card, substitution, half-time, full-time, technical-interruption, starting-soon]
+        isDefault:
+          type: boolean
+        description:
+          type: ["string", "null"]
+
+    OverlayState:
+      type: object
+      required: [activeTemplateId, isVisible, outputMode]
+      properties:
+        activeTemplateId:
+          type: ["string", "null"]
+        isVisible:
+          type: boolean
+        outputMode:
+          type: string
+          enum: [clean, programme, overlay-only, operator-preview]
+        currentGraphic:
+          type: ["string", "null"]
+        graphicVisible:
+          type: boolean
+
+    StreamingDestination:
+      type: object
+      required: [destinationId, name, platform, serverUrl]
+      properties:
+        destinationId:
+          type: string
+        name:
+          type: string
+        platform:
+          type: string
+          enum: [youtube, vimeo, rtmp-custom, srt-custom]
+        serverUrl:
+          type: string
+        hasStreamKey:
+          type: boolean
+        resolution:
+          type: ["string", "null"]
+        frameRate:
+          type: ["integer", "null"]
+        bitRate:
+          type: ["integer", "null"]
+        isDefault:
+          type: boolean
+
+    StreamingDestinationInput:
+      type: object
+      required: [name, platform, serverUrl]
+      properties:
+        name:
+          type: string
+        platform:
+          type: string
+          enum: [youtube, vimeo, rtmp-custom, srt-custom]
+        serverUrl:
+          type: string
+        streamKey:
+          type: string
+        resolution:
+          type: string
+        frameRate:
+          type: integer
+        bitRate:
+          type: integer
+        isDefault:
+          type: boolean
+
+    ExportRequest:
+      type: object
+      required: [formats]
+      properties:
+        formats:
+          type: array
+          items:
+            type: string
+            enum: [json, csv, manifest, technical-log]
+        includeEventTypes:
+          type: array
+          items:
+            type: string
+
+    ExportResult:
+      type: object
+      required: [success, exportDirectory, files]
+      properties:
+        success:
+          type: boolean
+        exportDirectory:
+          type: string
+        files:
+          type: array
+          items:
+            type: string
+        manifestVersion:
+          type: integer
+        message:
+          type: ["string", "null"]
+
+    OperationResult:
+      type: object
+      required: [success]
+      properties:
+        success:
+          type: boolean
+        message:
+          type: ["string", "null"]
+        error:
+          type: ["string", "null"]

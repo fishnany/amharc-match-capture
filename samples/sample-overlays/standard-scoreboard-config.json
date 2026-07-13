@@ -1,0 +1,37 @@
+{
+  "templateId": "TMPL-001",
+  "name": "AMHARC Standard Scoreboard",
+  "version": 1,
+  "position": {
+    "anchor": "bottom-left",
+    "x": 40,
+    "y": 40,
+    "width": 600,
+    "height": 80
+  },
+  "style": {
+    "backgroundColour": "#000000",
+    "backgroundOpacity": 0.85,
+    "borderColour": "#1C8551",
+    "borderWidth": 2,
+    "fontFamily": "Space Mono, monospace",
+    "fontSize": 24,
+    "textColour": "#FFFFFF",
+    "accentColour": "#B6DC46",
+    "logoUrl": "/branding/amharc-logo-transparent.png",
+    "logoWidth": 48,
+    "safeMarginPx": 40
+  },
+  "elements": {
+    "homeTeamName": { "visible": true, "maxLength": 20 },
+    "awayTeamName": { "visible": true, "maxLength": 20 },
+    "homeScore": { "visible": true, "format": "goals-points" },
+    "awayScore": { "visible": true, "format": "goals-points" },
+    "matchClock": { "visible": true, "colour": "#B6DC46" },
+    "period": { "visible": true },
+    "competition": { "visible": false },
+    "venue": { "visible": false },
+    "liveIndicator": { "visible": true, "colour": "#B6DC46" },
+    "amharcLogo": { "visible": true }
+  }
+}

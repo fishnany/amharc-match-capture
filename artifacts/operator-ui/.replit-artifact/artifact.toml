@@ -1,0 +1,27 @@
+kind = "web"
+previewPath = "/"
+title = "AMHARC Match Capture — Operator Interface"
+version = "1.0.0"
+id = "artifacts/operator-ui"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 23278
+
+[services.development]
+run = "pnpm --filter @workspace/operator-ui run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/operator-ui", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/operator-ui/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "23278"
+BASE_PATH = "/"

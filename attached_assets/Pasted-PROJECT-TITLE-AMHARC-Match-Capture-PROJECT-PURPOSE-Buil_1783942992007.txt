@@ -1,0 +1,2083 @@
+PROJECT TITLE
+AMHARC Match Capture
+
+PROJECT PURPOSE
+Build a production-oriented prototype of AMHARC Match Capture.
+
+AMHARC Match Capture is a hybrid, local-first sports video capture, recording, live-production, PTZ control, event-tagging and streaming platform designed for:
+
+- Gaelic football
+- Hurling
+- Ladies’ football
+- Camogie
+
+The platform must capture live video from professional IP cameras, record full matches locally, support manual pan-tilt-zoom control, accept event-tagging input from a 15-button Elgato Stream Deck, generate broadcast-style overlays, stream matches live and export structured match data for later AMHARC analysis.
+
+This is not a conventional web application and must not be implemented as a browser-only video uploader.
+
+The system must use a hybrid architecture comprising:
+
+1. A local Windows Capture Agent running on the match laptop.
+2. A browser-based Operator Interface.
+3. A local SQLite database.
+4. A local WebSocket and HTTP API between the Operator Interface and Capture Agent.
+5. A modular camera-adapter architecture.
+6. A media-processing pipeline based on FFmpeg or GStreamer.
+7. Optional cloud services for remote administration, account management or off-site metadata synchronisation.
+
+The local Capture Agent must remain fully operational without Internet access.
+
+REFERENCE HARDWARE
+
+The initial reference hardware is:
+
+- AXIS Q6128-E 50 Hz outdoor PTZ network camera
+- PoE+ power source
+- Ethernet connection between camera and laptop
+- Windows 11 laptop
+- Local NVMe SSD
+- Axis joystick or compatible USB joystick
+- Elgato Stream Deck with 15 buttons
+- Optional USB microphone or commentary audio interface
+- Optional Internet connection for live streaming
+
+The AXIS Q6128-E must be treated only as the first reference implementation.
+
+The architecture must not make Axis a permanent dependency.
+
+The system must later be capable of supporting other cameras through adapters, including:
+
+- Canon
+- Panasonic
+- Sony
+- Axis
+- PTZOptics
+- BirdDog
+- AVer
+- Bolin
+- ONVIF-compatible cameras
+- Generic RTSP cameras
+
+CORE ARCHITECTURAL PRINCIPLES
+
+The implementation must adhere to the following principles.
+
+1. Local-first operation
+
+Recording, event tagging, PTZ control, match timing and local metadata capture must continue when Internet connectivity is unavailable.
+
+2. Camera neutrality
+
+Camera-specific behaviour must be isolated behind interfaces and adapters.
+
+3. Open protocols
+
+Use established protocols and manufacturer-supported interfaces where possible, including:
+
+- RTSP
+- RTP
+- ONVIF
+- VAPIX
+- RTMP
+- SRT
+- NDI or NDI HX where appropriate
+- HTTP
+- WebSocket
+
+4. Resilient recording
+
+A camera disconnect, application failure or loss of Internet access must not invalidate an entire recording.
+
+5. Clean separation of services
+
+The following must remain separate modules:
+
+- Camera connection
+- Video preview
+- Video recording
+- PTZ control
+- Joystick input
+- Stream Deck input
+- Match clock
+- Event tagging
+- Broadcast overlays
+- Live streaming
+- Storage monitoring
+- Metadata export
+- Health monitoring
+- Logging
+
+6. Single authoritative match timeline
+
+Video, match clock, recording time, event tags, score, periods and broadcast overlays must share a synchronised time model.
+
+7. No vendor lock-in
+
+All metadata and event data must be exportable in open formats.
+
+8. Safe failure behaviour
+
+Local recording must continue even if:
+
+- the live stream fails;
+- the overlay engine fails;
+- the Internet connection fails;
+- the cloud service becomes unavailable.
+
+9. Structured documentation
+
+The repository must contain formal documentation for requirements, architecture, interfaces, APIs, testing and deployment.
+
+10. Incremental delivery
+
+Do not attempt to build the entire system in one step.
+
+First produce the design, contracts and backlog.
+
+Then implement the system in phases.
+
+SYSTEM CONTEXT
+
+The application will normally operate as follows:
+
+- The camera is mounted on a telescopic mast.
+- The camera receives power through PoE+.
+- The camera connects to the Windows laptop by Ethernet.
+- The operator views the live camera feed on the laptop.
+- The operator controls camera pan, tilt and zoom using a joystick.
+- The operator presses Stream Deck buttons to tag important events.
+- The system records the full match locally.
+- The system maintains a match clock and scoreboard.
+- The system can generate a clean video feed.
+- The system can generate a programme feed with broadcast overlays.
+- The system can live stream the programme feed.
+- The system stores match metadata and events for later AMHARC analysis.
+- The system must work at grounds where no reliable Internet connection exists.
+
+REQUIRED SOLUTION COMPONENTS
+
+Create the following logical components.
+
+1. CameraAdapter
+
+A generic interface representing a supported camera.
+
+Responsibilities:
+
+- Connect to camera
+- Authenticate
+- Retrieve camera identity
+- Retrieve stream profiles
+- Retrieve supported resolutions
+- Retrieve supported frame rates
+- Retrieve supported codecs
+- Start and stop live video
+- Report connection state
+- Report camera health
+- Reconnect after failure
+
+2. AxisCameraAdapter
+
+The first concrete camera implementation.
+
+Responsibilities:
+
+- Support AXIS Q6128-E
+- Connect using RTSP
+- Authenticate using camera credentials
+- Retrieve camera information where supported
+- Use Axis VAPIX for PTZ
+- Use ONVIF where appropriate
+- Support Axis stream profiles
+- Support automatic reconnect
+- Record Axis-specific errors in structured logs
+
+3. StreamReceiver
+
+Responsibilities:
+
+- Receive live RTSP video
+- Monitor bit rate
+- Monitor frame rate
+- Detect dropped frames
+- Detect stream interruption
+- Expose video to the preview engine
+- Expose video to the recording engine
+- Expose video to the overlay and streaming engines
+
+4. RecordingManager
+
+Responsibilities:
+
+- Start recording
+- Stop recording
+- Record the native stream without unnecessary transcoding
+- Record recoverable MKV segments
+- Rotate segments at configurable intervals
+- Retain all original segments
+- Remux validated segments into MP4
+- Calculate final recording duration
+- Calculate checksum
+- Store recording metadata
+- Detect insufficient storage
+- Recover incomplete recordings after unexpected shutdown
+- Never stop solely because the Internet connection fails
+
+5. PtzController
+
+Generic PTZ interface.
+
+Responsibilities:
+
+- Pan left and right
+- Tilt up and down
+- Zoom in and out
+- Continuous movement
+- Relative movement
+- Absolute movement where supported
+- Set movement speed
+- Set zoom speed
+- Recall presets
+- Save presets
+- Stop movement
+- Return to home position
+- Trigger emergency wide view
+
+6. AxisPtzController
+
+Responsibilities:
+
+- Implement PTZ using Axis VAPIX
+- Support AXIS Q6128-E
+- Support continuous pan, tilt and zoom
+- Support configurable speed
+- Support presets
+- Support home position
+- Handle PTZ errors
+- Report PTZ state
+
+7. JoystickService
+
+Responsibilities:
+
+- Detect connected joystick
+- Detect axes
+- Detect buttons
+- Configure dead zones
+- Configure axis inversion
+- Configure sensitivity
+- Map joystick controls to PTZ
+- Support adjustable pan speed
+- Support adjustable tilt speed
+- Support adjustable zoom speed
+- Support configurable button mappings
+- Support emergency wide preset
+- Support preset recall
+
+8. StreamDeckService
+
+Responsibilities:
+
+- Detect a 15-button Elgato Stream Deck
+- Support configurable button layouts
+- Support button labels
+- Support icons
+- Support button colours and states
+- Support sport-specific profiles
+- Create event tags when buttons are pressed
+- Provide immediate operator feedback
+- Support short press
+- Support long press where possible
+- Support double press where possible
+- Support undo where configured
+- Support score updates
+- Support period start and stop
+- Support highlight markers
+- Store every action in the event log
+
+9. MatchClockService
+
+Responsibilities:
+
+- Start
+- Pause
+- Resume
+- Reset
+- Correct time manually
+- Start period
+- End period
+- Start half-time
+- End half-time
+- Mark full-time
+- Support count-up mode
+- Support count-down mode
+- Maintain recording time separately from match time
+- Synchronise events with recording time
+- Record every clock correction in an audit log
+
+10. EventTaggingService
+
+Responsibilities:
+
+- Create event
+- Edit event
+- Delete event
+- Undo event
+- Assign team
+- Assign player later
+- Add notes
+- Flag event for review
+- Associate event with video time
+- Create optional video clip requests
+- Export events
+- Filter events
+- Search events
+- Maintain audit history
+
+11. OverlayService
+
+Responsibilities:
+
+- Generate broadcast overlays
+- Generate scoreboard
+- Generate match clock
+- Generate period indicator
+- Generate team names
+- Generate team crests
+- Generate competition title
+- Generate venue title
+- Generate lower thirds
+- Generate card graphics
+- Generate substitution graphics
+- Generate goal graphics
+- Generate point graphics
+- Generate half-time graphics
+- Generate full-time graphics
+- Generate sponsor graphics
+- Generate live indicator
+- Generate technical interruption notice
+- Support overlay templates
+- Support configurable branding
+- Produce a transparent browser source suitable for OBS
+- Produce an overlay-only output
+- Produce a programme feed
+- Preserve a clean feed without graphics
+
+12. StreamingService
+
+Responsibilities:
+
+- Stream to RTMP
+- Support future SRT
+- Support YouTube
+- Support Vimeo
+- Support custom RTMP destinations
+- Support private streaming endpoints
+- Securely store stream keys
+- Start and stop stream
+- Monitor outgoing bandwidth
+- Monitor dropped frames
+- Detect failed stream
+- Reconnect automatically
+- Continue local recording during stream failure
+- Support configurable stream delay
+- Select clean or programme feed
+- Support audio
+
+13. StorageMonitor
+
+Responsibilities:
+
+- Detect available disk space
+- Estimate recording capacity
+- Warn before recording
+- Warn during recording
+- Prevent recording when minimum storage threshold is not met
+- Show current recording location
+- Support configurable recording directory
+- Detect disconnected external storage
+- Record storage events in logs
+
+14. ExportService
+
+Responsibilities:
+
+- Export match metadata as JSON
+- Export event data as JSON
+- Export event data as CSV
+- Export recording manifest
+- Export camera metadata
+- Export technical logs
+- Export overlay configuration
+- Generate AMHARC Match Capture Manifest
+- Use versioned schemas
+
+15. HealthMonitoringService
+
+Responsibilities:
+
+- Monitor camera
+- Monitor recording
+- Monitor storage
+- Monitor local API
+- Monitor overlay engine
+- Monitor streaming
+- Monitor audio
+- Monitor Stream Deck
+- Monitor joystick
+- Provide status indicators
+- Generate operator warnings
+- Record structured health events
+
+16. OperatorInterface
+
+Responsibilities:
+
+- Match setup
+- Camera setup
+- Camera diagnostics
+- Live video preview
+- Recording controls
+- Match clock controls
+- Score controls
+- Period controls
+- Event timeline
+- Stream Deck profile editor
+- PTZ presets
+- Overlay preview
+- Streaming configuration
+- Storage status
+- System health
+- Export controls
+- Post-match review
+
+FUNCTIONAL REQUIREMENTS
+
+MATCH CREATION
+
+The operator must be able to create a new match.
+
+Required fields:
+
+- Match ID
+- Sport
+- Competition
+- Season
+- Round
+- Date
+- Venue
+- Home team
+- Away team
+- Home team short name
+- Away team short name
+- Home team crest
+- Away team crest
+- Home team colours
+- Away team colours
+- Operator
+- Scheduled start time
+- Period structure
+- Expected match duration
+- Recording directory
+- Camera
+- Stream profile
+- Overlay template
+- Live-stream destination
+- Commentary source
+- Notes
+
+Supported sports:
+
+- gaelic-football
+- hurling
+- ladies-football
+- camogie
+
+Supported period structures:
+
+- halves
+- quarters
+- custom
+
+CAMERA CONFIGURATION
+
+The operator must be able to:
+
+- Add a camera
+- Edit a camera
+- Remove a camera
+- Test a camera connection
+- Store credentials securely
+- Select camera manufacturer
+- Select camera adapter
+- Enter camera IP address
+- Enter RTSP URL
+- Enter username
+- Enter password
+- Select stream profile
+- Select codec
+- Select resolution
+- Select frame rate
+- Select audio
+- Test PTZ
+- Save presets
+- View camera health
+- View firmware version where available
+- View camera model
+- View serial number where available
+
+LIVE PREVIEW
+
+The interface must display:
+
+- Live camera video
+- Camera name
+- Camera model
+- Connection status
+- Recording status
+- Elapsed recording time
+- Match clock
+- Current period
+- Home score
+- Away score
+- Resolution
+- Frame rate
+- Bit rate
+- Dropped frames
+- Storage remaining
+- Estimated recording time remaining
+- Joystick status
+- Stream Deck status
+- Audio level
+- Live-stream status
+- Overlay preview
+- Warning messages
+
+RECORDING
+
+The platform must support:
+
+- Start recording
+- Stop recording
+- Optional safe pause behaviour
+- Pre-match recording
+- Half-time continuation
+- Full-match recording
+- Automatic file naming
+- Configurable segment duration
+- Automatic recording manifest
+- Automatic recording folder creation
+- Checksum creation
+- Recording recovery
+- Final remux to MP4
+- Clean recording
+- Programme recording
+- Optional commentary recording
+- Optional separate audio recording
+
+Use the following default strategy:
+
+- Native stream recording where possible
+- MKV segments
+- Two-minute or five-minute segments
+- Final MP4 after validation
+- Preserve original MKV segments until final MP4 validation succeeds
+- Do not automatically delete source segments
+
+Default folder structure:
+
+Matches/
+  YYYY/
+    YYYY-MM-DD_Home-Team_v_Away-Team/
+      video/
+        clean/
+        programme/
+        segments/
+      audio/
+      metadata/
+      events/
+      overlays/
+      exports/
+      logs/
+      thumbnails/
+      clips/
+
+Default file naming:
+
+YYYY-MM-DD_HHMM_Home-Team_v_Away-Team_Camera-Role.ext
+
+Example:
+
+2026-07-18_1400_Club-A_v_Club-B_Primary-PTZ.mp4
+
+PTZ CONTROL
+
+Support:
+
+- Pan
+- Tilt
+- Zoom
+- Variable speed
+- Smooth continuous movement
+- Configurable sensitivity
+- Dead-zone adjustment
+- Axis inversion
+- Preset save
+- Preset recall
+- Home position
+- Emergency wide view
+- PTZ lock
+- PTZ status
+- Stop movement
+
+Recommended presets:
+
+- Full pitch
+- Midfield
+- Left goal
+- Right goal
+- Near sideline
+- Far sideline
+- Wide recovery view
+- Home position
+
+STREAM DECK CONFIGURATION
+
+The system must support a configurable 15-button layout.
+
+Each button configuration must include:
+
+- Button number
+- Label
+- Icon
+- Colour
+- Event type
+- Team
+- Score effect
+- Overlay effect
+- Clip request
+- Confirmation message
+- Short-press action
+- Long-press action
+- Double-press action
+- Enabled state
+
+DEFAULT GAELIC FOOTBALL PROFILE
+
+Button 1:
+Home score
+
+Button 2:
+Away score
+
+Button 3:
+Goal
+
+Button 4:
+Point
+
+Button 5:
+Two-point score
+
+Button 6:
+Kick-out
+
+Button 7:
+Turnover
+
+Button 8:
+Shot
+
+Button 9:
+Free
+
+Button 10:
+Mark
+
+Button 11:
+Card
+
+Button 12:
+Substitution
+
+Button 13:
+Major incident
+
+Button 14:
+Highlight marker
+
+Button 15:
+Start or stop period
+
+DEFAULT HURLING PROFILE
+
+Button 1:
+Home score
+
+Button 2:
+Away score
+
+Button 3:
+Goal
+
+Button 4:
+Point
+
+Button 5:
+Puck-out
+
+Button 6:
+Shot
+
+Button 7:
+Turnover
+
+Button 8:
+Free
+
+Button 9:
+Sideline cut
+
+Button 10:
+Hook
+
+Button 11:
+Block
+
+Button 12:
+Card
+
+Button 13:
+Substitution
+
+Button 14:
+Highlight marker
+
+Button 15:
+Start or stop period
+
+The interface must allow the operator to create additional Stream Deck profiles.
+
+EVENT TYPES
+
+Support the following initial event types:
+
+- match-start
+- match-end
+- period-start
+- period-end
+- half-time-start
+- half-time-end
+- score
+- goal
+- point
+- two-point-score
+- shot
+- kick-out
+- puck-out
+- turnover
+- free
+- mark
+- sideline-cut
+- hook
+- block
+- substitution
+- card
+- injury
+- major-incident
+- highlight
+- technical-issue
+- custom-event
+
+Each event must contain:
+
+- eventId
+- matchId
+- eventType
+- team
+- playerId
+- playerNumber
+- period
+- matchClockSeconds
+- recordingElapsedSeconds
+- systemTimestamp
+- source
+- operator
+- note
+- scoreBefore
+- scoreAfter
+- clipRequested
+- reviewStatus
+- createdAt
+- updatedAt
+
+Valid source values:
+
+- operator-ui
+- stream-deck
+- joystick
+- system
+- imported
+- api
+- automatic
+
+Valid reviewStatus values:
+
+- unreviewed
+- reviewed
+- corrected
+- rejected
+- flagged
+
+EVENT ACTIONS
+
+Support:
+
+- Add event
+- Edit event
+- Delete event
+- Undo latest event
+- Restore deleted event
+- Assign team
+- Assign player
+- Add note
+- Mark for review
+- Request clip
+- Change event type
+- Correct match time
+- Correct recording time
+- Filter by team
+- Filter by event type
+- Filter by period
+- Filter by review state
+- Search notes
+- Export selected events
+
+MATCH CLOCK
+
+Maintain two separate values:
+
+- recordingElapsedSeconds
+- matchClockSeconds
+
+The application must never assume they are identical.
+
+Support:
+
+- Start clock
+- Pause clock
+- Resume clock
+- Reset clock
+- Manual correction
+- Start period
+- End period
+- Start half-time
+- End half-time
+- Full-time
+- Count-up
+- Count-down
+- Period-specific clock
+- Global match clock
+- Clock correction audit log
+
+SCOREBOARD
+
+Support configurable scoring rules for each sport.
+
+Gaelic football and ladies’ football:
+
+- Goal
+- Point
+- Two-point score where applicable
+- Team total
+
+Hurling and camogie:
+
+- Goal
+- Point
+- Team total
+
+Store the score as separate goals and points where appropriate.
+
+Example:
+
+{
+  "homeGoals": 1,
+  "homePoints": 12,
+  "awayGoals": 0,
+  "awayPoints": 15
+}
+
+Do not store only a combined numerical total.
+
+Support:
+
+- Increment score
+- Decrement score
+- Correct score
+- Undo score change
+- Audit score changes
+- Update overlay automatically
+- Link score changes to event records
+
+BROADCAST OVERLAYS
+
+Support the following initial graphics:
+
+- Match title
+- Home team
+- Away team
+- Team crests
+- Home score
+- Away score
+- Match clock
+- Period
+- Competition
+- Venue
+- Live indicator
+- Goal graphic
+- Point graphic
+- Two-point score graphic
+- Card graphic
+- Substitution graphic
+- Injury delay graphic
+- Lower-third player graphic
+- Half-time graphic
+- Full-time graphic
+- Sponsor graphic
+- Technical interruption notice
+- Upcoming match graphic
+
+Support output modes:
+
+- Clean feed
+- Programme feed
+- Overlay-only feed
+- Operator preview
+
+The clean feed must never contain overlays.
+
+The programme feed must include selected overlays.
+
+The overlay-only feed must support a transparent background for use as an OBS browser source.
+
+Allow overlay templates to define:
+
+- Position
+- Size
+- Fonts
+- Colours
+- Logos
+- Backgrounds
+- Animation
+- Duration
+- Visibility
+- Sponsor placement
+- Safe margins
+
+Do not use unlicensed fonts, logos or media assets.
+
+Use placeholders in the prototype.
+
+LIVE STREAMING
+
+Support:
+
+- RTMP output
+- Future SRT output
+- YouTube
+- Vimeo
+- Custom RTMP server
+- Private streaming destination
+- Stream key
+- Server URL
+- Resolution
+- Frame rate
+- Bit rate
+- Audio source
+- Stream delay
+- Clean or programme feed
+- Start stream
+- Stop stream
+- Reconnect
+- Bandwidth test
+- Stream health
+- Dropped-frame counter
+
+Local recording must continue during:
+
+- Stream failure
+- Server failure
+- Internet failure
+- Authentication failure
+- Overlay failure
+
+AUDIO
+
+Support:
+
+- Camera audio
+- USB microphone
+- USB audio interface
+- Commentary microphone
+- Line input
+- Audio level
+- Mute
+- Gain control
+- Audio delay
+- Audio monitoring
+- Separate commentary track
+- Embedded programme audio
+- Clean video without commentary
+
+CLIP CREATION
+
+Support event-based clip requests.
+
+Default clip window:
+
+- 10 seconds before event
+- 15 seconds after event
+
+Allow configuration of:
+
+- Pre-event duration
+- Post-event duration
+- Clip name
+- Event type
+- Team
+- Player
+- Period
+- Review state
+
+Clip generation may occur after the match.
+
+Do not interrupt recording to create clips.
+
+AMHARC MATCH CAPTURE MANIFEST
+
+Create a versioned manifest.
+
+Example:
+
+{
+  "format": "amharc-match-capture",
+  "formatVersion": 1,
+  "application": {
+    "name": "AMHARC Match Capture",
+    "version": "0.1.0"
+  },
+  "match": {
+    "matchId": "AMHARC-2026-000145",
+    "sport": "hurling",
+    "competition": "Senior Championship",
+    "season": "2026",
+    "round": "Round 3",
+    "date": "2026-07-18",
+    "venue": "Example Grounds",
+    "homeTeam": "Club A",
+    "awayTeam": "Club B",
+    "periodStructure": "halves"
+  },
+  "recordings": [
+    {
+      "recordingId": "REC-000001",
+      "cameraId": "CAM-AXIS-001",
+      "cameraRole": "primary-ptz",
+      "file": "video/clean/match_final.mp4",
+      "startTimestamp": "2026-07-18T13:55:00Z",
+      "durationSeconds": 6324,
+      "checksum": "sha256-value"
+    }
+  ],
+  "eventFile": "events/events.json",
+  "scoreFile": "metadata/score.json",
+  "technicalLog": "logs/session.json"
+}
+
+EVENT EXAMPLE
+
+{
+  "eventId": "EVT-000127",
+  "matchId": "AMHARC-2026-000145",
+  "eventType": "puck-out",
+  "team": "home",
+  "playerId": null,
+  "playerNumber": null,
+  "period": 2,
+  "matchClockSeconds": 941,
+  "recordingElapsedSeconds": 4028,
+  "systemTimestamp": "2026-07-18T15:02:08Z",
+  "source": "stream-deck",
+  "operator": "Operator Name",
+  "note": null,
+  "clipRequested": false,
+  "reviewStatus": "unreviewed",
+  "createdAt": "2026-07-18T15:02:08Z",
+  "updatedAt": "2026-07-18T15:02:08Z"
+}
+
+DATA MODEL
+
+Implement the following primary entities:
+
+- Match
+- Team
+- Camera
+- CameraStreamProfile
+- Recording
+- RecordingSegment
+- MatchPeriod
+- MatchClockState
+- ScoreState
+- ScoreEvent
+- MatchEvent
+- Operator
+- Device
+- JoystickConfiguration
+- StreamDeckProfile
+- StreamDeckButton
+- OverlayTemplate
+- OverlayState
+- BroadcastSession
+- StreamingDestination
+- AudioSource
+- VideoClipRequest
+- HealthEvent
+- TechnicalLogEntry
+- ExportManifest
+
+Use stable unique identifiers.
+
+Use UUIDs internally where appropriate.
+
+Also generate human-readable sequential identifiers where useful.
+
+RECOMMENDED TECHNOLOGY STACK
+
+LOCAL WINDOWS CAPTURE AGENT
+
+Preferred:
+
+- C#
+- Modern .NET
+- Windows 11
+- ASP.NET Core local API
+- WebSocket
+- SQLite
+- Entity Framework Core
+- FFmpeg
+- LibVLCSharp or an equivalent low-latency preview framework
+- Windows HID, DirectInput or supported joystick library
+- Elgato Stream Deck SDK or a compatible local integration
+- Serilog or structured JSON logging
+- Dependency injection
+- Background worker services
+
+WEB OPERATOR INTERFACE
+
+Preferred:
+
+- React
+- TypeScript
+- Vite or Next.js
+- WebSocket client
+- Responsive desktop-first layout
+- Accessible controls
+- Full-screen operator mode
+
+LOCAL DATABASE
+
+Use:
+
+- SQLite
+
+Use migrations.
+
+Do not require PostgreSQL for local match operation.
+
+OPTIONAL CLOUD SERVICES
+
+Cloud services may use:
+
+- PostgreSQL
+- Secure authentication
+- Remote configuration
+- Metadata synchronisation
+
+Cloud services must remain optional.
+
+MEDIA PIPELINE
+
+Preferred:
+
+Camera RTSP stream
+  to StreamReceiver
+  to clean RecordingManager
+  to live preview
+  to OverlayService
+  to programme recording
+  to StreamingService
+
+Avoid decoding and re-encoding the clean archival feed unless necessary.
+
+Use stream copy for clean recording when possible.
+
+Use hardware encoding for the programme or streaming feed where supported.
+
+REPOSITORY STRUCTURE
+
+Create the following repository structure:
+
+amharc-match-capture/
+  README.md
+  LICENSE
+  .gitignore
+
+  apps/
+    operator-ui/
+    local-agent/
+    overlay-renderer/
+
+  packages/
+    domain-model/
+    api-contracts/
+    camera-abstractions/
+    event-schema/
+    shared-ui/
+    shared-logging/
+
+  adapters/
+    axis-vapix/
+    onvif/
+    generic-rtsp/
+    stream-deck/
+    joystick/
+
+  infrastructure/
+    ffmpeg/
+    sqlite/
+    logging/
+    streaming/
+    audio/
+    health-monitoring/
+
+  docs/
+    requirements/
+    architecture/
+    api/
+    data-model/
+    testing/
+    deployment/
+    operations/
+    security/
+    decisions/
+
+  samples/
+    mock-streams/
+    sample-matches/
+    sample-events/
+    sample-overlays/
+
+  scripts/
+    windows/
+    development/
+    packaging/
+
+  tests/
+    unit/
+    integration/
+    hardware/
+    endurance/
+    recovery/
+    acceptance/
+
+DOCUMENTATION REQUIREMENTS
+
+Before implementing production code, create the following documents:
+
+1. README.md
+
+Include:
+
+- Product purpose
+- Architecture overview
+- Prerequisites
+- Development setup
+- Local execution
+- Known limitations
+- Roadmap
+
+2. docs/requirements/PRODUCT_REQUIREMENTS.md
+
+Include:
+
+- Product vision
+- Users
+- Use cases
+- Functional requirements
+- Non-functional requirements
+- Constraints
+- Assumptions
+- Acceptance criteria
+
+3. docs/architecture/SOLUTION_ARCHITECTURE.md
+
+Include:
+
+- System context
+- Component architecture
+- Runtime architecture
+- Media flow
+- Data flow
+- Failure behaviour
+- Security boundaries
+- Local-first design
+
+4. docs/architecture/COMPONENTS.md
+
+Describe every component and interface.
+
+5. docs/architecture/CAMERA_ADAPTER_MODEL.md
+
+Describe:
+
+- Generic camera interface
+- Axis adapter
+- ONVIF adapter
+- Future adapters
+
+6. docs/api/LOCAL_API.md
+
+Define all REST endpoints and WebSocket messages.
+
+7. docs/data-model/DATA_MODEL.md
+
+Define all entities, fields, relationships and validation rules.
+
+8. docs/testing/TEST_STRATEGY.md
+
+Include:
+
+- Unit tests
+- Integration tests
+- Hardware tests
+- Full-match endurance tests
+- Recovery tests
+- Network interruption tests
+- Storage tests
+- Stream Deck tests
+- Joystick tests
+- Streaming tests
+
+9. docs/security/SECURITY_MODEL.md
+
+Include:
+
+- Credential storage
+- Local API access
+- Network exposure
+- Logging
+- Encryption
+- Streaming secrets
+- Camera security
+
+10. docs/operations/MATCH_DAY_RUNBOOK.md
+
+Include:
+
+- Equipment setup
+- Camera setup
+- Network setup
+- Pre-match checks
+- Recording checks
+- Stream checks
+- Match workflow
+- Half-time checks
+- Full-time checks
+- Export
+- Shutdown
+- Troubleshooting
+
+11. docs/decisions/
+
+Create architecture decision records for significant choices.
+
+Use Mermaid for diagrams.
+
+REQUIRED MERMAID DIAGRAMS
+
+Create:
+
+- System context diagram
+- Component diagram
+- Video pipeline diagram
+- Match-day workflow
+- Recording state machine
+- Camera connection state machine
+- Streaming state machine
+- Event-tagging workflow
+- Recovery workflow
+- Data model ER diagram
+- Deployment diagram
+- Phased delivery roadmap
+
+LOCAL API REQUIREMENTS
+
+Define endpoints such as:
+
+GET /api/health
+
+GET /api/system/status
+
+GET /api/cameras
+
+POST /api/cameras
+
+GET /api/cameras/{cameraId}
+
+PUT /api/cameras/{cameraId}
+
+DELETE /api/cameras/{cameraId}
+
+POST /api/cameras/{cameraId}/test
+
+POST /api/cameras/{cameraId}/connect
+
+POST /api/cameras/{cameraId}/disconnect
+
+POST /api/cameras/{cameraId}/ptz
+
+POST /api/cameras/{cameraId}/presets
+
+GET /api/matches
+
+POST /api/matches
+
+GET /api/matches/{matchId}
+
+PUT /api/matches/{matchId}
+
+POST /api/matches/{matchId}/start
+
+POST /api/matches/{matchId}/stop
+
+POST /api/matches/{matchId}/clock/start
+
+POST /api/matches/{matchId}/clock/pause
+
+POST /api/matches/{matchId}/clock/resume
+
+POST /api/matches/{matchId}/clock/correct
+
+GET /api/matches/{matchId}/events
+
+POST /api/matches/{matchId}/events
+
+PUT /api/matches/{matchId}/events/{eventId}
+
+DELETE /api/matches/{matchId}/events/{eventId}
+
+POST /api/matches/{matchId}/events/undo
+
+POST /api/matches/{matchId}/recording/start
+
+POST /api/matches/{matchId}/recording/stop
+
+GET /api/matches/{matchId}/recording/status
+
+POST /api/matches/{matchId}/streaming/start
+
+POST /api/matches/{matchId}/streaming/stop
+
+GET /api/matches/{matchId}/streaming/status
+
+POST /api/matches/{matchId}/export
+
+GET /api/storage/status
+
+GET /api/devices
+
+GET /api/devices/stream-deck
+
+GET /api/devices/joystick
+
+WEBSOCKET REQUIREMENTS
+
+Publish real-time messages for:
+
+- camera-status
+- camera-health
+- recording-status
+- recording-progress
+- storage-status
+- match-clock
+- score-update
+- event-created
+- event-updated
+- event-deleted
+- stream-deck-status
+- joystick-status
+- ptz-status
+- overlay-status
+- streaming-status
+- audio-status
+- system-warning
+- system-error
+
+SECURITY REQUIREMENTS
+
+The system must:
+
+- Never store passwords in plain text
+- Use Windows credential storage or encrypted secrets
+- Encrypt streaming credentials
+- Restrict the local API to localhost or configured private interfaces
+- Require authentication for remote access
+- Protect WebSocket connections
+- Validate all input
+- Prevent path traversal
+- Prevent arbitrary command execution
+- Restrict FFmpeg arguments to validated templates
+- Maintain an audit log
+- Avoid exposing the camera directly to the public Internet
+- Support an isolated camera network
+- Avoid logging secrets
+- Support secure deletion of stored credentials
+- Document all open ports
+
+NON-FUNCTIONAL REQUIREMENTS
+
+RELIABILITY
+
+- Full-match recording must operate for at least two hours.
+- Recording must survive Internet loss.
+- Prior segments must remain usable after application failure.
+- Camera reconnection must be attempted automatically.
+- Stream failure must not stop recording.
+- Overlay failure must not stop clean recording.
+- Events must be stored immediately.
+- Score changes must be auditable.
+- The application must support recovery after abnormal shutdown.
+
+PERFORMANCE
+
+- Support one 4K camera stream.
+- Support 1080p50 for the initial AXIS Q6128-E implementation.
+- Support future multi-camera operation.
+- Avoid unnecessary transcoding.
+- PTZ controls must feel responsive.
+- Stream Deck events should be timestamped within 100 milliseconds where practical.
+- Operator interface updates should appear in near real time.
+- Preview latency must be sufficiently low for joystick PTZ operation.
+
+USABILITY
+
+- One trained operator must be able to run the system.
+- Match setup should normally take less than five minutes.
+- Recording state must be visually unmistakable.
+- Critical warnings must use text and icons, not colour alone.
+- The interface must be usable in outdoor lighting.
+- The interface must support full-screen mode.
+- Common actions must be available without opening menus.
+- Destructive actions must require confirmation.
+- Undo must be available for common tagging and score actions.
+
+ACCESSIBILITY
+
+- Support keyboard navigation
+- Provide visible focus states
+- Use sufficient contrast
+- Avoid colour-only meaning
+- Support scalable text
+- Provide accessible labels
+- Provide operator notifications in text form
+
+OBSERVABILITY
+
+Use structured logs.
+
+Every log entry should include:
+
+- timestamp
+- severity
+- component
+- sessionId
+- matchId where applicable
+- cameraId where applicable
+- event type
+- message
+- error code
+- exception details where applicable
+
+Support log levels:
+
+- trace
+- debug
+- information
+- warning
+- error
+- critical
+
+PHASED IMPLEMENTATION PLAN
+
+PHASE 0 — DESIGN AND PROJECT FOUNDATION
+
+Deliver:
+
+- Repository structure
+- Product requirements
+- Solution architecture
+- Data model
+- API contract
+- Component interfaces
+- Risk register
+- Test strategy
+- Delivery backlog
+- Architecture decision records
+
+Do not implement hardware integration until these are produced.
+
+PHASE 1 — CAMERA AND RECORDING PROOF OF CONCEPT
+
+Deliver:
+
+- Camera configuration
+- AXIS Q6128-E RTSP connection
+- Secure credential storage
+- Live camera status
+- Basic low-latency preview
+- Start recording
+- Stop recording
+- Recoverable MKV segmentation
+- Disk-space monitoring
+- Automatic file naming
+- Match metadata
+- Structured logging
+- Automatic reconnect
+- Final MP4 remux
+- Mock RTSP source for development without hardware
+
+PHASE 2 — PTZ AND JOYSTICK
+
+Deliver:
+
+- Axis VAPIX PTZ adapter
+- Joystick detection
+- Pan
+- Tilt
+- Zoom
+- Variable speed
+- Dead-zone configuration
+- Axis inversion
+- Preset save
+- Preset recall
+- Emergency wide view
+- PTZ diagnostics
+
+PHASE 3 — MATCH MANAGEMENT AND STREAM DECK
+
+Deliver:
+
+- Match setup
+- Match clock
+- Scoreboard
+- Period controls
+- Stream Deck detection
+- Gaelic football profile
+- Hurling profile
+- Event creation
+- Event timeline
+- Undo
+- Edit
+- Delete
+- JSON export
+- CSV export
+
+PHASE 4 — BROADCAST OVERLAYS
+
+Deliver:
+
+- Scoreboard overlay
+- Match clock overlay
+- Team names
+- Team crests
+- Competition
+- Period
+- Goal graphic
+- Point graphic
+- Card graphic
+- Substitution graphic
+- Half-time graphic
+- Full-time graphic
+- Sponsor panel
+- Overlay-only browser source
+- Clean feed
+- Programme feed
+- Overlay template editor
+
+PHASE 5 — LIVE STREAMING
+
+Deliver:
+
+- RTMP output
+- Streaming destination configuration
+- Secure stream-key storage
+- Live-stream status
+- Health monitoring
+- Reconnect
+- Bandwidth test
+- Clean/programme feed selection
+- Local recording during stream failure
+
+PHASE 6 — POST-MATCH REVIEW AND EXPORT
+
+Deliver:
+
+- Event review
+- Event correction
+- Clip request
+- Clip generation
+- Manifest export
+- Match package export
+- Checksum validation
+- Recording validation
+- Technical report
+
+PHASE 7 — MULTI-CAMERA READINESS
+
+Deliver:
+
+- Multiple camera configuration
+- Camera roles
+- Synchronous recording
+- Primary PTZ camera
+- Fixed wide camera
+- Optional goal cameras
+- Multi-view preview
+- Common match timeline
+
+MVP ACCEPTANCE CRITERIA
+
+The MVP is accepted only when the following are demonstrated.
+
+1. The AXIS Q6128-E connects over Ethernet.
+2. The camera authenticates successfully.
+3. Live video is displayed.
+4. The operator can start recording.
+5. The operator can stop recording.
+6. The system records for at least two continuous hours.
+7. The resulting video plays in standard software.
+8. Recording uses recoverable segments.
+9. A forced application closure does not invalidate all previous footage.
+10. The system can reconnect after a temporary camera interruption.
+11. The system warns when disk space is insufficient.
+12. Local recording continues without Internet access.
+13. The joystick can control pan, tilt and zoom.
+14. The Stream Deck can create timestamped events.
+15. Every event includes match time and recording time.
+16. Score changes update the scoreboard.
+17. Period controls work.
+18. Events can be edited.
+19. Events can be undone.
+20. Events export to JSON.
+21. Events export to CSV.
+22. The system produces an AMHARC Match Capture Manifest.
+23. A clean recording can be produced.
+24. A programme recording can be produced.
+25. A broadcast overlay can display score and clock.
+26. RTMP streaming can operate while local recording continues.
+27. Stream failure does not stop local recording.
+28. Camera credentials are not stored in plain text.
+29. System and technical logs are generated.
+30. A Windows 11 setup guide is provided.
+
+RISK REGISTER
+
+Create a formal risk register covering at least:
+
+- RTSP latency
+- PTZ latency
+- Hardware compatibility
+- Stream Deck SDK compatibility
+- Joystick driver compatibility
+- FFmpeg licensing and distribution
+- Codec licensing
+- Windows firewall
+- Camera credential security
+- PoE power failure
+- Ethernet cable failure
+- Laptop thermal limits
+- SSD capacity
+- SSD disconnect
+- External storage performance
+- Internet bandwidth
+- Streaming platform restrictions
+- Overlay rendering performance
+- Multi-camera synchronisation
+- Audio latency
+- Application crash
+- Power loss
+- File corruption
+- Wind and mast vibration
+- Rain
+- Operator error
+- Accidental recording stop
+- Score correction errors
+- Match-clock correction
+- Long-term schema compatibility
+
+REPLIT-SPECIFIC INSTRUCTIONS
+
+Replit will be used for:
+
+- Repository generation
+- Requirements documentation
+- Architecture design
+- Web operator interface
+- API contracts
+- Mock services
+- Unit tests
+- Initial code scaffolding
+- Development planning
+
+Do not assume the Replit-hosted environment can directly access:
+
+- The local Ethernet camera
+- The Windows joystick
+- The Stream Deck
+- The laptop SSD
+- The local RTSP stream
+- Windows Credential Manager
+- Hardware encoders
+
+Hardware-dependent functionality must be implemented in the local Windows Capture Agent.
+
+For development in Replit:
+
+- Create mock camera adapters.
+- Create mock joystick input.
+- Create mock Stream Deck input.
+- Create a test RTSP configuration.
+- Create simulated recording status.
+- Create sample event data.
+- Create test WebSocket messages.
+- Create a mock local-agent API.
+- Keep production interfaces identical to the mock interfaces.
+
+Do not implement the production solution as a Replit-hosted server that must remain online during a match.
+
+The match system must run locally on the Windows laptop.
+
+INITIAL TASK
+
+Begin by producing Phase 0 only.
+
+Do not immediately attempt the full implementation.
+
+Perform the following tasks in order.
+
+TASK 1
+
+Create the complete repository structure.
+
+TASK 2
+
+Create README.md.
+
+TASK 3
+
+Create PRODUCT_REQUIREMENTS.md.
+
+TASK 4
+
+Create SOLUTION_ARCHITECTURE.md.
+
+TASK 5
+
+Create COMPONENTS.md.
+
+TASK 6
+
+Create CAMERA_ADAPTER_MODEL.md.
+
+TASK 7
+
+Create DATA_MODEL.md.
+
+TASK 8
+
+Create LOCAL_API.md.
+
+TASK 9
+
+Create TEST_STRATEGY.md.
+
+TASK 10
+
+Create SECURITY_MODEL.md.
+
+TASK 11
+
+Create MATCH_DAY_RUNBOOK.md.
+
+TASK 12
+
+Create the initial architecture decision records.
+
+TASK 13
+
+Create a Mermaid system context diagram.
+
+TASK 14
+
+Create a Mermaid component diagram.
+
+TASK 15
+
+Create a Mermaid video-processing pipeline.
+
+TASK 16
+
+Create a Mermaid match-day workflow.
+
+TASK 17
+
+Create a Mermaid ER diagram.
+
+TASK 18
+
+Create a phased product backlog.
+
+TASK 19
+
+Create a risk register.
+
+TASK 20
+
+Create an MVP acceptance test plan.
+
+TASK 21
+
+Create interface definitions for:
+
+- ICameraAdapter
+- IStreamReceiver
+- IRecordingManager
+- IPtzController
+- IJoystickService
+- IStreamDeckService
+- IMatchClockService
+- IEventTaggingService
+- IOverlayService
+- IStreamingService
+- IStorageMonitor
+- IExportService
+- IHealthMonitoringService
+
+TASK 22
+
+Create mock implementations for those interfaces.
+
+TASK 23
+
+Create the basic operator-interface shell using React and TypeScript.
+
+The operator interface should initially include:
+
+- Dashboard
+- Match setup
+- Camera setup
+- Live capture
+- Event timeline
+- Stream Deck profile
+- Overlay setup
+- Streaming setup
+- System health
+- Exports
+- Settings
+
+TASK 24
+
+Create a local-agent solution scaffold using C# and modern .NET.
+
+Do not implement real hardware integration yet.
+
+TASK 25
+
+Create test data for:
+
+- One Gaelic football match
+- One hurling match
+- One AXIS Q6128-E camera
+- One Stream Deck profile
+- One joystick profile
+- One recording session
+- Multiple events
+- One broadcast session
+
+OUTPUT EXPECTATIONS
+
+After completing Phase 0, provide:
+
+1. A summary of the architecture.
+2. A list of created files.
+3. A list of assumptions.
+4. A list of unresolved decisions.
+5. A list of external dependencies.
+6. A list of hardware-dependent components.
+7. A proposed Phase 1 implementation sequence.
+8. Instructions for running the mock system.
+9. Instructions for building the Windows local agent.
+10. A clear statement of what remains mocked.
+
+QUALITY REQUIREMENTS
+
+Use:
+
+- Clean architecture
+- SOLID principles
+- Dependency injection
+- Strong typing
+- TypeScript strict mode
+- Nullable reference types in C#
+- Explicit interfaces
+- Structured logging
+- Error handling
+- Input validation
+- Unit tests
+- Integration tests
+- Clear comments
+- Consistent naming
+- UK English in documentation
+
+Avoid:
+
+- Hard-coded credentials
+- Hard-coded camera addresses
+- Hard-coded stream keys
+- Hard-coded file paths
+- Tight coupling to Axis
+- Browser-only hardware access
+- Hidden dependencies
+- Unstructured global state
+- Direct FFmpeg command construction from untrusted input
+- Deleting recording segments before final validation
+- Treating Internet connectivity as mandatory
+- Treating match time and recording time as the same value
+- Implementing all phases in one monolithic component
+
+FINAL PRODUCT NAME
+
+Use only:
+
+AMHARC Match Capture
+
+Do not use:
+
+- GGIE Match Capture
+- Tagger-Pro
+- GGIE Capture Platform
+- GGIE Video Intake
+
+All application titles, namespaces, repositories, manifests, documentation and UI labels must use AMHARC Match Capture.
