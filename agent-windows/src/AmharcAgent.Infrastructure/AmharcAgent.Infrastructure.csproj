@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>AmharcAgent.Infrastructure</RootNamespace>
+    <AssemblyName>AmharcAgent.Infrastructure</AssemblyName>
+    <!-- Windows-only: DirectInput for joystick -->
+    <UseWindowsForms>false</UseWindowsForms>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AmharcAgent.Core\AmharcAgent.Core.csproj" />
+    <ProjectReference Include="..\AmharcAgent.Data\AmharcAgent.Data.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Stream Deck HID -->
+    <PackageReference Include="StreamDeckSharp" Version="0.6.5" />
+    <!-- Joystick / DirectInput (Windows only) -->
+    <PackageReference Include="SharpDX.DirectInput" Version="4.2.0" />
+    <PackageReference Include="SharpDX" Version="4.2.0" />
+    <!-- Logging -->
+    <PackageReference Include="Serilog" Version="3.1.1" />
+    <PackageReference Include="Serilog.Extensions.Logging" Version="8.0.0" />
+    <!-- HTTP resilience for VAPIX calls -->
+    <PackageReference Include="Polly" Version="8.3.0" />
+    <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="8.0.0" />
+    <!-- EF Core access from infrastructure -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.0" />
+  </ItemGroup>
+</Project>
