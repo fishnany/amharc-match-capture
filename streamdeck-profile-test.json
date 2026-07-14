@@ -1,0 +1,62 @@
+{
+  "name": "AMHARC Capture Test",
+  "sport": "gaelic-football",
+  "buttons": [
+    {
+      "buttonNumber": 0,
+      "label": "HOME POINT",
+      "colour": "#1C8551",
+      "eventType": "point",
+      "team": 0,
+      "scoreEffect": "+1",
+      "clipRequest": false,
+      "enabled": true
+    },
+    {
+      "buttonNumber": 1,
+      "label": "HOME GOAL",
+      "colour": "#1C8551",
+      "eventType": "goal",
+      "team": 0,
+      "scoreEffect": "+3",
+      "clipRequest": true,
+      "enabled": true
+    },
+    {
+      "buttonNumber": 2,
+      "label": "AWAY POINT",
+      "colour": "#B6DC46",
+      "eventType": "point",
+      "team": 1,
+      "scoreEffect": "+1",
+      "clipRequest": false,
+      "enabled": true
+    },
+    {
+      "buttonNumber": 3,
+      "label": "AWAY GOAL",
+      "colour": "#B6DC46",
+      "eventType": "goal",
+      "team": 1,
+      "scoreEffect": "+3",
+      "clipRequest": true,
+      "enabled": true
+    },
+    {
+      "buttonNumber": 4,
+      "label": "START",
+      "colour": "#1C8551",
+      "eventType": "recording-start",
+      "clipRequest": false,
+      "enabled": true
+    },
+    {
+      "buttonNumber": 5,
+      "label": "STOP",
+      "colour": "#CC3333",
+      "eventType": "recording-stop",
+      "clipRequest": false,
+      "enabled": true
+    }
+  ]
+}

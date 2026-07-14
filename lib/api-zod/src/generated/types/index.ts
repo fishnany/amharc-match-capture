@@ -77,5 +77,7 @@ export * from './systemStatusCamera';
 export * from './systemStatusJoystick';
 export * from './systemStatusOverlay';
 export * from './systemStatusRecording';
+export * from './systemStatusStorage';
 export * from './systemStatusStreamDeck';
 export * from './systemStatusStreaming';
+export * from './systemStatusStreamingStats';

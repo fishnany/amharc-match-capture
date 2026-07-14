@@ -6,11 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type SystemStatusOverlay = typeof SystemStatusOverlay[keyof typeof SystemStatusOverlay];
-
-
-export const SystemStatusOverlay = {
-  active: 'active',
-  inactive: 'inactive',
-  error: 'error',
-} as const;
+export type SystemStatusOverlay = {
+  isVisible: boolean;
+  outputMode: string;
+  /** @nullable */
+  activeTemplateId?: string | null;
+};

@@ -5,25 +5,22 @@
  * AMHARC Match Capture — Local Agent API
  * OpenAPI spec version: 0.1.0
  */
-import type { StorageStatus } from './storageStatus';
 import type { SystemStatusAudio } from './systemStatusAudio';
 import type { SystemStatusCamera } from './systemStatusCamera';
 import type { SystemStatusJoystick } from './systemStatusJoystick';
 import type { SystemStatusOverlay } from './systemStatusOverlay';
 import type { SystemStatusRecording } from './systemStatusRecording';
+import type { SystemStatusStorage } from './systemStatusStorage';
 import type { SystemStatusStreamDeck } from './systemStatusStreamDeck';
 import type { SystemStatusStreaming } from './systemStatusStreaming';
 
 export interface SystemStatus {
-  version: string;
-  uptime: number;
   camera: SystemStatusCamera;
   recording: SystemStatusRecording;
   streaming: SystemStatusStreaming;
-  storage: StorageStatus;
   streamDeck: SystemStatusStreamDeck;
   joystick: SystemStatusJoystick;
+  storage: SystemStatusStorage;
   overlay: SystemStatusOverlay;
   audio: SystemStatusAudio;
-  warnings?: string[];
 }

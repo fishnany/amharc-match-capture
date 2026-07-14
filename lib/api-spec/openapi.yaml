@@ -936,39 +936,127 @@ components:
 
     SystemStatus:
       type: object
-      required: [version, uptime, camera, recording, streaming, storage, streamDeck, joystick, overlay, audio]
+      required:
+        - camera
+        - recording
+        - streaming
+        - streamDeck
+        - joystick
+        - storage
+        - overlay
+        - audio
       properties:
-        version:
-          type: string
-        uptime:
-          type: integer
         camera:
-          type: string
-          enum: [connected, disconnected, connecting, error]
+          type: object
+          required:
+            - connectionState
+            - cameraId
+          properties:
+            connectionState:
+              type: string
+            cameraId:
+              type: string
+            model:
+              type:
+                - string
+                - "null"
+
         recording:
-          type: string
-          enum: [idle, recording, paused, stopping, error]
+          type: object
+          required:
+            - state
+            - elapsedSeconds
+            - segmentCount
+          properties:
+            state:
+              type: string
+            elapsedSeconds:
+              type: integer
+            segmentCount:
+              type: integer
+            outputDirectory:
+              type:
+                - string
+                - "null"
+
         streaming:
-          type: string
-          enum: [idle, streaming, connecting, error]
-        storage:
-          $ref: "#/components/schemas/StorageStatus"
+          type: object
+          required:
+            - state
+          properties:
+            state:
+              type: string
+            stats:
+              type:
+                - object
+                - "null"
+              additionalProperties: true
+
         streamDeck:
-          type: string
-          enum: [connected, disconnected, error]
+          type: object
+          required:
+            - connected
+          properties:
+            connected:
+              type: boolean
+            deviceName:
+              type:
+                - string
+                - "null"
+            activeProfileId:
+              type:
+                - string
+                - "null"
+
         joystick:
-          type: string
-          enum: [connected, disconnected]
+          type: object
+          required:
+            - connected
+          properties:
+            connected:
+              type: boolean
+            deviceName:
+              type:
+                - string
+                - "null"
+
+        storage:
+          type: object
+          required:
+            - availableMinutes
+            - warningLevel
+            - availableBytes
+          properties:
+            availableMinutes:
+              type: integer
+            warningLevel:
+              type: string
+            availableBytes:
+              type: integer
+              format: int64
+
         overlay:
-          type: string
-          enum: [active, inactive, error]
+          type: object
+          required:
+            - isVisible
+            - outputMode
+          properties:
+            isVisible:
+              type: boolean
+            outputMode:
+              type: string
+            activeTemplateId:
+              type:
+                - string
+                - "null"
+
         audio:
-          type: string
-          enum: [active, muted, error, none]
-        warnings:
-          type: array
-          items:
-            type: string
+          type: object
+          required:
+            - state
+          properties:
+            state:
+              type: string
 
     Camera:
       type: object

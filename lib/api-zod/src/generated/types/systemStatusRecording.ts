@@ -6,13 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type SystemStatusRecording = typeof SystemStatusRecording[keyof typeof SystemStatusRecording];
-
-
-export const SystemStatusRecording = {
-  idle: 'idle',
-  recording: 'recording',
-  paused: 'paused',
-  stopping: 'stopping',
-  error: 'error',
-} as const;
+export type SystemStatusRecording = {
+  state: string;
+  elapsedSeconds: number;
+  segmentCount: number;
+  /** @nullable */
+  outputDirectory?: string | null;
+};

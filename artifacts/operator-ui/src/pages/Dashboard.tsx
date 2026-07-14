@@ -84,25 +84,29 @@ export default function Dashboard() {
         <StatusCard 
           title="Camera" 
           icon={Video} 
-          status={systemStatus?.camera} 
+          status={systemStatus?.camera.connectionState} 
           isLoading={statusLoading} 
         />
         <StatusCard 
           title="Recording" 
           icon={HardDrive} 
-          status={systemStatus?.recording} 
+          status={systemStatus?.recording.state} 
           isLoading={statusLoading} 
         />
         <StatusCard 
           title="Streaming" 
           icon={RadioReceiver} 
-          status={systemStatus?.streaming} 
+          status={systemStatus?.streaming.state} 
           isLoading={statusLoading} 
         />
         <StatusCard 
           title="Stream Deck" 
           icon={Gamepad2} 
-          status={systemStatus?.streamDeck} 
+          status={
+          systemStatus?.streamDeck.connected
+          ? "connected"
+          : "disconnected"
+        } 
           isLoading={statusLoading} 
         />
       </div>
@@ -177,20 +181,14 @@ export default function Dashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {systemStatus?.warnings && systemStatus.warnings.length > 0 ? (
-              <ul className="space-y-3">
-                {systemStatus.warnings.map((warning, i) => (
-                  <li key={i} className="bg-amber-500/10 border border-amber-500/20 text-amber-200 p-3 rounded-md text-sm">
-                    {warning}
-                  </li>
-                ))}
-              </ul>
-            ) : (
+            <div className="flex flex-col items-center justify-center py-8 text-neutral-500">
+              <Activity className="w-8 h-8 mb-2 opacity-50" />
+              <p>No system warnings.</p>
+              </div>
               <div className="flex flex-col items-center justify-center py-8 text-neutral-500">
                 <Activity className="w-8 h-8 mb-2 opacity-50" />
                 <p>System operating normally</p>
               </div>
-            )}
           </CardContent>
         </Card>
       </div>

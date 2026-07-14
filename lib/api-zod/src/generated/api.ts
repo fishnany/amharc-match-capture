@@ -20,25 +20,43 @@ export const HealthCheckResponse = zod.object({
  * @summary Get full system status
  */
 export const GetSystemStatusResponse = zod.object({
-  "version": zod.string(),
-  "uptime": zod.number(),
-  "camera": zod.enum(['connected', 'disconnected', 'connecting', 'error']),
-  "recording": zod.enum(['idle', 'recording', 'paused', 'stopping', 'error']),
-  "streaming": zod.enum(['idle', 'streaming', 'connecting', 'error']),
-  "storage": zod.object({
-  "totalBytes": zod.number(),
-  "usedBytes": zod.number(),
-  "availableBytes": zod.number(),
-  "availableMinutes": zod.number(),
-  "recordingDirectory": zod.string(),
-  "warningLevel": zod.enum(['ok', 'warning', 'critical']),
-  "isExternalStorage": zod.boolean().optional()
+  "camera": zod.object({
+  "connectionState": zod.string(),
+  "cameraId": zod.string(),
+  "model": zod.string().nullish()
 }),
-  "streamDeck": zod.enum(['connected', 'disconnected', 'error']),
-  "joystick": zod.enum(['connected', 'disconnected']),
-  "overlay": zod.enum(['active', 'inactive', 'error']),
-  "audio": zod.enum(['active', 'muted', 'error', 'none']),
-  "warnings": zod.array(zod.string()).optional()
+  "recording": zod.object({
+  "state": zod.string(),
+  "elapsedSeconds": zod.number(),
+  "segmentCount": zod.number(),
+  "outputDirectory": zod.string().nullish()
+}),
+  "streaming": zod.object({
+  "state": zod.string(),
+  "stats": zod.record(zod.string(), zod.unknown()).nullish()
+}),
+  "streamDeck": zod.object({
+  "connected": zod.boolean(),
+  "deviceName": zod.string().nullish(),
+  "activeProfileId": zod.string().nullish()
+}),
+  "joystick": zod.object({
+  "connected": zod.boolean(),
+  "deviceName": zod.string().nullish()
+}),
+  "storage": zod.object({
+  "availableMinutes": zod.number(),
+  "warningLevel": zod.string(),
+  "availableBytes": zod.number()
+}),
+  "overlay": zod.object({
+  "isVisible": zod.boolean(),
+  "outputMode": zod.string(),
+  "activeTemplateId": zod.string().nullish()
+}),
+  "audio": zod.object({
+  "state": zod.string()
+})
 })
 
 

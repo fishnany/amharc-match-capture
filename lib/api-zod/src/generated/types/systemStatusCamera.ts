@@ -6,12 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type SystemStatusCamera = typeof SystemStatusCamera[keyof typeof SystemStatusCamera];
-
-
-export const SystemStatusCamera = {
-  connected: 'connected',
-  disconnected: 'disconnected',
-  connecting: 'connecting',
-  error: 'error',
-} as const;
+export type SystemStatusCamera = {
+  connectionState: string;
+  cameraId: string;
+  /** @nullable */
+  model?: string | null;
+};

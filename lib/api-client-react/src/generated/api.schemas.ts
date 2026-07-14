@@ -9,104 +9,72 @@ export interface HealthStatus {
   status: string;
 }
 
-export type SystemStatusCamera = typeof SystemStatusCamera[keyof typeof SystemStatusCamera];
+export type SystemStatusCamera = {
+  connectionState: string;
+  cameraId: string;
+  /** @nullable */
+  model?: string | null;
+};
 
+export type SystemStatusRecording = {
+  state: string;
+  elapsedSeconds: number;
+  segmentCount: number;
+  /** @nullable */
+  outputDirectory?: string | null;
+};
 
-export const SystemStatusCamera = {
-  connected: 'connected',
-  disconnected: 'disconnected',
-  connecting: 'connecting',
-  error: 'error',
-} as const;
+/**
+ * @nullable
+ */
+export type SystemStatusStreamingStats = { [key: string]: unknown } | null;
 
-export type SystemStatusRecording = typeof SystemStatusRecording[keyof typeof SystemStatusRecording];
+export type SystemStatusStreaming = {
+  state: string;
+  /** @nullable */
+  stats?: SystemStatusStreamingStats;
+};
 
+export type SystemStatusStreamDeck = {
+  connected: boolean;
+  /** @nullable */
+  deviceName?: string | null;
+  /** @nullable */
+  activeProfileId?: string | null;
+};
 
-export const SystemStatusRecording = {
-  idle: 'idle',
-  recording: 'recording',
-  paused: 'paused',
-  stopping: 'stopping',
-  error: 'error',
-} as const;
+export type SystemStatusJoystick = {
+  connected: boolean;
+  /** @nullable */
+  deviceName?: string | null;
+};
 
-export type SystemStatusStreaming = typeof SystemStatusStreaming[keyof typeof SystemStatusStreaming];
-
-
-export const SystemStatusStreaming = {
-  idle: 'idle',
-  streaming: 'streaming',
-  connecting: 'connecting',
-  error: 'error',
-} as const;
-
-export type SystemStatusStreamDeck = typeof SystemStatusStreamDeck[keyof typeof SystemStatusStreamDeck];
-
-
-export const SystemStatusStreamDeck = {
-  connected: 'connected',
-  disconnected: 'disconnected',
-  error: 'error',
-} as const;
-
-export type SystemStatusJoystick = typeof SystemStatusJoystick[keyof typeof SystemStatusJoystick];
-
-
-export const SystemStatusJoystick = {
-  connected: 'connected',
-  disconnected: 'disconnected',
-} as const;
-
-export type SystemStatusOverlay = typeof SystemStatusOverlay[keyof typeof SystemStatusOverlay];
-
-
-export const SystemStatusOverlay = {
-  active: 'active',
-  inactive: 'inactive',
-  error: 'error',
-} as const;
-
-export type SystemStatusAudio = typeof SystemStatusAudio[keyof typeof SystemStatusAudio];
-
-
-export const SystemStatusAudio = {
-  active: 'active',
-  muted: 'muted',
-  error: 'error',
-  none: 'none',
-} as const;
-
-export type StorageStatusWarningLevel = typeof StorageStatusWarningLevel[keyof typeof StorageStatusWarningLevel];
-
-
-export const StorageStatusWarningLevel = {
-  ok: 'ok',
-  warning: 'warning',
-  critical: 'critical',
-} as const;
-
-export interface StorageStatus {
-  totalBytes: number;
-  usedBytes: number;
-  availableBytes: number;
+export type SystemStatusStorage = {
   availableMinutes: number;
-  recordingDirectory: string;
-  warningLevel: StorageStatusWarningLevel;
-  isExternalStorage?: boolean;
-}
+  warningLevel: string;
+  availableBytes: number;
+};
+
+export type SystemStatusOverlay = {
+  isVisible: boolean;
+  outputMode: string;
+  /** @nullable */
+  activeTemplateId?: string | null;
+};
+
+export type SystemStatusAudio = {
+  state: string;
+};
 
 export interface SystemStatus {
-  version: string;
-  uptime: number;
   camera: SystemStatusCamera;
   recording: SystemStatusRecording;
   streaming: SystemStatusStreaming;
-  storage: StorageStatus;
   streamDeck: SystemStatusStreamDeck;
   joystick: SystemStatusJoystick;
+  storage: SystemStatusStorage;
   overlay: SystemStatusOverlay;
   audio: SystemStatusAudio;
-  warnings?: string[];
 }
 
 export type CameraManufacturer = typeof CameraManufacturer[keyof typeof CameraManufacturer];
@@ -696,6 +664,25 @@ export interface StreamingStatus {
   error?: string | null;
   /** @nullable */
   startedAt?: string | null;
+}
+
+export type StorageStatusWarningLevel = typeof StorageStatusWarningLevel[keyof typeof StorageStatusWarningLevel];
+
+
+export const StorageStatusWarningLevel = {
+  ok: 'ok',
+  warning: 'warning',
+  critical: 'critical',
+} as const;
+
+export interface StorageStatus {
+  totalBytes: number;
+  usedBytes: number;
+  availableBytes: number;
+  availableMinutes: number;
+  recordingDirectory: string;
+  warningLevel: StorageStatusWarningLevel;
+  isExternalStorage?: boolean;
 }
 
 export interface StreamDeckStatus {

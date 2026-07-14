@@ -6,12 +6,6 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type SystemStatusAudio = typeof SystemStatusAudio[keyof typeof SystemStatusAudio];
-
-
-export const SystemStatusAudio = {
-  active: 'active',
-  muted: 'muted',
-  error: 'error',
-  none: 'none',
-} as const;
+export type SystemStatusAudio = {
+  state: string;
+};

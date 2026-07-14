@@ -6,11 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type SystemStatusStreamDeck = typeof SystemStatusStreamDeck[keyof typeof SystemStatusStreamDeck];
-
-
-export const SystemStatusStreamDeck = {
-  connected: 'connected',
-  disconnected: 'disconnected',
-  error: 'error',
-} as const;
+export type SystemStatusStreamDeck = {
+  connected: boolean;
+  /** @nullable */
+  deviceName?: string | null;
+  /** @nullable */
+  activeProfileId?: string | null;
+};

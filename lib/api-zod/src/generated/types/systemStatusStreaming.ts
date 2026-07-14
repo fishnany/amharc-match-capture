@@ -5,13 +5,10 @@
  * AMHARC Match Capture — Local Agent API
  * OpenAPI spec version: 0.1.0
  */
+import type { SystemStatusStreamingStats } from './systemStatusStreamingStats';
 
-export type SystemStatusStreaming = typeof SystemStatusStreaming[keyof typeof SystemStatusStreaming];
-
-
-export const SystemStatusStreaming = {
-  idle: 'idle',
-  streaming: 'streaming',
-  connecting: 'connecting',
-  error: 'error',
-} as const;
+export type SystemStatusStreaming = {
+  state: string;
+  /** @nullable */
+  stats?: SystemStatusStreamingStats;
+};

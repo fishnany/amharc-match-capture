@@ -6,8 +6,8 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type SystemStatusJoystick = {
-  connected: boolean;
-  /** @nullable */
-  deviceName?: string | null;
+export type SystemStatusStorage = {
+  availableMinutes: number;
+  warningLevel: string;
+  availableBytes: bigint;
 };

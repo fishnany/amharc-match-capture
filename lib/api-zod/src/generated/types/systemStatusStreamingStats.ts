@@ -6,8 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type SystemStatusJoystick = {
-  connected: boolean;
-  /** @nullable */
-  deviceName?: string | null;
-};
+/**
+ * @nullable
+ */
+export type SystemStatusStreamingStats = { [key: string]: unknown } | null;
