@@ -11,8 +11,7 @@ namespace AmharcAgent.Api.Controllers;
 [Route("api/streaming")]
 public class StreamingController(
     IStreamingService streaming,
-    AmharcDbContext db,
-    ILogger<StreamingController> logger) : ControllerBase
+    AmharcDbContext db) : ControllerBase
 {
     [HttpPost("start")]
     public async Task<IActionResult> StartStreaming([FromBody] StartStreamingRequest req, CancellationToken ct)

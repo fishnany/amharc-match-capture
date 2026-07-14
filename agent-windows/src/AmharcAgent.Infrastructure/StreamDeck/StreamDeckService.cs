@@ -1,3 +1,4 @@
+using OpenMacroBoard.SDK;
 using AmharcAgent.Core.Domain;
 using AmharcAgent.Core.Interfaces;
 using Microsoft.Extensions.Logging;
@@ -12,7 +13,7 @@ namespace AmharcAgent.Infrastructure.StreamDeck;
 public class StreamDeckService : IStreamDeckService, IAsyncDisposable
 {
     private readonly ILogger<StreamDeckService> _logger;
-    private IStreamDeck? _device;
+    private IMacroBoard? _device;
     private StreamDeckProfile? _activeProfile;
     private readonly Dictionary<int, StreamDeckButton> _buttonMap = new();
     private readonly HashSet<int> _activeButtons = new();
@@ -89,7 +90,7 @@ public class StreamDeckService : IStreamDeckService, IAsyncDisposable
         {
             try
             {
-                _device = StreamDeck.OpenDevice();
+                _device = global::StreamDeckSharp.StreamDeck.OpenDevice();
                 DeviceName = "Elgato Stream Deck";
                 _running = true;
                 _device.KeyStateChanged += OnKeyStateChanged;

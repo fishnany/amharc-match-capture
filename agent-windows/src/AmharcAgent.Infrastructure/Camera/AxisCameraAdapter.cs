@@ -15,7 +15,7 @@ public class AxisCameraAdapter : ICameraAdapter, IPtzController, IAsyncDisposabl
     private readonly Core.Domain.Camera _config;
     private AxisVapixClient? _client;
     private CameraConnectionState _state = CameraConnectionState.Disconnected;
-    private readonly Lock _lock = new();
+    private readonly object _lock = new();
     private CancellationTokenSource? _reconnectCts;
     private const int MaxReconnectAttempts = 5;
 
@@ -47,6 +47,12 @@ public class AxisCameraAdapter : ICameraAdapter, IPtzController, IAsyncDisposabl
             _config.LastConnectedAt = DateTimeOffset.UtcNow;
             _logger.LogInformation("Connected to AXIS {Model} at {Ip}", info.Model, _config.IpAddress);
             SetState(CameraConnectionState.Connected);
+
+            HealthChanged?.Invoke(new CameraHealth(
+            BitRate: null,
+            FrameRate: null,
+            DroppedFrames: null,
+            Timestamp: DateTimeOffset.UtcNow));
         }
         catch (Exception ex)
         {

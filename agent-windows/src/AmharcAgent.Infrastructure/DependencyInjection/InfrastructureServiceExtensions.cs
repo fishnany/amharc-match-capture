@@ -43,7 +43,7 @@ public static class InfrastructureServiceExtensions
 
         // ── Camera ───────────────────────────────────────────────────────────
         // Use a placeholder camera; the real one is configured after first-run setup
-        var placeholderCamera = new Camera
+        var placeholderCamera = new AmharcAgent.Core.Domain.Camera
         {
             CameraId = "primary",
             Name = "Primary Camera",
