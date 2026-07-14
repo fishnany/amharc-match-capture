@@ -69,3 +69,8 @@ Thumbs.db
 # Test Results
 TestResults/
 *.trx
+
+# AMHARC local SQLite database
+agent-windows/src/AmharcAgent.Api/amharc.db
+agent-windows/src/AmharcAgent.Api/amharc.db-shm
+agent-windows/src/AmharcAgent.Api/amharc.db-wal
