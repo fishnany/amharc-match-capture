@@ -16,8 +16,18 @@ public class SystemController(
     IOverlayService overlay) : ControllerBase
 {
     [HttpGet("healthz")]
-    public IActionResult HealthCheck() =>
-        Ok(new { status = "healthy", version = "1.0.0", timestamp = DateTimeOffset.UtcNow });
+public IActionResult HealthCheck()
+{
+    var systemHealth = health.GetHealth();
+
+    return Ok(new
+    {
+        status = systemHealth.OverallState.ToString().ToLowerInvariant(),
+        version = "1.0.0",
+        timestamp = DateTimeOffset.UtcNow,
+        health = systemHealth
+    });
+}
 
     [HttpGet("system/status")]
     public IActionResult GetSystemStatus() => Ok(new

@@ -25,10 +25,18 @@ public class ExportsController(
             var technicalLog = Path.Combine(outputDir, $"{matchId}_technical.log");
 
             await Task.WhenAll(
-                File.WriteAllTextAsync(eventsJson, await exports.ExportEventsJsonAsync(matchId, ct), ct),
-                File.WriteAllTextAsync(eventsCsv, await exports.ExportEventsCsvAsync(matchId, ct), ct),
-                exports.WriteManifestAsync(matchId, manifestPath, ct),
-                exports.WriteTechnicalLogAsync(matchId, technicalLog, ct));
+    System.IO.File.WriteAllTextAsync(
+        eventsJson,
+        await exports.ExportEventsJsonAsync(matchId, ct),
+        ct),
+
+    System.IO.File.WriteAllTextAsync(
+        eventsCsv,
+        await exports.ExportEventsCsvAsync(matchId, ct),
+        ct),
+
+    exports.WriteManifestAsync(matchId, manifestPath, ct),
+    exports.WriteTechnicalLogAsync(matchId, technicalLog, ct));
 
             logger.LogInformation("Export complete for match {MatchId} → {Dir}", matchId, outputDir);
 

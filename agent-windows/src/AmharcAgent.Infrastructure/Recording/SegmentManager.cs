@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using AmharcAgent.Core.Interfaces;
+using AmharcAgent.Core.Models;
 using Microsoft.Extensions.Logging;
 
 namespace AmharcAgent.Infrastructure.Recording;
@@ -57,16 +58,15 @@ public sealed class SegmentManager
 
             double? duration = endTs.HasValue ? (endTs.Value - startTs).TotalSeconds : null;
 
-            segments.Add(new RecordingSegmentInfo
-            {
-                SegmentNumber = i + 1,
-                FilePath = path,
-                StartTimestamp = startTs,
-                EndTimestamp = endTs,
-                IsComplete = endTs.HasValue,
-                DurationSeconds = duration,
-                FileSizeBytes = fileInfo.Exists ? fileInfo.Length : null
-            });
+            segments.Add(new RecordingSegmentInfo(
+                SegmentNumber: i + 1,
+                FilePath: path,
+                StartTimestamp: startTs,
+                EndTimestamp: endTs,
+                IsComplete: endTs.HasValue,
+                DurationSeconds: duration,
+                FileSizeBytes: fileInfo.Exists ? fileInfo.Length : null
+            ));
         }
 
         _logger.LogDebug("Found {Count} segments in {Dir} for match {MatchId}",

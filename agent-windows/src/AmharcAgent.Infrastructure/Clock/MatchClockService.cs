@@ -18,7 +18,7 @@ public class MatchClockService : IMatchClockService, IDisposable
     private readonly Stopwatch _matchStopwatch = new();
     private readonly Stopwatch _recordingStopwatch = new();
     private readonly System.Threading.Timer _timer;
-    private readonly Lock _lock = new();
+    private readonly object _lock = new();
     private readonly List<ClockCorrectionEntry> _auditLog = new();
 
     private double _matchOffsetSeconds; // accumulated from corrections/pauses

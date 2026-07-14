@@ -47,3 +47,25 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+# ============================================
+# .NET Build Artefacts
+# ============================================
+
+**/bin/
+**/obj/
+*.log
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Rider
+.idea/
+
+# Test Results
+TestResults/
+*.trx

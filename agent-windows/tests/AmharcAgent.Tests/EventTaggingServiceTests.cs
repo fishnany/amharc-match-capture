@@ -6,12 +6,13 @@ using AmharcAgent.Data.Repositories;
 using AmharcAgent.Infrastructure.Events;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
+using DomainMatch = AmharcAgent.Core.Domain.Match;
 
 namespace AmharcAgent.Tests;
 
 public class EventTaggingServiceTests
 {
-    private static Match MakeMatch() => new()
+    private static DomainMatch MakeMatch() => new()
     {
         MatchId = "m1", HomeTeam = "Clare", AwayTeam = "Galway",
         HomeGoals = 0, HomePoints = 0, AwayGoals = 0, AwayPoints = 0
@@ -24,10 +25,12 @@ public class EventTaggingServiceTests
         var events = new Mock<IEventRepository>();
         var matches = new Mock<IMatchRepository>();
         matches.Setup(m => m.GetByIdAsync("m1", default)).ReturnsAsync(match);
-        matches.Setup(m => m.UpdateAsync(It.IsAny<Match>(), default)).ReturnsAsync(match);
-        events.Setup(e => e.CreateAsync(It.IsAny<MatchEvent>(), default))
-            .ReturnsAsync<MatchEvent, IEventRepository, CancellationToken, MatchEvent>(
-                (ev, _) => ev);
+        matches.Setup(m => m.UpdateAsync(It.IsAny<DomainMatch>(), default)).ReturnsAsync(match);
+        events.Setup(e => e.CreateAsync(
+        It.IsAny<MatchEvent>(),
+        It.IsAny<CancellationToken>()))
+    .Returns((MatchEvent ev, CancellationToken _) =>
+        Task.FromResult(ev));
 
         var sut = new EventTaggingService(events.Object, matches.Object,
             NullLogger<EventTaggingService>.Instance);
@@ -53,9 +56,12 @@ public class EventTaggingServiceTests
         var events = new Mock<IEventRepository>();
         var matches = new Mock<IMatchRepository>();
         matches.Setup(m => m.GetByIdAsync("m1", default)).ReturnsAsync(match);
-        matches.Setup(m => m.UpdateAsync(It.IsAny<Match>(), default)).ReturnsAsync(match);
-        events.Setup(e => e.CreateAsync(It.IsAny<MatchEvent>(), default))
-            .ReturnsAsync<MatchEvent, IEventRepository, CancellationToken, MatchEvent>((ev, _) => ev);
+        matches.Setup(m => m.UpdateAsync(It.IsAny<DomainMatch>(), default)).ReturnsAsync(match);
+        events.Setup(e => e.CreateAsync(
+        It.IsAny<MatchEvent>(),
+        It.IsAny<CancellationToken>()))
+    .Returns((MatchEvent ev, CancellationToken _) =>
+        Task.FromResult(ev));
 
         var sut = new EventTaggingService(events.Object, matches.Object,
             NullLogger<EventTaggingService>.Instance);

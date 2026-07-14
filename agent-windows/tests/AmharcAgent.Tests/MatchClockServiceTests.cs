@@ -78,20 +78,25 @@ public class MatchClockServiceTests : IDisposable
     }
 
     [Fact]
-    public void Resume_AfterPause_ContinuesMatchClockFromPausePoint()
-    {
-        _sut.Start();
-        Thread.Sleep(100);
-        _sut.Pause();
-        var pausedAt = _sut.State.MatchClockSeconds;
+public void Resume_AfterPause_ContinuesMatchClockFromPausePoint()
+{
+    _sut.Start();
+    Thread.Sleep(100);
+    _sut.Pause();
 
-        Thread.Sleep(100);
-        _sut.Resume();
-        Thread.Sleep(100);
+    var pausedAt = _sut.State.MatchClockSeconds;
 
-        _sut.State.MatchClockSeconds.Should().BeGreaterThan(pausedAt,
-            "match clock should resume from where it paused");
-    }
+    Thread.Sleep(100);
+
+    _sut.Resume();
+
+    var advanced = SpinWait.SpinUntil(
+        () => _sut.State.MatchClockSeconds > pausedAt,
+        TimeSpan.FromSeconds(2));
+
+    advanced.Should().BeTrue(
+        "the match clock should resume from its paused position and advance");
+}
 
     public void Dispose() => _sut.Dispose();
 }

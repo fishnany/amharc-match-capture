@@ -18,7 +18,7 @@ public class FfmpegRecordingService : IRecordingService, IAsyncDisposable
     private readonly Stopwatch _elapsedStopwatch = new();
     private RecordingState _state = RecordingState.Idle;
     private RecordingOptions? _currentOptions;
-    private readonly Lock _lock = new();
+    private readonly object _lock = new();
 
     public event Action<RecordingState>? StateChanged;
 

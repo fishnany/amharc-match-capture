@@ -17,7 +17,7 @@
 
   <ItemGroup>
     <!-- Stream Deck HID -->
-    <PackageReference Include="StreamDeckSharp" Version="0.6.5" />
+    <PackageReference Include="StreamDeckSharp" Version="1.0.0" />
     <!-- Joystick / DirectInput (Windows only) -->
     <PackageReference Include="SharpDX.DirectInput" Version="4.2.0" />
     <PackageReference Include="SharpDX" Version="4.2.0" />
