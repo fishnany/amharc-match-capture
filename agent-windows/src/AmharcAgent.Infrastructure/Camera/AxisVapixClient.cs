@@ -32,16 +32,56 @@ public class AxisVapixClient : IDisposable
         _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", credentials);
     }
 
-    /// <summary>Fetch device info via VAPIX basic device info CGI.</summary>
-    public async Task<VapixDeviceInfo> GetDeviceInfoAsync(CancellationToken ct = default)
+    /// <summary>
+/// Fetches camera identity information.
+///
+/// Modern AXIS OS devices expose basicdeviceinfo.cgi.
+/// Older AXIS firmware, including the Q6128-E 6.50 branch,
+/// exposes the information through the legacy param.cgi API.
+/// </summary>
+public async Task<VapixDeviceInfo> GetDeviceInfoAsync(
+    CancellationToken ct = default)
+{
+    var modernUrl = $"{_baseUrl}/axis-cgi/basicdeviceinfo.cgi";
+
+    using var modernRequest = new HttpRequestMessage(
+        HttpMethod.Post,
+        modernUrl)
     {
-        var url = $"{_baseUrl}/axis-cgi/basicdeviceinfo.cgi";
-        _logger.LogDebug("VAPIX GET {Url}", url);
-        var response = await _http.GetAsync(url, ct);
-        response.EnsureSuccessStatusCode();
-        var body = await response.Content.ReadAsStringAsync(ct);
-        return ParseDeviceInfo(body);
+        Content = new StringContent(
+            """
+            {
+              "apiVersion": "1.0",
+              "context": "AMHARC",
+              "method": "getAllProperties"
+            }
+            """,
+            Encoding.UTF8,
+            "application/json")
+    };
+
+    _logger.LogDebug("VAPIX POST {Url}", modernUrl);
+
+    using var modernResponse = await _http.SendAsync(
+        modernRequest,
+        ct);
+
+    if (modernResponse.IsSuccessStatusCode)
+    {
+        var modernBody = await modernResponse.Content
+            .ReadAsStringAsync(ct);
+
+        return ParseDeviceInfo(modernBody);
     }
+
+    _logger.LogInformation(
+        "Modern AXIS device-information API unavailable at {Url}; " +
+        "falling back to legacy VAPIX parameter API. Status: {Status}",
+        modernUrl,
+        modernResponse.StatusCode);
+
+    return await GetLegacyDeviceInfoAsync(ct);
+}
 
     /// <summary>Build the RTSP stream URL for this camera (H.264, main stream).</summary>
     public string GetRtspUrl(string? profileName = null)
@@ -99,7 +139,116 @@ public class AxisVapixClient : IDisposable
         if (!response.IsSuccessStatusCode)
             _logger.LogWarning("VAPIX PTZ returned {Status} for {Url}", response.StatusCode, url);
     }
+    private async Task<VapixDeviceInfo> GetLegacyDeviceInfoAsync(
+    CancellationToken ct)
+{
+    var properties = await GetLegacyParameterGroupAsync(
+        "Properties",
+        ct);
 
+    var brand = await GetLegacyParameterGroupAsync(
+        "Brand",
+        ct);
+
+    var serialNumber = GetLegacyValue(
+        properties,
+        "root.Properties.System.SerialNumber");
+
+    var firmwareVersion = GetLegacyValue(
+        properties,
+        "root.Properties.Firmware.Version");
+
+    var model =
+        GetLegacyValue(brand, "root.Brand.ProdFullName") ??
+        GetLegacyValue(brand, "root.Brand.ProductFullName") ??
+        GetLegacyValue(brand, "root.Brand.ProdShortName") ??
+        "AXIS Camera";
+
+    return new VapixDeviceInfo(
+        model,
+        serialNumber,
+        firmwareVersion,
+        FormatAxisMacAddress(serialNumber));
+}
+
+private async Task<Dictionary<string, string>>
+    GetLegacyParameterGroupAsync(
+        string group,
+        CancellationToken ct)
+{
+    var url =
+        $"{_baseUrl}/axis-cgi/param.cgi" +
+        $"?action=list&group={Uri.EscapeDataString(group)}";
+
+    _logger.LogDebug("Legacy VAPIX GET {Url}", url);
+
+    using var response = await _http.GetAsync(url, ct);
+    response.EnsureSuccessStatusCode();
+
+    var body = await response.Content.ReadAsStringAsync(ct);
+
+    return ParseLegacyParameters(body);
+}
+
+private static Dictionary<string, string> ParseLegacyParameters(
+    string body)
+{
+    var values = new Dictionary<string, string>(
+        StringComparer.OrdinalIgnoreCase);
+
+    foreach (var rawLine in body.Split(
+        ['\r', '\n'],
+        StringSplitOptions.RemoveEmptyEntries))
+    {
+        var line = rawLine.Trim();
+        var separator = line.IndexOf('=');
+
+        if (separator <= 0)
+        {
+            continue;
+        }
+
+        var key = line[..separator].Trim();
+        var value = line[(separator + 1)..].Trim();
+
+        values[key] = value;
+    }
+
+    return values;
+}
+
+private static string? GetLegacyValue(
+    IReadOnlyDictionary<string, string> values,
+    string key)
+{
+    return values.TryGetValue(key, out var value)
+        ? value
+        : null;
+}
+
+private static string? FormatAxisMacAddress(string? serialNumber)
+{
+    if (string.IsNullOrWhiteSpace(serialNumber))
+    {
+        return null;
+    }
+
+    var compact = new string(
+        serialNumber
+            .Where(char.IsLetterOrDigit)
+            .ToArray())
+        .ToUpperInvariant();
+
+    if (compact.Length != 12)
+    {
+        return serialNumber;
+    }
+
+    return string.Join(
+        ":",
+        Enumerable.Range(0, 6)
+            .Select(index => compact.Substring(index * 2, 2)));
+}
     private static VapixDeviceInfo ParseDeviceInfo(string body)
     {
         // VAPIX basicdeviceinfo returns JSON: {"apiVersion":"1.0","data":{"propertyList":{...}}}
@@ -111,11 +260,13 @@ public class AxisVapixClient : IDisposable
         static string? TryGet(System.Text.Json.JsonElement el, string key) =>
             el.TryGetProperty(key, out var v) ? v.GetString() : null;
 
-        return new VapixDeviceInfo(
-            TryGet(props, "Model"),
-            TryGet(props, "SerialNumber"),
-            TryGet(props, "Version"),
-            TryGet(props, "HardwareID"));
+        var serialNumber = TryGet(props, "SerialNumber");
+
+return new VapixDeviceInfo(
+    TryGet(props, "Model"),
+    serialNumber,
+    TryGet(props, "Version"),
+    FormatAxisMacAddress(serialNumber));
     }
 
     private static IEnumerable<VapixPreset> ParsePresets(string body)

@@ -49,7 +49,7 @@ public static class InfrastructureServiceExtensions
             Name = "Primary Camera",
             Manufacturer = "AXIS",
             Model = "Q6128-E",
-            IpAddress = "192.168.1.100",
+            IpAddress = "192.168.1.135",
             Username = settings.DefaultCameraUsername,
             Password = settings.DefaultCameraPassword
         };
