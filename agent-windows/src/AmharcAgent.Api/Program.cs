@@ -46,6 +46,13 @@ if (settings.StreamDeckEnabled)
 if (settings.JoystickEnabled)
 {
     var joystick = app.Services.GetRequiredService<IJoystickService>();
+
+    var joystickPtzBridge =
+        app.Services.GetRequiredService<
+            AmharcAgent.Infrastructure.Joystick.JoystickPtzBridge>();
+
+    joystickPtzBridge.Start();
+
     _ = joystick.StartAsync(app.Lifetime.ApplicationStopping);
 }
 

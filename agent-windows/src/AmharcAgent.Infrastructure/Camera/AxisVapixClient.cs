@@ -93,8 +93,8 @@ public async Task<VapixDeviceInfo> GetDeviceInfoAsync(
     }
 
     /// <summary>Continuous PTZ pan/tilt move. Speed range -100 to 100.</summary>
-    public async Task PtzContinuousMoveAsync(int panSpeed, int tiltSpeed, CancellationToken ct = default) =>
-        await VapixPtzGetAsync($"continuouspantiltmove={panSpeed},{tiltSpeed}", ct);
+    public async Task PtzContinuousMoveAsync(int panSpeed, int tiltSpeed, int zoomSpeed, CancellationToken ct = default) =>
+        await VapixPtzGetAsync($"continuouspantiltmove={panSpeed},{tiltSpeed}" + $"&continuouszoommove={zoomSpeed}", ct);
 
     /// <summary>Continuous zoom. Speed -100 to 100.</summary>
     public async Task PtzContinuousZoomAsync(int zoomSpeed, CancellationToken ct = default) =>

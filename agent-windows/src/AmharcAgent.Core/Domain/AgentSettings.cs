@@ -1,3 +1,4 @@
+using AmharcAgent.Core.Models;
 namespace AmharcAgent.Core.Domain;
 
 /// <summary>Persisted user configuration for the AMHARC local agent.</summary>
@@ -30,4 +31,5 @@ public class AgentSettings
     public string OperatorName { get; set; } = "Operator";
     public bool StreamDeckEnabled { get; set; } = true;
     public bool JoystickEnabled { get; set; } = true;
+    public JoystickConfig Joystick { get; set; } = new();
 }

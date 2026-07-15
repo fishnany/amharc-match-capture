@@ -72,10 +72,8 @@ public static class InfrastructureServiceExtensions
 
         // ── Stream Deck & Joystick ────────────────────────────────────────────
         services.AddSingleton<IStreamDeckService, StreamDeckService>();
-        services.AddSingleton<IJoystickService>(sp =>
-            new JoystickService(
-                sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<JoystickService>>(),
-                new JoystickConfig()));
+        services.AddSingleton<IJoystickService>(sp => new JoystickService(sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<JoystickService>>(), settings.Joystick));
+        services.AddSingleton<JoystickPtzBridge>();
 
         // ── Clock ─────────────────────────────────────────────────────────────
         services.AddSingleton<IMatchClockService, MatchClockService>();
