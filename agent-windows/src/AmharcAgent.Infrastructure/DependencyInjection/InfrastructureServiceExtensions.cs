@@ -17,6 +17,8 @@ using AmharcAgent.Infrastructure.Streaming;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using System.Text.Json;
+using AmharcAgent.Infrastructure.Settings;
 
 namespace AmharcAgent.Infrastructure.DependencyInjection;
 
@@ -27,9 +29,55 @@ public static class InfrastructureServiceExtensions
         IConfiguration configuration)
     {
         // ── Settings ─────────────────────────────────────────────────────────
-        var settings = configuration.GetSection("AmharcAgent").Get<AgentSettings>()
-            ?? new AgentSettings();
-        services.AddSingleton(settings);
+var settings = configuration
+    .GetSection("AmharcAgent")
+    .Get<AgentSettings>()
+    ?? new AgentSettings();
+
+var settingsDirectory = Path.Combine(
+    Environment.GetFolderPath(
+        Environment.SpecialFolder.LocalApplicationData),
+    "AMHARC",
+    "MatchCapture");
+
+var persistedSettingsPath = Path.Combine(
+    settingsDirectory,
+    "agent-settings.json");
+
+if (File.Exists(persistedSettingsPath))
+{
+    try
+    {
+        var json = File.ReadAllText(persistedSettingsPath);
+
+        var persistedSettings =
+            JsonSerializer.Deserialize<AgentSettings>(
+                json,
+                new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+        if (persistedSettings is not null)
+        {
+            settings = persistedSettings;
+        }
+    }
+    catch
+    {
+        // Invalid persisted settings fall back to appsettings.json defaults.
+        // Runtime logging can be added here in a later refinement.
+    }
+}
+
+services.AddSingleton(settings);
+
+services.AddSingleton<IAgentSettingsStore>(sp =>
+    new JsonAgentSettingsStore(
+        persistedSettingsPath,
+        sp.GetRequiredService<
+            Microsoft.Extensions.Logging.ILogger<
+                JsonAgentSettingsStore>>()));
 
         // ── Database ─────────────────────────────────────────────────────────
         services.AddDbContext<AmharcDbContext>(opts =>
