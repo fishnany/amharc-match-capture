@@ -1,3 +1,7 @@
+import {
+  StreamDeckButtonEditor,
+  type StreamDeckButtonConfig,
+} from "./StreamDeckButtonEditor";
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Card,
@@ -26,18 +30,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 
-type StreamDeckButton = {
-  buttonNumber: number;
-  label: string;
-  icon?: string | null;
-  colour?: string | null;
-  eventType: string;
-  team?: number | null;
-  scoreEffect?: string | null;
-  overlayEffect?: string | null;
-  clipRequest: boolean;
-  enabled: boolean;
-};
+type StreamDeckButton = StreamDeckButtonConfig;
 
 type StreamDeckProfile = {
   profileId: string;
@@ -158,6 +151,13 @@ useEffect(() => {
   const [isActivating, setIsActivating] =
     useState(false);
 
+  const [editingButtonNumber, setEditingButtonNumber] =
+    useState<number | null>(null);
+
+  const [isEditorOpen, setIsEditorOpen] =
+    useState(false);
+
+  
   const deckLayout = useMemo(
     () => inferDeckLayout(status, profiles),
     [status, profiles],
@@ -273,6 +273,100 @@ useEffect(() => {
     setSelectedProfileId(profileId);
     await activateProfile(profileId);
   };
+
+  const handleEditButton = (
+  hardwareIndex: number,
+) => {
+  setEditingButtonNumber(hardwareIndex);
+  setIsEditorOpen(true);
+};
+
+const handleSaveButton = async (
+  updatedButton: StreamDeckButtonConfig,
+) => {
+  if (!selectedProfile) {
+    return;
+  }
+
+
+  try {
+    const existingButtonIndex =
+      selectedProfile.buttons.findIndex(
+        (button) =>
+          button.buttonNumber ===
+          updatedButton.buttonNumber,
+      );
+
+    const updatedButtons =
+      existingButtonIndex >= 0
+        ? selectedProfile.buttons.map(
+            (button) =>
+              button.buttonNumber ===
+              updatedButton.buttonNumber
+                ? updatedButton
+                : button,
+          )
+        : [
+            ...selectedProfile.buttons,
+            updatedButton,
+          ];
+
+    const updatedProfile: StreamDeckProfile = {
+      ...selectedProfile,
+      buttons: updatedButtons,
+      updatedAt: new Date().toISOString(),
+    };
+
+    const response = await fetch(
+      `/api/devices/stream-deck/profiles/${encodeURIComponent(
+        selectedProfile.profileId,
+      )}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedProfile),
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to update Stream Deck profile: ${response.status}`,
+      );
+    }
+
+    const savedProfile =
+      (await response.json()) as StreamDeckProfile;
+
+    setProfiles((current) =>
+      current.map((profile) =>
+        profile.profileId ===
+        savedProfile.profileId
+          ? savedProfile
+          : profile,
+      ),
+    );
+
+    toast({
+      title: "Stream Deck button saved",
+      description: `Key ${
+        updatedButton.buttonNumber + 1
+      } has been updated successfully.`,
+    });
+  } catch (error) {
+    console.error(error);
+
+    toast({
+      title: "Unable to save Stream Deck button",
+      description:
+        "The AMHARC Agent could not persist the button configuration.",
+      variant: "destructive",
+    });
+
+    throw error;
+  }
+};
 
   const handleSync = async () => {
     if (!selectedProfileId) {
@@ -537,6 +631,9 @@ useEffect(() => {
                       <button
                         key={hardwareIndex}
                         type="button"
+                        onClick={() =>
+                          handleEditButton(hardwareIndex)
+                        }
                         className="aspect-square min-w-[72px] bg-black rounded-xl border border-white/10 flex flex-col items-center justify-center p-2 hover:border-white/30 transition-all group relative overflow-hidden"
                         style={{
                           borderColor: button?.colour
@@ -630,7 +727,23 @@ useEffect(() => {
             </div>
           </CardContent>
         </Card>
-      </div>
+       </div>
+
+      <StreamDeckButtonEditor
+        open={isEditorOpen}
+        buttonNumber={editingButtonNumber}
+        button={
+          editingButtonNumber === null
+            ? null
+            : selectedProfile?.buttons.find(
+                (button) =>
+                  button.buttonNumber ===
+                  editingButtonNumber,
+              ) ?? null
+        }
+        onOpenChange={setIsEditorOpen}
+        onSave={handleSaveButton}
+      />
     </div>
   );
 }
