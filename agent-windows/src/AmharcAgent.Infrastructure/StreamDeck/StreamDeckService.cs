@@ -18,6 +18,7 @@ public class StreamDeckService : IStreamDeckService, IAsyncDisposable
     private readonly Dictionary<int, StreamDeckButton> _buttonMap = new();
     private readonly HashSet<int> _activeButtons = new();
     private bool _running;
+    private readonly AmharcStreamDeckButtonRenderer _renderer;
 
     public bool IsConnected => _device is not null && _running;
     public string? DeviceName { get; private set; }
@@ -27,10 +28,13 @@ public class StreamDeckService : IStreamDeckService, IAsyncDisposable
     public event Action<string>? Connected;
     public event Action? Disconnected;
 
-    public StreamDeckService(ILogger<StreamDeckService> logger)
-    {
-        _logger = logger;
-    }
+    public StreamDeckService(
+    ILogger<StreamDeckService> logger,
+    AmharcStreamDeckButtonRenderer renderer)
+{
+    _logger = logger;
+    _renderer = renderer;
+}
 
     public async Task StartAsync(CancellationToken ct = default)
     {
@@ -45,20 +49,35 @@ public class StreamDeckService : IStreamDeckService, IAsyncDisposable
         return Task.CompletedTask;
     }
 
-    public async Task LoadProfileAsync(StreamDeckProfile profile, CancellationToken ct = default)
-    {
-        _activeProfile = profile;
-        _buttonMap.Clear();
-        foreach (var btn in profile.Buttons)
-            _buttonMap[btn.ButtonNumber] = btn;
+    public async Task LoadProfileAsync(
+    StreamDeckProfile profile,
+    CancellationToken ct = default)
+{
+    _activeProfile = profile;
+    _buttonMap.Clear();
+    _activeButtons.Clear();
 
-        if (_device is not null)
+    foreach (var btn in profile.Buttons)
+        _buttonMap[btn.ButtonNumber] = btn;
+
+    if (_device is not null)
+    {
+        // Clear all keys first so buttons from a previous profile
+        // or the native Stream Deck configuration are not left behind.
+        _device.ClearKeys();
+
+        foreach (var btn in profile.Buttons)
         {
-            foreach (var btn in profile.Buttons)
+            if (btn.Enabled)
                 await RenderButtonAsync(btn, false);
         }
-        _logger.LogInformation("Loaded Stream Deck profile: {Name}", profile.Name);
     }
+
+    _logger.LogInformation(
+        "Loaded Stream Deck profile: {Name} ({ButtonCount} configured buttons)",
+        profile.Name,
+        profile.Buttons.Count);
+}
 
     public async Task SetButtonStateAsync(int buttonNumber, bool active, CancellationToken ct = default)
     {
@@ -123,41 +142,35 @@ public class StreamDeckService : IStreamDeckService, IAsyncDisposable
         }
     }
 
-    private async Task RenderButtonAsync(StreamDeckButton btn, bool active)
+    private async Task RenderButtonAsync(
+    StreamDeckButton btn,
+    bool active)
+{
+    if (_device is null)
+        return;
+
+    try
     {
-        if (_device is null) return;
-        try
-        {
-            // Parse colour from hex string or defaults
-            var (r, g, b) = ParseColour(btn.Colour, btn.Team, active);
-            var key = OpenMacroBoard.SDK.KeyBitmap.Create.FromRgb(r, g, b);
-            _device.SetKeyBitmap(btn.ButtonNumber, key);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Failed to render button {Num}", btn.ButtonNumber);
-        }
-        await Task.CompletedTask;
+        var keyBitmap =
+            _renderer.Render(
+                btn,
+                active);
+
+        _device.SetKeyBitmap(
+            btn.ButtonNumber,
+            keyBitmap);
+    }
+    catch (Exception ex)
+    {
+        _logger.LogWarning(
+            ex,
+            "Failed to render button {Num}",
+            btn.ButtonNumber);
     }
 
-    private static (byte R, byte G, byte B) ParseColour(string? hex, ButtonTeam? team, bool active)
-    {
-        if (active) return (255, 255, 255); // white highlight when active
-        if (hex is not null && hex.StartsWith('#') && hex.Length == 7)
-        {
-            return (
-                Convert.ToByte(hex[1..3], 16),
-                Convert.ToByte(hex[3..5], 16),
-                Convert.ToByte(hex[5..7], 16));
-        }
-        return team switch
-        {
-            ButtonTeam.Home => (28, 133, 81),   // AMHARC Green
-            ButtonTeam.Away => (182, 220, 70),  // AMHARC Lime
-            _ => (40, 40, 40)                   // dark grey
-        };
-    }
-
+    await Task.CompletedTask;
+}
+    
     private void CloseDevice()
     {
         if (_device is null) return;
