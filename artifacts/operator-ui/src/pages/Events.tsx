@@ -127,6 +127,7 @@ export default function Events() {
                 <SelectItem value="all">All Types</SelectItem>
                 <SelectItem value="goal">Goal</SelectItem>
                 <SelectItem value="point">Point</SelectItem>
+                <SelectItem value="two-point-score">Two-point score</SelectItem>
                 <SelectItem value="card">Card</SelectItem>
                 <SelectItem value="substitution">Substitution</SelectItem>
                 <SelectItem value="highlight">Highlight</SelectItem>

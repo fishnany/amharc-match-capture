@@ -62,7 +62,7 @@ export default function LiveCapture() {
     return `${m}:${s}`;
   };
 
-  const handleScore = (team: 'home' | 'away', type: 'goal' | 'point') => {
+  const handleScore = (team: 'home' | 'away', type: 'goal' | 'point' | 'two-point') => {
     updateScore.mutate({
       matchId,
       data: {
@@ -146,16 +146,16 @@ export default function LiveCapture() {
                 <div className="bg-black/80 backdrop-blur-md border border-white/20 rounded shadow-2xl p-3 flex gap-6 font-sans">
                   <div className="flex items-center gap-3">
                     <span className="font-bold text-lg">{activeMatch.homeTeamShort || activeMatch.homeTeam.substring(0,3).toUpperCase()}</span>
-                    <span className="text-2xl font-mono text-amharc-lime">{score?.homeGoals}-{score?.homePoints}</span>
-                  </div>
-                  <div className="w-px bg-white/20"></div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl font-mono text-amharc-lime">{score?.awayGoals}-{score?.awayPoints}</span>
-                    <span className="font-bold text-lg">{activeMatch.awayTeamShort || activeMatch.awayTeam.substring(0,3).toUpperCase()}</span>
+                    <span className="text-2xl font-mono text-amharc-lime">{score?.homeDisplay || '0-0 (0)'}</span>
                   </div>
                   <div className="w-px bg-white/20"></div>
                   <div className="flex items-center text-xl font-mono">
                     {formatTime(clock?.matchClockSeconds || 0)}
+                  </div>
+                  <div className="w-px bg-white/20"></div>
+                  <div className="flex items-center gap-3">
+                    <span className="font-bold text-lg">{activeMatch.awayTeamShort || activeMatch.awayTeam.substring(0,3).toUpperCase()}</span>
+                    <span className="text-2xl font-mono text-amharc-lime">{score?.awayDisplay || '0-0 (0)'}</span>
                   </div>
                 </div>
               </div>
@@ -236,19 +236,25 @@ export default function LiveCapture() {
           <div className="p-4 border-b border-white/10 space-y-4">
             <div className="flex justify-between items-center mb-2">
               <span className="font-bold text-sm tracking-wider uppercase">{activeMatch.homeTeam}</span>
-              <span className="font-mono text-xl text-amharc-lime">{score?.homeGoals}-{score?.homePoints}</span>
+              <span className="font-mono text-xl text-amharc-lime">{score?.homeDisplay || '0-0 (0)'}</span>
             </div>
             <div className="flex gap-2">
               <Button variant="outline" className="flex-1 bg-neutral-900 border-white/10" onClick={() => handleScore('home', 'goal')}>+ Goal</Button>
+              {activeMatch.sport === 'gaelic-football' && (
+                <Button variant="outline" className="flex-1 bg-neutral-900 border-white/10" onClick={() => handleScore('home', 'two-point')}>+ 2pt</Button>
+              )}
               <Button variant="outline" className="flex-1 bg-neutral-900 border-white/10" onClick={() => handleScore('home', 'point')}>+ Point</Button>
             </div>
 
             <div className="flex justify-between items-center mt-6 mb-2">
               <span className="font-bold text-sm tracking-wider uppercase">{activeMatch.awayTeam}</span>
-              <span className="font-mono text-xl text-amharc-lime">{score?.awayGoals}-{score?.awayPoints}</span>
+              <span className="font-mono text-xl text-amharc-lime">{score?.awayDisplay || '0-0 (0)'}</span>
             </div>
             <div className="flex gap-2">
               <Button variant="outline" className="flex-1 bg-neutral-900 border-white/10" onClick={() => handleScore('away', 'goal')}>+ Goal</Button>
+              {activeMatch.sport === 'gaelic-football' && (
+                <Button variant="outline" className="flex-1 bg-neutral-900 border-white/10" onClick={() => handleScore('away', 'two-point')}>+ 2pt</Button>
+              )}
               <Button variant="outline" className="flex-1 bg-neutral-900 border-white/10" onClick={() => handleScore('away', 'point')}>+ Point</Button>
             </div>
           </div>

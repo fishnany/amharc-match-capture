@@ -4,6 +4,7 @@ using FluentAssertions;
 using Moq;
 using AmharcAgent.Data.Repositories;
 using AmharcAgent.Infrastructure.Events;
+using AmharcAgent.Infrastructure.Scoring;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 using DomainMatch = AmharcAgent.Core.Domain.Match;
@@ -32,7 +33,9 @@ public class EventTaggingServiceTests
     .Returns((MatchEvent ev, CancellationToken _) =>
         Task.FromResult(ev));
 
-        var sut = new EventTaggingService(events.Object, matches.Object,
+        var sut = new EventTaggingService(
+            events.Object, matches.Object, new ScoringService(),
+            new Mock<IOverlayService>().Object, new Mock<IBroadcastService>().Object,
             NullLogger<EventTaggingService>.Instance);
 
         var opts = new CreateEventOptions("m1", "point", EventTeam.Home, null, 1, 120, 125,
@@ -63,7 +66,9 @@ public class EventTaggingServiceTests
     .Returns((MatchEvent ev, CancellationToken _) =>
         Task.FromResult(ev));
 
-        var sut = new EventTaggingService(events.Object, matches.Object,
+        var sut = new EventTaggingService(
+            events.Object, matches.Object, new ScoringService(),
+            new Mock<IOverlayService>().Object, new Mock<IBroadcastService>().Object,
             NullLogger<EventTaggingService>.Instance);
 
         var opts = new CreateEventOptions("m1", "goal", EventTeam.Away, null, 2, 600, 650,
@@ -92,7 +97,9 @@ public class EventTaggingServiceTests
         events.Setup(e => e.GetByMatchIdAsync("m1", default))
             .ReturnsAsync(new List<MatchEvent> { evt });
 
-        var sut = new EventTaggingService(events.Object, matches.Object,
+        var sut = new EventTaggingService(
+            events.Object, matches.Object, new ScoringService(),
+            new Mock<IOverlayService>().Object, new Mock<IBroadcastService>().Object,
             NullLogger<EventTaggingService>.Instance);
 
         var csv = await sut.ExportEventsCsvAsync("m1", default);

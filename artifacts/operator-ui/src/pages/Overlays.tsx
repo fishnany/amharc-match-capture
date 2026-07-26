@@ -3,12 +3,27 @@ import { useGetOverlayTemplates, useGetOverlayState } from "@workspace/api-clien
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Layers, Monitor, Play, Square, Settings2 } from "lucide-react";
+import { Layers, Monitor, Play, Settings2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { ScoreBugPreview } from "@/components/ScoreBugPreview";
 
 export default function Overlays() {
   const { data: templates } = useGetOverlayTemplates();
-  const { data: state } = useGetOverlayState();
+  const { data: state, refetch: refetchState } = useGetOverlayState();
+
+  const setVisible = async (visible: boolean) => {
+    await fetch(`/api/overlays/${visible ? "show" : "hide"}`, { method: "POST" });
+    await refetchState();
+  };
+
+  const setMode = async (mode: "clean" | "programme" | "overlay-only") => {
+    await fetch("/api/overlays/mode", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mode }),
+    });
+    await refetchState();
+  };
 
   const activeTemplate = templates?.find(t => t.templateId === state?.activeTemplateId) || templates?.[0];
 
@@ -23,7 +38,7 @@ export default function Overlays() {
           <Badge variant="outline" className={`font-mono ${state?.isVisible ? 'border-amharc-green text-amharc-green' : 'border-neutral-600 text-neutral-500'}`}>
             {state?.isVisible ? 'OVERLAYS LIVE' : 'OVERLAYS HIDDEN'}
           </Badge>
-          <Button className={state?.isVisible ? "bg-destructive text-white hover:bg-destructive/90" : "bg-amharc-green text-white hover:bg-amharc-green/90"}>
+          <Button onClick={() => setVisible(!state?.isVisible)} className={state?.isVisible ? "bg-destructive text-white hover:bg-destructive/90" : "bg-amharc-green text-white hover:bg-amharc-green/90"}>
             {state?.isVisible ? "Hide All" : "Show All"}
           </Button>
         </div>
@@ -47,22 +62,8 @@ export default function Overlays() {
               <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'linear-gradient(45deg, #333 25%, transparent 25%), linear-gradient(-45deg, #333 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #333 75%), linear-gradient(-45deg, transparent 75%, #333 75%)', backgroundSize: '20px 20px', backgroundPosition: '0 0, 0 10px, 10px -10px, -10px 0px' }}></div>
               
               {state?.isVisible && (
-                <div className="absolute top-8 left-8 right-8 pointer-events-none">
-                  <div className="bg-black/80 backdrop-blur border border-white/20 rounded shadow-2xl p-3 inline-flex gap-6 font-sans">
-                    <div className="flex items-center gap-3">
-                      <span className="font-bold text-lg">DUB</span>
-                      <span className="text-2xl font-mono text-amharc-lime">1-12</span>
-                    </div>
-                    <div className="w-px bg-white/20"></div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl font-mono text-amharc-lime">0-14</span>
-                      <span className="font-bold text-lg">KER</span>
-                    </div>
-                    <div className="w-px bg-white/20"></div>
-                    <div className="flex items-center text-xl font-mono">
-                      34:12
-                    </div>
-                  </div>
+                <div className="absolute inset-x-0 top-8 flex justify-center pointer-events-none">
+                  <ScoreBugPreview visible />
                 </div>
               )}
 
@@ -80,13 +81,13 @@ export default function Overlays() {
                 <p className="text-xs text-neutral-500">How the video feed is composed</p>
               </div>
               <div className="flex gap-2">
-                <Button variant={state?.outputMode === 'clean' ? 'default' : 'outline'} className={state?.outputMode === 'clean' ? 'bg-white text-black' : 'bg-black border-white/10'}>
+                <Button onClick={() => setMode('clean')} variant={state?.outputMode === 'clean' ? 'default' : 'outline'} className={state?.outputMode === 'clean' ? 'bg-white text-black' : 'bg-black border-white/10'}>
                   Clean
                 </Button>
-                <Button variant={state?.outputMode === 'programme' ? 'default' : 'outline'} className={state?.outputMode === 'programme' ? 'bg-white text-black' : 'bg-black border-white/10'}>
+                <Button onClick={() => setMode('programme')} variant={state?.outputMode === 'programme' ? 'default' : 'outline'} className={state?.outputMode === 'programme' ? 'bg-white text-black' : 'bg-black border-white/10'}>
                   Programme
                 </Button>
-                <Button variant={state?.outputMode === 'overlay-only' ? 'default' : 'outline'} className={state?.outputMode === 'overlay-only' ? 'bg-white text-black' : 'bg-black border-white/10'}>
+                <Button onClick={() => setMode('overlay-only')} variant={state?.outputMode === 'overlay-only' ? 'default' : 'outline'} className={state?.outputMode === 'overlay-only' ? 'bg-white text-black' : 'bg-black border-white/10'}>
                   Key & Fill
                 </Button>
               </div>

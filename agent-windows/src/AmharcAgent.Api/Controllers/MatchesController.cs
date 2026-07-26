@@ -10,7 +10,9 @@ namespace AmharcAgent.Api.Controllers;
 public class MatchesController(
     IMatchRepository repo,
     IMatchClockService clock,
+    IScoringService scoring,
     IOverlayService overlay,
+    IBroadcastService broadcast,
     ILogger<MatchesController> logger) : ControllerBase
 {
     [HttpGet]
@@ -40,6 +42,7 @@ public class MatchesController(
         if (existing is null) return NotFound();
         input.MatchId = matchId;
         input.CreatedAt = existing.CreatedAt;
+        input.UpdatedAt = DateTimeOffset.UtcNow;
         return Ok(await repo.UpdateAsync(input, ct));
     }
 
@@ -55,12 +58,21 @@ public class MatchesController(
     {
         var match = await repo.GetByIdAsync(matchId, ct);
         if (match is null) return NotFound();
+
         match.Status = MatchStatus.Active;
         match.CurrentPeriod = 1;
+        match.UpdatedAt = DateTimeOffset.UtcNow;
         await repo.UpdateAsync(match, ct);
+
         clock.Start();
-        overlay.UpdateScore(match.HomeGoals, match.HomePoints, match.AwayGoals, match.AwayPoints);
-        logger.LogInformation("Match {Id} started", matchId);
+        var score = scoring.GetState(match);
+        overlay.UpdateScore(score);
+        overlay.ShowScoreboard();
+        broadcast.SetMatch(matchId);
+        broadcast.UpdateScore(score);
+        broadcast.ShowScoreBug();
+
+        logger.LogInformation("Match {Id} started using scoring model {ScoringModel}", matchId, score.ScoringModel);
         return Ok(match);
     }
 
@@ -70,6 +82,7 @@ public class MatchesController(
         var match = await repo.GetByIdAsync(matchId, ct);
         if (match is null) return NotFound();
         match.Status = MatchStatus.Complete;
+        match.UpdatedAt = DateTimeOffset.UtcNow;
         await repo.UpdateAsync(match, ct);
         clock.MarkFullTime();
         return Ok(match);
@@ -102,40 +115,42 @@ public class MatchesController(
     public async Task<IActionResult> GetScore(string matchId, CancellationToken ct)
     {
         var match = await repo.GetByIdAsync(matchId, ct);
-        if (match is null) return NotFound();
-        return Ok(new
-        {
-            homeGoals = match.HomeGoals, homePoints = match.HomePoints, homeTotal = match.HomeTotal,
-            awayGoals = match.AwayGoals, awayPoints = match.AwayPoints, awayTotal = match.AwayTotal
-        });
+        return match is null ? NotFound() : Ok(scoring.GetState(match));
     }
 
-    [HttpPost("{matchId}/score")]
+    [HttpPut("{matchId}/score")]
     public async Task<IActionResult> UpdateScore(string matchId, [FromBody] ScoreUpdateRequest req, CancellationToken ct)
     {
         var match = await repo.GetByIdAsync(matchId, ct);
         if (match is null) return NotFound();
 
-        if (req.Team == "home")
+        var team = req.Team.Trim().ToLowerInvariant() switch
         {
-            if (req.ScoreType == "goal") match.HomeGoals++;
-            else if (req.ScoreType == "point") match.HomePoints++;
+            "home" => EventTeam.Home,
+            "away" => EventTeam.Away,
+            _ => throw new ArgumentException("Team must be 'home' or 'away'.", nameof(req.Team))
+        };
+
+        try
+        {
+            scoring.Apply(match, team, req.ScoreType, req.Delta);
         }
-        else if (req.Team == "away")
+        catch (InvalidOperationException ex)
         {
-            if (req.ScoreType == "goal") match.AwayGoals++;
-            else if (req.ScoreType == "point") match.AwayPoints++;
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
         }
 
         await repo.UpdateAsync(match, ct);
-        overlay.UpdateScore(match.HomeGoals, match.HomePoints, match.AwayGoals, match.AwayPoints);
-        return Ok(new
-        {
-            homeGoals = match.HomeGoals, homePoints = match.HomePoints, homeTotal = match.HomeTotal,
-            awayGoals = match.AwayGoals, awayPoints = match.AwayPoints, awayTotal = match.AwayTotal
-        });
+        var state = scoring.GetState(match);
+        overlay.UpdateScore(state);
+        broadcast.UpdateScore(state);
+        return Ok(state);
     }
 }
 
 public record ClockCorrectRequest(int MatchClockSeconds, string? Reason);
-public record ScoreUpdateRequest(string ScoreType, string Team);
+public record ScoreUpdateRequest(string ScoreType, string Team, int Delta = 1, string? Reason = null);

@@ -3,6 +3,7 @@ using AmharcAgent.Core.Interfaces;
 using AmharcAgent.Core.Models;
 using AmharcAgent.Data;
 using AmharcAgent.Data.Repositories;
+using AmharcAgent.Infrastructure.Broadcast;
 using AmharcAgent.Infrastructure.Camera;
 using AmharcAgent.Infrastructure.Clock;
 using AmharcAgent.Infrastructure.Events;
@@ -11,6 +12,7 @@ using AmharcAgent.Infrastructure.Health;
 using AmharcAgent.Infrastructure.Joystick;
 using AmharcAgent.Infrastructure.Overlay;
 using AmharcAgent.Infrastructure.Recording;
+using AmharcAgent.Infrastructure.Scoring;
 using AmharcAgent.Infrastructure.Storage;
 using AmharcAgent.Infrastructure.StreamDeck;
 using AmharcAgent.Infrastructure.Streaming;
@@ -81,12 +83,17 @@ public static class InfrastructureServiceExtensions
         services.AddSingleton<IMatchClockService, MatchClockService>();
 
         // ── Events, Storage, Overlay ──────────────────────────────────────────
+        services.AddSingleton<IScoringService, ScoringService>();
         services.AddScoped<IEventTaggingService, EventTaggingService>();
         services.AddSingleton<IStorageMonitorService>(sp =>
             new StorageMonitorService(
                 sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<StorageMonitorService>>(),
                 settings.RecordingDirectory));
         services.AddSingleton<IOverlayService, OverlayService>();
+        services.AddSingleton<IBroadcastService, BroadcastService>();
+        services.AddSingleton<IScoreBugRenderer, ScoreBugSvgRenderer>();
+        services.AddSingleton<IEventBannerRenderer, EventBannerSvgRenderer>();
+        services.AddSingleton<IMatchIntroRenderer, MatchIntroSvgRenderer>();
 
         // ── Health ────────────────────────────────────────────────────────────
         services.AddSingleton<IHealthMonitoringService, HealthMonitoringService>();

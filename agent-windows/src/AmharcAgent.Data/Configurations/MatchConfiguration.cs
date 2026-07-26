@@ -16,8 +16,11 @@ public class MatchConfiguration : IEntityTypeConfiguration<Match>
         builder.Property(m => m.AwayTeam).IsRequired().HasMaxLength(100);
         builder.Property(m => m.Competition).HasMaxLength(200);
         builder.Property(m => m.Season).HasMaxLength(20);
+        builder.Ignore(m => m.ScoringModel);
         builder.Ignore(m => m.HomeTotal);
         builder.Ignore(m => m.AwayTotal);
+        builder.Ignore(m => m.HomeScoreDisplay);
+        builder.Ignore(m => m.AwayScoreDisplay);
         builder.HasIndex(m => m.Status);
         builder.HasIndex(m => m.Date);
     }

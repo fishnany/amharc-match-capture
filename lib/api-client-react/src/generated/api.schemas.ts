@@ -435,14 +435,29 @@ export interface ClockCorrection {
   reason?: string;
 }
 
+export type ScoreStateSport = MatchSport;
+
+export type ScoreStateScoringModel = typeof ScoreStateScoringModel[keyof typeof ScoreStateScoringModel];
+
+export const ScoreStateScoringModel = {
+  'goals-points': 'goals-points',
+  'goals-two-point-one-point': 'goals-two-point-one-point',
+} as const;
+
 export interface ScoreState {
   matchId: string;
+  sport: ScoreStateSport;
+  scoringModel: ScoreStateScoringModel;
   homeGoals: number;
+  homeTwoPointScores: number;
   homePoints: number;
-  awayGoals: number;
-  awayPoints: number;
   homeTotal: number;
+  homeDisplay: string;
+  awayGoals: number;
+  awayTwoPointScores: number;
+  awayPoints: number;
   awayTotal: number;
+  awayDisplay: string;
   /** @nullable */
   updatedAt?: string | null;
 }

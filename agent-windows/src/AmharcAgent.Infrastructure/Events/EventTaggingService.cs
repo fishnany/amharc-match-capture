@@ -1,7 +1,6 @@
 using AmharcAgent.Core.Domain;
 using AmharcAgent.Core.Interfaces;
 using AmharcAgent.Core.Models;
-using AmharcAgent.Data;
 using AmharcAgent.Data.Repositories;
 using Microsoft.Extensions.Logging;
 using System.Text;
@@ -11,23 +10,36 @@ namespace AmharcAgent.Infrastructure.Events;
 public class EventTaggingService(
     IEventRepository events,
     IMatchRepository matches,
+    IScoringService scoring,
+    IOverlayService overlay,
+    IBroadcastService broadcast,
     ILogger<EventTaggingService> logger) : IEventTaggingService
 {
-    private static readonly HashSet<string> ScoreEvents = ["goal", "point", "penalty_goal"];
+    private static readonly HashSet<string> ScoreEvents =
+    [
+        "goal", "point", "penalty_goal", "penalty-goal",
+        "two-point", "two_point", "two-point-score"
+    ];
 
     public async Task<MatchEvent> CreateEventAsync(CreateEventOptions opts, CancellationToken ct = default)
     {
         var match = await matches.GetByIdAsync(opts.MatchId, ct);
-        var scoreBefore = match is not null ? FormatScore(match) : null;
+        var beforeState = match is not null ? scoring.GetSnapshot(match) : null;
 
-        // Update match score if this is a scoring event
-        if (match is not null && ScoreEvents.Contains(opts.EventType))
+        if (match is not null && ScoreEvents.Contains(opts.EventType.ToLowerInvariant()))
         {
-            ApplyScore(match, opts.EventType, opts.Team);
+            if (opts.Team is null)
+                throw new InvalidOperationException("Scoring events require a team.");
+
+            scoring.Apply(match, opts.Team.Value, opts.EventType, 1);
             await matches.UpdateAsync(match, ct);
+
+            var scoreState = scoring.GetState(match);
+            overlay.UpdateScore(scoreState);
+            broadcast.UpdateScore(scoreState);
         }
 
-        var scoreAfter = match is not null ? FormatScore(match) : null;
+        var afterState = match is not null ? scoring.GetSnapshot(match) : null;
 
         var evt = new MatchEvent
         {
@@ -43,13 +55,19 @@ public class EventTaggingService(
             Source = opts.Source,
             Operator = opts.Operator,
             Note = opts.Note,
-            ScoreBefore = scoreBefore,
-            ScoreAfter = scoreAfter,
+            ScoreBeforeState = beforeState,
+            ScoreAfterState = afterState,
+            ScoreBefore = beforeState?.Display,
+            ScoreAfter = afterState?.Display,
             ClipRequested = opts.ClipRequested,
             ReviewStatus = ReviewStatus.Unreviewed
         };
 
         var created = await events.CreateAsync(evt, ct);
+
+        // Phase 1.2: event creation is the single trigger for transient broadcast graphics.
+        broadcast.ShowGraphic(NormalizeGraphicType(created.EventType), GraphicDurationMs(created.EventType));
+
         logger.LogInformation("Event created: {Type} at {Clock}s (rec: {Rec}s)",
             opts.EventType, opts.MatchClockSeconds, opts.RecordingElapsedSeconds);
         return created;
@@ -98,20 +116,17 @@ public class EventTaggingService(
         return sb.ToString();
     }
 
-    private static string Quote(string? s) => s is null ? "" : $"\"{s.Replace("\"", "\"\"")}\"";
-    private static string FormatScore(Match m) => $"{m.HomeGoals}-{m.HomePoints} / {m.AwayGoals}-{m.AwayPoints}";
+    private static string NormalizeGraphicType(string value) => value.Trim().ToLowerInvariant().Replace('-', '_').Replace(' ', '_');
 
-    private static void ApplyScore(Match match, string eventType, EventTeam? team)
+    private static int GraphicDurationMs(string eventType) => NormalizeGraphicType(eventType) switch
     {
-        if (team == EventTeam.Home)
-        {
-            if (eventType == "goal" || eventType == "penalty_goal") match.HomeGoals++;
-            else if (eventType == "point") match.HomePoints++;
-        }
-        else if (team == EventTeam.Away)
-        {
-            if (eventType == "goal" || eventType == "penalty_goal") match.AwayGoals++;
-            else if (eventType == "point") match.AwayPoints++;
-        }
-    }
+        "goal" or "penalty_goal" or "two_point" or "two_point_score" => 2500,
+        "point" or "wide" or "short" or "free" or "free_awarded" or "mark" => 2000,
+        "yellow_card" or "black_card" or "red_card" => 3000,
+        "substitution" => 4000,
+        "half_time" or "full_time" => 5000,
+        _ => 2200
+    };
+
+    private static string Quote(string? s) => s is null ? "" : $"\"{s.Replace("\"", "\"\"")}\"";
 }

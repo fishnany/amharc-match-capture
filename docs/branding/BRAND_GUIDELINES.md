@@ -247,3 +247,44 @@ All application code must reference semantic tokens, not hard-coded hex values.
 ---
 
 *AMHARC Match Capture — Brand Guidelines v1.0*
+
+---
+
+## 16. Constitutional Master Logo Rule — Broadcast & Product Use
+
+**Status: LOCKED — July 2026**
+
+The supplied AMHARC logo files are immutable master brand assets. The logo must always be loaded from the approved artwork and must never be reconstructed from text, CSS, SVG primitives, generated artwork, or approximate geometry.
+
+The composition is deliberate and inseparable:
+
+- The word **AMHARC** forms the background wordmark.
+- The second **A** is the accent-green letter.
+- A white set of Gaelic Games goalposts sits in the foreground.
+- The left upright sits between the **H** and the second **A**.
+- The right upright sits between the second **A** and the **R**.
+- The white goalpost crossbar passes in front of the accent-green **A** and visually replaces/obscures the horizontal stroke of that **A**.
+- The green pitch sweeps beneath the wordmark are part of the protected composition.
+
+This foreground/background relationship is a defining feature of the identity and must be preserved exactly.
+
+### Mandatory implementation rule
+
+Application and broadcast code may:
+
+- position the approved logo asset;
+- scale it proportionally;
+- apply approved clear-space rules;
+- choose the approved light/dark-background asset.
+
+Application and broadcast code must not:
+
+- redraw any letter;
+- draw separate goalposts over a text wordmark;
+- recreate the green second A;
+- alter the foreground layering of the goalpost crossbar;
+- recolour, crop, stretch, rotate, or otherwise reinterpret the artwork.
+
+All Broadcast Lite components — including Score Bug, Event Banner, Match Introduction, Replay, Lower Thirds and future graphics — must reference the canonical asset identifiers defined in the application brand asset registry.
+
+**Any rendered AMHARC logo that is not derived from the approved master file is non-conformant.**

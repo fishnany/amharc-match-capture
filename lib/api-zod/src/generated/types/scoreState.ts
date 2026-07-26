@@ -8,12 +8,18 @@
 
 export interface ScoreState {
   matchId: string;
+  sport: 'gaelic-football' | 'hurling' | 'ladies-football' | 'camogie';
+  scoringModel: 'goals-points' | 'goals-two-point-one-point';
   homeGoals: number;
+  homeTwoPointScores: number;
   homePoints: number;
-  awayGoals: number;
-  awayPoints: number;
   homeTotal: number;
+  homeDisplay: string;
+  awayGoals: number;
+  awayTwoPointScores: number;
+  awayPoints: number;
   awayTotal: number;
+  awayDisplay: string;
   /** @nullable */
   updatedAt?: Date | null;
 }

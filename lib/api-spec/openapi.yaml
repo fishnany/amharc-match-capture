@@ -1291,22 +1291,36 @@ components:
 
     ScoreState:
       type: object
-      required: [matchId, homeGoals, homePoints, awayGoals, awayPoints, homeTotal, awayTotal]
+      required: [matchId, sport, scoringModel, homeGoals, homeTwoPointScores, homePoints, homeTotal, homeDisplay, awayGoals, awayTwoPointScores, awayPoints, awayTotal, awayDisplay]
       properties:
         matchId:
           type: string
+        sport:
+          type: string
+          enum: [gaelic-football, hurling, ladies-football, camogie]
+        scoringModel:
+          type: string
+          enum: [goals-points, goals-two-point-one-point]
         homeGoals:
+          type: integer
+        homeTwoPointScores:
           type: integer
         homePoints:
           type: integer
+        homeTotal:
+          type: integer
+        homeDisplay:
+          type: string
         awayGoals:
+          type: integer
+        awayTwoPointScores:
           type: integer
         awayPoints:
           type: integer
-        homeTotal:
-          type: integer
         awayTotal:
           type: integer
+        awayDisplay:
+          type: string
         updatedAt:
           type: ["string", "null"]
           format: date-time
@@ -1588,6 +1602,7 @@ components:
           enum: [home, away, null]
         scoreEffect:
           type: ["string", "null"]
+          enum: [goal, point, two-point, null]
         overlayEffect:
           type: ["string", "null"]
         clipRequest:

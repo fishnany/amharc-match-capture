@@ -8,9 +8,6 @@ public record OverlayState(
     OverlayOutputMode OutputMode,
     string? CurrentGraphic,
     bool GraphicVisible,
-    int HomeGoals,
-    int HomePoints,
-    int AwayGoals,
-    int AwayPoints,
+    ScoreState? Score,
     int MatchClockSeconds,
     int CurrentPeriod);
