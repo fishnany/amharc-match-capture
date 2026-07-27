@@ -62,6 +62,48 @@ const matches = new Map<string, any>([
 const clocks = new Map<string, any>();
 const scores = new Map<string, any>();
 
+
+function scoringModelForSport(sport: string) {
+  return sport === "gaelic-football" ? "goals-two-point-one-point" : "goals-points";
+}
+
+function createScoreState(matchId: string) {
+  const match = matches.get(matchId);
+  const sport = match?.sport ?? "gaelic-football";
+  return {
+    matchId,
+    sport,
+    scoringModel: scoringModelForSport(sport),
+    homeGoals: 0,
+    homeTwoPointScores: 0,
+    homePoints: 0,
+    homeTotal: 0,
+    homeDisplay: sport === "gaelic-football" ? "0-0-0 (0)" : "0-0 (0)",
+    awayGoals: 0,
+    awayTwoPointScores: 0,
+    awayPoints: 0,
+    awayTotal: 0,
+    awayDisplay: sport === "gaelic-football" ? "0-0-0 (0)" : "0-0 (0)",
+    updatedAt: null as string | null,
+  };
+}
+
+function refreshScoreState(score: any) {
+  const isMensFootball = score.sport === "gaelic-football";
+  score.scoringModel = scoringModelForSport(score.sport);
+  score.homeTotal = score.homeGoals * 3 + score.homeTwoPointScores * 2 + score.homePoints;
+  score.awayTotal = score.awayGoals * 3 + score.awayTwoPointScores * 2 + score.awayPoints;
+  const homeCore = isMensFootball
+    ? `${score.homeGoals}-${score.homeTwoPointScores}-${score.homePoints}`
+    : `${score.homeGoals}-${score.homePoints}`;
+  const awayCore = isMensFootball
+    ? `${score.awayGoals}-${score.awayTwoPointScores}-${score.awayPoints}`
+    : `${score.awayGoals}-${score.awayPoints}`;
+  score.homeDisplay = `${homeCore} (${score.homeTotal})`;
+  score.awayDisplay = `${awayCore} (${score.awayTotal})`;
+  return score;
+}
+
 function getMatchSecondsFromNow(startedAt: string | null): number {
   if (!startedAt) return 0;
   return Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000);
@@ -101,16 +143,7 @@ router.post("/matches", async (req, res): Promise<void> => {
     _startedAt: null,
     _recordingStartedAt: null,
   });
-  scores.set(matchId, {
-    matchId,
-    homeGoals: 0,
-    homePoints: 0,
-    awayGoals: 0,
-    awayPoints: 0,
-    homeTotal: 0,
-    awayTotal: 0,
-    updatedAt: null,
-  });
+  scores.set(matchId, createScoreState(matchId));
   res.status(201).json(match);
 });
 
@@ -320,10 +353,10 @@ router.get("/matches/:matchId/score", async (req, res): Promise<void> => {
   }
   let score = scores.get(params.data.matchId);
   if (!score) {
-    score = { matchId: params.data.matchId, homeGoals: 0, homePoints: 0, awayGoals: 0, awayPoints: 0, homeTotal: 0, awayTotal: 0, updatedAt: null };
+    score = createScoreState(params.data.matchId);
     scores.set(params.data.matchId, score);
   }
-  res.json(score);
+  res.json(refreshScoreState(score));
 });
 
 router.put("/matches/:matchId/score", async (req, res): Promise<void> => {
@@ -337,21 +370,25 @@ router.put("/matches/:matchId/score", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  let score = scores.get(params.data.matchId) ?? {
-    matchId: params.data.matchId, homeGoals: 0, homePoints: 0, awayGoals: 0, awayPoints: 0, homeTotal: 0, awayTotal: 0, updatedAt: null,
-  };
+  let score = scores.get(params.data.matchId) ?? createScoreState(params.data.matchId);
   const { team, scoreType, delta } = parsed.data;
+
+  if (scoreType === "two-point" && score.sport !== "gaelic-football") {
+    res.status(400).json({ error: "Two-point scores are valid only for men's Gaelic football." });
+    return;
+  }
+
   if (team === "home") {
     if (scoreType === "goal") score.homeGoals = Math.max(0, score.homeGoals + delta);
     else if (scoreType === "point") score.homePoints = Math.max(0, score.homePoints + delta);
-    else if (scoreType === "two-point") score.homePoints = Math.max(0, score.homePoints + delta * 2);
+    else if (scoreType === "two-point") score.homeTwoPointScores = Math.max(0, score.homeTwoPointScores + delta);
   } else {
     if (scoreType === "goal") score.awayGoals = Math.max(0, score.awayGoals + delta);
     else if (scoreType === "point") score.awayPoints = Math.max(0, score.awayPoints + delta);
-    else if (scoreType === "two-point") score.awayPoints = Math.max(0, score.awayPoints + delta * 2);
+    else if (scoreType === "two-point") score.awayTwoPointScores = Math.max(0, score.awayTwoPointScores + delta);
   }
-  score.homeTotal = score.homeGoals * 3 + score.homePoints;
-  score.awayTotal = score.awayGoals * 3 + score.awayPoints;
+
+  refreshScoreState(score);
   score.updatedAt = new Date().toISOString();
   scores.set(params.data.matchId, score);
   res.json(score);

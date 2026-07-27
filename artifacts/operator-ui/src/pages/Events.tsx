@@ -127,6 +127,7 @@ export default function Events() {
                 <SelectItem value="all">All Types</SelectItem>
                 <SelectItem value="goal">Goal</SelectItem>
                 <SelectItem value="point">Point</SelectItem>
+                <SelectItem value="two-point-score">Two-point score</SelectItem>
                 <SelectItem value="card">Card</SelectItem>
                 <SelectItem value="substitution">Substitution</SelectItem>
                 <SelectItem value="highlight">Highlight</SelectItem>
@@ -178,8 +179,8 @@ export default function Events() {
 
                   <div className="flex items-center gap-6 text-sm text-neutral-500 font-mono flex-shrink-0">
                     <div className="flex items-center gap-1 w-24">
-                      {ev.clipRequested && <Video className="w-4 h-4 text-amharc-lime" title="Clip requested" />}
-                      {ev.reviewStatus === 'flagged' && <Flag className="w-4 h-4 text-amber-500" title="Flagged for review" />}
+                      {ev.clipRequested && <Video className="w-4 h-4 text-amharc-lime" aria-label="Clip requested" />}
+                      {ev.reviewStatus === 'flagged' && <Flag className="w-4 h-4 text-amber-500" aria-label="Flagged for review" />}
                     </div>
                     <div className="w-20">P{ev.period}</div>
                     

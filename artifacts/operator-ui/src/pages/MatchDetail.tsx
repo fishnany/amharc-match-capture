@@ -82,6 +82,15 @@ export default function MatchDetail() {
                     <div className="text-4xl font-mono mb-2">{score?.homeGoals || 0}</div>
                     <span className="text-neutral-500 uppercase text-xs font-bold tracking-wider">Goals</span>
                   </div>
+                  {match.sport === 'gaelic-football' && (
+                    <>
+                      <span className="text-2xl text-neutral-600">-</span>
+                      <div className="text-center">
+                        <div className="text-4xl font-mono mb-2">{score?.homeTwoPointScores || 0}</div>
+                        <span className="text-neutral-500 uppercase text-xs font-bold tracking-wider">2pt</span>
+                      </div>
+                    </>
+                  )}
                   <span className="text-2xl text-neutral-600">-</span>
                   <div className="text-center">
                     <div className="text-4xl font-mono mb-2">{score?.homePoints || 0}</div>
@@ -135,6 +144,15 @@ export default function MatchDetail() {
                     <div className="text-4xl font-mono mb-2">{score?.awayPoints || 0}</div>
                     <span className="text-neutral-500 uppercase text-xs font-bold tracking-wider">Points</span>
                   </div>
+                  {match.sport === 'gaelic-football' && (
+                    <>
+                      <span className="text-2xl text-neutral-600">-</span>
+                      <div className="text-center">
+                        <div className="text-4xl font-mono mb-2">{score?.awayTwoPointScores || 0}</div>
+                        <span className="text-neutral-500 uppercase text-xs font-bold tracking-wider">2pt</span>
+                      </div>
+                    </>
+                  )}
                   <span className="text-2xl text-neutral-600">-</span>
                   <div className="text-center">
                     <div className="text-4xl font-mono mb-2">{score?.awayGoals || 0}</div>

@@ -36,6 +36,17 @@ using (var scope = app.Services.CreateScope())
     Log.Information("Database ready: {Db}", db.Database.GetConnectionString());
 }
 
+// ── Broadcast state synchronisation ─────────────────────────────────────────
+// Keep the overlay/broadcast control planes on the authoritative match clock.
+var matchClock = app.Services.GetRequiredService<IMatchClockService>();
+var overlayState = app.Services.GetRequiredService<IOverlayService>();
+var broadcastState = app.Services.GetRequiredService<IBroadcastService>();
+matchClock.StateChanged += state =>
+{
+    overlayState.UpdateClock(state.MatchClockSeconds, state.CurrentPeriod);
+    broadcastState.UpdateClock(state.MatchClockSeconds, state.CurrentPeriod);
+};
+
 // ── Background services: start hardware listeners ────────────────────────────
 var settings = app.Services.GetRequiredService<AmharcAgent.Core.Domain.AgentSettings>();
 if (settings.StreamDeckEnabled)

@@ -17,6 +17,7 @@ public class StreamDeckButton
     public string EventType { get; set; } = string.Empty;
 
     public ButtonTeam? Team { get; set; }
+    /// <summary>Optional score effect: goal, point, or two-point. Two-point is valid only for men's Gaelic football.</summary>
     public string? ScoreEffect { get; set; }
     public string? OverlayEffect { get; set; }
     public bool ClipRequest { get; set; }
