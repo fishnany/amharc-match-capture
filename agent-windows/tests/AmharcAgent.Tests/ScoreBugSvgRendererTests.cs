@@ -3,6 +3,7 @@ using AmharcAgent.Core.Domain;
 using AmharcAgent.Core.Models;
 using AmharcAgent.Infrastructure.Broadcast;
 using FluentAssertions;
+using Xunit;
 
 namespace AmharcAgent.Tests;
 
