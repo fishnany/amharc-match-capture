@@ -20,6 +20,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.Text.Json;
 using AmharcAgent.Infrastructure.Settings;
+using AmharcAgent.Infrastructure.Commands;
+
 
 namespace AmharcAgent.Infrastructure.DependencyInjection;
 
@@ -128,7 +130,8 @@ services.AddSingleton<IAgentSettingsStore>(sp =>
         // ── Clock ─────────────────────────────────────────────────────────────
         services.AddSingleton<IMatchClockService, MatchClockService>();
 
-        // ── Events, Scoring, Storage, Overlay ──────────────────────────────────────────
+        // ── Commands, Events, Scoring, Storage, Overlay ───────────────────────
+        services.AddScoped<IAmharcCommandDispatcher, AmharcCommandDispatcher>();
         services.AddScoped<IScoringService, ScoringService>();
         services.AddScoped<IEventTaggingService, EventTaggingService>();
         services.AddSingleton<IStorageMonitorService>(sp =>
