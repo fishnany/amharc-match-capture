@@ -6,6 +6,7 @@ using AmharcAgent.Data.Repositories;
 using AmharcAgent.Infrastructure.Camera;
 using AmharcAgent.Infrastructure.Clock;
 using AmharcAgent.Infrastructure.Events;
+using AmharcAgent.Infrastructure.Scoring;
 using AmharcAgent.Infrastructure.Export;
 using AmharcAgent.Infrastructure.Health;
 using AmharcAgent.Infrastructure.Joystick;
@@ -127,7 +128,8 @@ services.AddSingleton<IAgentSettingsStore>(sp =>
         // ── Clock ─────────────────────────────────────────────────────────────
         services.AddSingleton<IMatchClockService, MatchClockService>();
 
-        // ── Events, Storage, Overlay ──────────────────────────────────────────
+        // ── Events, Scoring, Storage, Overlay ──────────────────────────────────────────
+        services.AddScoped<IScoringService, ScoringService>();
         services.AddScoped<IEventTaggingService, EventTaggingService>();
         services.AddSingleton<IStorageMonitorService>(sp =>
             new StorageMonitorService(
