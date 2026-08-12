@@ -32,7 +32,7 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AmharcDbContext>();
-    db.Database.EnsureCreated();
+    db.Database.Migrate();
     Log.Information("Database ready: {Db}", db.Database.GetConnectionString());
 }
 

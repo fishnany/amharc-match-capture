@@ -74,3 +74,5 @@ TestResults/
 agent-windows/src/AmharcAgent.Api/amharc.db
 agent-windows/src/AmharcAgent.Api/amharc.db-shm
 agent-windows/src/AmharcAgent.Api/amharc.db-wal
+agent-windows/src/AmharcAgent.Api/amharc.pre-migrations.db
+agent-windows/src/AmharcAgent.Api/Properties/launchSettings.json
