@@ -1,3 +1,5 @@
+using AmharcAgent.Core.Models;
+
 namespace AmharcAgent.Core.Domain;
 
 /// <summary>Who or what created the event.</summary>
@@ -41,9 +43,14 @@ public class MatchEvent
     public string? Operator { get; set; }
     public string? Note { get; set; }
 
-    /// <summary>Score before this event in goals-points format (e.g. "1-12").</summary>
+    /// <summary>Canonical score snapshot before the event.</summary>
+    public ScoreSnapshot? ScoreBeforeState { get; set; }
+    /// <summary>Canonical score snapshot after the event.</summary>
+    public ScoreSnapshot? ScoreAfterState { get; set; }
+
+    /// <summary>Human-readable score before the event, retained for exports/backward compatibility.</summary>
     public string? ScoreBefore { get; set; }
-    /// <summary>Score after this event in goals-points format.</summary>
+    /// <summary>Human-readable score after the event, retained for exports/backward compatibility.</summary>
     public string? ScoreAfter { get; set; }
 
     public bool ClipRequested { get; set; }
