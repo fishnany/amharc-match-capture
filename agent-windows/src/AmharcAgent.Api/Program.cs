@@ -28,7 +28,7 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// ── DB: ensure created ───────────────────────────────────────────────────────
+// ── DB: apply migrations ───────────────────────────────────────────────────────
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AmharcDbContext>();
@@ -40,8 +40,17 @@ using (var scope = app.Services.CreateScope())
 var settings = app.Services.GetRequiredService<AmharcAgent.Core.Domain.AgentSettings>();
 if (settings.StreamDeckEnabled)
 {
-    var streamDeck = app.Services.GetRequiredService<IStreamDeckService>();
-    _ = streamDeck.StartAsync(app.Lifetime.ApplicationStopping);
+    var streamDeck =
+        app.Services.GetRequiredService<IStreamDeckService>();
+
+    var streamDeckCommandBridge =
+        app.Services.GetRequiredService<
+            AmharcAgent.Infrastructure.StreamDeck.StreamDeckCommandBridge>();
+
+    streamDeckCommandBridge.Start();
+
+    _ = streamDeck.StartAsync(
+        app.Lifetime.ApplicationStopping);
 }
 if (settings.JoystickEnabled)
 {

@@ -124,6 +124,7 @@ services.AddSingleton<IAgentSettingsStore>(sp =>
         // ── Stream Deck & Joystick ────────────────────────────────────────────
         services.AddSingleton<AmharcStreamDeckButtonRenderer>();
         services.AddSingleton<IStreamDeckService, StreamDeckService>();
+        services.AddSingleton<StreamDeckCommandBridge>();
         services.AddSingleton<IJoystickService>(sp => new JoystickService(sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<JoystickService>>(), settings.Joystick));
         services.AddSingleton<JoystickPtzBridge>();
 

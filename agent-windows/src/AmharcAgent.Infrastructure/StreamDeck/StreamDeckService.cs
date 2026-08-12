@@ -92,10 +92,17 @@ public class StreamDeckService : IStreamDeckService, IAsyncDisposable
         if (_device is null || !_buttonMap.TryGetValue(buttonNumber, out var btn)) return;
         var updated = new StreamDeckButton
         {
-            ButtonNumber = btn.ButtonNumber, Label = label, Icon = btn.Icon,
-            Colour = btn.Colour, EventType = btn.EventType, Team = btn.Team,
-            ScoreEffect = btn.ScoreEffect, OverlayEffect = btn.OverlayEffect,
-            ClipRequest = btn.ClipRequest, Enabled = btn.Enabled
+            ButtonNumber = btn.ButtonNumber,
+            CommandId = btn.CommandId,
+            Label = label,
+            Icon = btn.Icon,
+            Colour = btn.Colour,
+            EventType = btn.EventType,
+            Team = btn.Team,
+            ScoreEffect = btn.ScoreEffect,
+            OverlayEffect = btn.OverlayEffect,
+            ClipRequest = btn.ClipRequest,
+            Enabled = btn.Enabled
         };
         _buttonMap[buttonNumber] = updated;
         await RenderButtonAsync(updated, _activeButtons.Contains(buttonNumber));
