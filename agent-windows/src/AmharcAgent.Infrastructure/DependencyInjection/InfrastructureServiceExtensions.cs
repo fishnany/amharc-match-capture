@@ -122,7 +122,10 @@ services.AddSingleton<IAgentSettingsStore>(sp =>
                 settings.FfmpegPath));
 
         // ── Stream Deck & Joystick ────────────────────────────────────────────
+        // Stream Deck
         services.AddSingleton<AmharcStreamDeckButtonRenderer>();
+        services.AddSingleton<IStreamDeckProcessManager, StreamDeckProcessManager>();
+        services.AddSingleton<IStreamDeckOwnershipService, StreamDeckOwnershipService>();
         services.AddSingleton<IStreamDeckService, StreamDeckService>();
         services.AddSingleton<StreamDeckCommandBridge>();
         services.AddSingleton<IJoystickService>(sp => new JoystickService(sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<JoystickService>>(), settings.Joystick));

@@ -40,8 +40,55 @@ using (var scope = app.Services.CreateScope())
 var settings = app.Services.GetRequiredService<AmharcAgent.Core.Domain.AgentSettings>();
 if (settings.StreamDeckEnabled)
 {
+    var streamDeckOwnership =
+        app.Services.GetRequiredService<IStreamDeckOwnershipService>();
+
+    var ownershipState =
+        await streamDeckOwnership.AcquireAsync(
+            app.Lifetime.ApplicationStopping);
+
+    if (ownershipState ==
+        AmharcAgent.Core.Models.StreamDeckOwnershipState.Controlled)
+{
     var streamDeck =
         app.Services.GetRequiredService<IStreamDeckService>();
+
+    if (settings.StreamDeck.RestoreActiveProfileOnStartup &&
+        !string.IsNullOrWhiteSpace(
+            settings.StreamDeck.ActiveProfileId))
+    {
+        using var profileScope =
+            app.Services.CreateScope();
+
+        var profileDb =
+            profileScope.ServiceProvider
+                .GetRequiredService<AmharcDbContext>();
+
+        var profile =
+            await profileDb.StreamDeckProfiles.FindAsync(
+                [
+                    settings.StreamDeck.ActiveProfileId
+                ],
+                app.Lifetime.ApplicationStopping);
+
+        if (profile is not null)
+        {
+            await streamDeck.LoadProfileAsync(
+                profile,
+                app.Lifetime.ApplicationStopping);
+
+            Log.Information(
+                "Restored Stream Deck profile {ProfileName} ({ProfileId})",
+                profile.Name,
+                profile.ProfileId);
+        }
+        else
+        {
+            Log.Warning(
+                "Configured Stream Deck profile {ProfileId} could not be found",
+                settings.StreamDeck.ActiveProfileId);
+        }
+    }
 
     var streamDeckCommandBridge =
         app.Services.GetRequiredService<
@@ -51,6 +98,13 @@ if (settings.StreamDeckEnabled)
 
     _ = streamDeck.StartAsync(
         app.Lifetime.ApplicationStopping);
+}
+    else
+    {
+        Log.Warning(
+            "Stream Deck startup skipped because ownership state is {OwnershipState}",
+            ownershipState);
+    }
 }
 if (settings.JoystickEnabled)
 {

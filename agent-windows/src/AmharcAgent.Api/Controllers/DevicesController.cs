@@ -10,16 +10,29 @@ namespace AmharcAgent.Api.Controllers;
 [Route("api/devices")]
 public class DevicesController(
     IStreamDeckService streamDeck,
+    IStreamDeckOwnershipService streamDeckOwnership,
     IJoystickService joystick,
+    AgentSettings settings,
+    IAgentSettingsStore settingsStore,
     AmharcDbContext db) : ControllerBase
 {
     [HttpGet("stream-deck")]
-    public IActionResult GetStreamDeckStatus() => Ok(new
+    public async Task<IActionResult> GetStreamDeckStatus(
+        CancellationToken ct)
+{
+    var ownershipState =
+        await streamDeckOwnership.InspectAsync(ct);
+
+    return Ok(new
     {
         connected = streamDeck.IsConnected,
         deviceName = streamDeck.DeviceName,
-        activeProfileId = streamDeck.ActiveProfileId
+        activeProfileId = streamDeck.ActiveProfileId,
+        ownershipState,
+        competingProcesses =
+            streamDeckOwnership.CompetingProcesses
     });
+}
 
     [HttpGet("joystick")]
     public IActionResult GetJoystickStatus() => Ok(new
@@ -97,20 +110,30 @@ public class DevicesController(
     public async Task<IActionResult> ActivateProfile(
         string profileId,
         CancellationToken ct)
-    {
-        var profile = await db.StreamDeckProfiles
-            .FindAsync([profileId], ct);
+{
+    var profile = await db.StreamDeckProfiles
+        .FindAsync([profileId], ct);
 
-        if (profile is null)
-            return NotFound();
+    if (profile is null)
+        return NotFound();
 
-        await streamDeck.LoadProfileAsync(
-            profile,
-            ct);
+    await streamDeck.LoadProfileAsync(
+        profile,
+        ct);
 
-        return Ok(new
+    settings.StreamDeck =
+        settings.StreamDeck with
         {
-            activeProfileId = profileId
-        });
-    }
+            ActiveProfileId = profileId
+        };
+
+    await settingsStore.SaveAsync(
+        settings,
+        ct);
+
+    return Ok(new
+    {
+        activeProfileId = profileId
+    });
+}
 }

@@ -29,7 +29,12 @@ public class AgentSettings
     public bool AutoDiscoverCameras { get; set; } = true;
 
     public string OperatorName { get; set; } = "Operator";
+
     public bool StreamDeckEnabled { get; set; } = true;
+
+    public StreamDeckConfig StreamDeck { get; set; } = new();
+
     public bool JoystickEnabled { get; set; } = true;
+
     public JoystickConfig Joystick { get; set; } = new();
 }
