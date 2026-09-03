@@ -83,12 +83,14 @@ services.AddSingleton<IAgentSettingsStore>(sp =>
                 JsonAgentSettingsStore>>()));
 
         // ── Database ─────────────────────────────────────────────────────────
-        services.AddDbContext<AmharcDbContext>(opts =>
-            opts.UseSqlite(configuration.GetConnectionString("DefaultConnection")
-                ?? "Data Source=amharc.db"));
         services.AddDbContextFactory<AmharcDbContext>(opts =>
-            opts.UseSqlite(configuration.GetConnectionString("DefaultConnection")
+            opts.UseSqlite(
+                configuration.GetConnectionString("DefaultConnection")
                 ?? "Data Source=amharc.db"));
+
+        services.AddScoped<AmharcDbContext>(sp =>
+            sp.GetRequiredService<IDbContextFactory<AmharcDbContext>>()
+                .CreateDbContext());
 
         // ── Repositories ─────────────────────────────────────────────────────
         services.AddScoped<IMatchRepository, MatchRepository>();
