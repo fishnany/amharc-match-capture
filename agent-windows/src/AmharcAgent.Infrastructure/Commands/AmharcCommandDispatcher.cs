@@ -124,6 +124,58 @@ public class AmharcCommandDispatcher(
                     break;
                 }
 
+            case AmharcCommandIds.MatchClockFullTime:
+                {
+                    var matchId =
+                        await ResolveMatchIdAsync(
+                            command,
+                            ct);
+
+                    clock.MarkFullTime();
+
+                    await clock.SaveRuntimeStateAsync(
+                        matchId,
+                        ct);
+
+                    LogCommand(command);
+                    break;
+                }
+
+            case AmharcCommandIds.MatchClockCorrect:
+                {
+                    var matchId =
+                        await ResolveMatchIdAsync(
+                            command,
+                            ct);
+
+                    if (command.Parameters is null ||
+                        !command.Parameters.TryGetValue(
+                            "matchClockSeconds",
+                            out var secondsValue) ||
+                        !int.TryParse(
+                            secondsValue,
+                            out var matchClockSeconds))
+                    {
+                        throw new ArgumentException(
+                            "Clock correction requires a valid 'matchClockSeconds' parameter.");
+                    }
+
+                    command.Parameters.TryGetValue(
+                        "reason",
+                        out var reason);
+
+                    clock.Correct(
+                        matchClockSeconds,
+                        reason);
+
+                    await clock.SaveRuntimeStateAsync(
+                        matchId,
+                        ct);
+
+                    LogCommand(command);
+                    break;
+                }
+
             case AmharcCommandIds.EventUndo:
                 {
                     var matchId =

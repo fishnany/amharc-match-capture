@@ -278,6 +278,98 @@ public class AmharcCommandDispatcherTests
     }
 
     [Fact]
+    public async Task MatchClockFullTime_MarksFullTime_AndPersistsRuntimeState()
+    {
+        var match = ActiveMatch();
+
+        var matches = new Mock<IMatchRepository>();
+        var events = new Mock<IEventTaggingService>();
+        var clock = new Mock<IMatchClockService>();
+
+        matches
+            .Setup(m => m.GetActiveMatchAsync(
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(match);
+
+        clock
+            .Setup(c => c.SaveRuntimeStateAsync(
+                "m1",
+                It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        var sut = new AmharcCommandDispatcher(
+            matches.Object,
+            events.Object,
+            clock.Object,
+            NullLogger<AmharcCommandDispatcher>.Instance);
+
+        await sut.DispatchAsync(
+            new AmharcCommand(
+                AmharcCommandIds.MatchClockFullTime,
+                EventSource.OperatorUi));
+
+        clock.Verify(
+            c => c.MarkFullTime(),
+            Times.Once);
+
+        clock.Verify(
+            c => c.SaveRuntimeStateAsync(
+                "m1",
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task MatchClockCorrect_CorrectsClock_AndPersistsRuntimeState()
+    {
+        var match = ActiveMatch();
+
+        var matches = new Mock<IMatchRepository>();
+        var events = new Mock<IEventTaggingService>();
+        var clock = new Mock<IMatchClockService>();
+
+        matches
+            .Setup(m => m.GetActiveMatchAsync(
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(match);
+
+        clock
+            .Setup(c => c.SaveRuntimeStateAsync(
+                "m1",
+                It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        var sut = new AmharcCommandDispatcher(
+            matches.Object,
+            events.Object,
+            clock.Object,
+            NullLogger<AmharcCommandDispatcher>.Instance);
+
+        await sut.DispatchAsync(
+            new AmharcCommand(
+                AmharcCommandIds.MatchClockCorrect,
+                EventSource.OperatorUi,
+                Parameters:
+                    new Dictionary<string, string?>
+                    {
+                        ["matchClockSeconds"] = "600",
+                        ["reason"] = "Operator correction"
+                    }));
+
+        clock.Verify(
+            c => c.Correct(
+                600,
+                "Operator correction"),
+            Times.Once);
+
+        clock.Verify(
+            c => c.SaveRuntimeStateAsync(
+                "m1",
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
     public async Task EventUndo_UsesActiveMatch()
     {
         var match = ActiveMatch();

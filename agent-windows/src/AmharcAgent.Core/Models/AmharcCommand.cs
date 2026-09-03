@@ -6,7 +6,8 @@ public record AmharcCommand(
     string CommandId,
     EventSource Source,
     string? MatchId = null,
-    string? Operator = null);
+    string? Operator = null,
+    IReadOnlyDictionary<string, string?>? Parameters = null);
 
 public static class AmharcCommandIds
 {
@@ -21,6 +22,8 @@ public static class AmharcCommandIds
     public const string MatchClockStart = "match.clock.start";
     public const string MatchClockPause = "match.clock.pause";
     public const string MatchClockResume = "match.clock.resume";
+    public const string MatchClockFullTime = "match.clock.full-time";
+    public const string MatchClockCorrect = "match.clock.correct";
 
     public const string EventUndo = "event.undo";
 }
