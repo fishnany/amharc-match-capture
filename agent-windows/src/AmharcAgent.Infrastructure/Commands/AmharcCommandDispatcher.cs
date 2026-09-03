@@ -74,19 +74,55 @@ public class AmharcCommandDispatcher(
                 break;
 
             case AmharcCommandIds.MatchClockStart:
-                clock.Start();
-                LogCommand(command);
-                break;
+                {
+                    var matchId =
+                        await ResolveMatchIdAsync(
+                            command,
+                            ct);
+
+                    clock.Start();
+
+                    await clock.SaveRuntimeStateAsync(
+                        matchId,
+                        ct);
+
+                    LogCommand(command);
+                    break;
+                }
 
             case AmharcCommandIds.MatchClockPause:
-                clock.Pause();
-                LogCommand(command);
-                break;
+                {
+                    var matchId =
+                        await ResolveMatchIdAsync(
+                            command,
+                            ct);
+
+                    clock.Pause();
+
+                    await clock.SaveRuntimeStateAsync(
+                        matchId,
+                        ct);
+
+                    LogCommand(command);
+                    break;
+                }
 
             case AmharcCommandIds.MatchClockResume:
-                clock.Resume();
-                LogCommand(command);
-                break;
+                {
+                    var matchId =
+                        await ResolveMatchIdAsync(
+                            command,
+                            ct);
+
+                    clock.Resume();
+
+                    await clock.SaveRuntimeStateAsync(
+                        matchId,
+                        ct);
+
+                    LogCommand(command);
+                    break;
+                }
 
             case AmharcCommandIds.EventUndo:
                 {
