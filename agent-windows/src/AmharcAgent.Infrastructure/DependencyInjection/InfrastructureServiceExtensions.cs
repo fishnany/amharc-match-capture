@@ -86,6 +86,9 @@ services.AddSingleton<IAgentSettingsStore>(sp =>
         services.AddDbContext<AmharcDbContext>(opts =>
             opts.UseSqlite(configuration.GetConnectionString("DefaultConnection")
                 ?? "Data Source=amharc.db"));
+        services.AddDbContextFactory<AmharcDbContext>(opts =>
+            opts.UseSqlite(configuration.GetConnectionString("DefaultConnection")
+                ?? "Data Source=amharc.db"));
 
         // ── Repositories ─────────────────────────────────────────────────────
         services.AddScoped<IMatchRepository, MatchRepository>();
@@ -132,6 +135,7 @@ services.AddSingleton<IAgentSettingsStore>(sp =>
         services.AddSingleton<JoystickPtzBridge>();
 
         // ── Clock ─────────────────────────────────────────────────────────────
+        services.AddSingleton<IMatchClockStateStore, MatchClockStateStore>();
         services.AddSingleton<IMatchClockService, MatchClockService>();
 
         // ── Commands, Events, Scoring, Storage, Overlay ───────────────────────
