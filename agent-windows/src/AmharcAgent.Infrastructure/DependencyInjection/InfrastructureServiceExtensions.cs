@@ -139,6 +139,7 @@ services.AddSingleton<IAgentSettingsStore>(sp =>
         // ── Clock ─────────────────────────────────────────────────────────────
         services.AddSingleton<IMatchClockStateStore, MatchClockStateStore>();
         services.AddSingleton<IMatchClockService, MatchClockService>();
+        services.AddSingleton<IRecordingSessionStore, RecordingSessionStore>();
 
         // ── Commands, Events, Scoring, Storage, Overlay ───────────────────────
         services.AddScoped<IAmharcCommandDispatcher, AmharcCommandDispatcher>();
