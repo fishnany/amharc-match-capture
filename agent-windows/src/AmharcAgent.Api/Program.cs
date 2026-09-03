@@ -36,6 +36,74 @@ using (var scope = app.Services.CreateScope())
     Log.Information("Database ready: {Db}", db.Database.GetConnectionString());
 }
 
+// ── Live match recovery ────────────────────────────────────────────────────────
+using (var recoveryScope = app.Services.CreateScope())
+{
+    var matchRepository =
+        recoveryScope.ServiceProvider
+            .GetRequiredService<AmharcAgent.Data.Repositories.IMatchRepository>();
+
+    var clock =
+        app.Services.GetRequiredService<IMatchClockService>();
+
+    try
+    {
+        var activeMatch =
+            await matchRepository.GetActiveMatchAsync(
+                app.Lifetime.ApplicationStopping);
+
+        if (activeMatch is null)
+        {
+            Log.Information(
+                "No active or half-time match found; startup recovery not required");
+        }
+        else
+        {
+            Log.Information(
+                "Recovering live match {MatchId} with status {Status}",
+                activeMatch.MatchId,
+                activeMatch.Status);
+
+            var recovered =
+                await clock.RecoverRuntimeStateAsync(
+                    activeMatch.MatchId,
+                    app.Lifetime.ApplicationStopping);
+
+            if (recovered)
+            {
+                Log.Information(
+                    "Live match {MatchId} recovered successfully: period={Period}, match={MatchSeconds}s, recording={RecordingSeconds}s, running={IsRunning}",
+                    activeMatch.MatchId,
+                    clock.State.CurrentPeriod,
+                    clock.State.MatchClockSeconds,
+                    clock.State.RecordingElapsedSeconds,
+                    clock.State.IsRunning);
+            }
+            else
+            {
+                Log.Warning(
+                    "Match {MatchId} is marked {Status}, but no persisted clock runtime state was available; automatic clock recovery was not performed",
+                    activeMatch.MatchId,
+                    activeMatch.Status);
+            }
+        }
+    }
+    catch (OperationCanceledException)
+        when (app.Lifetime.ApplicationStopping.IsCancellationRequested)
+    {
+        Log.Information(
+            "Live match recovery cancelled because the application is stopping");
+    }
+    catch (Exception ex)
+    {
+        Log.Error(
+            ex,
+            "Live match recovery failed during Agent startup");
+
+        throw;
+    }
+}
+
 // ── Background services: start hardware listeners ────────────────────────────
 var settings = app.Services.GetRequiredService<AmharcAgent.Core.Domain.AgentSettings>();
 if (settings.StreamDeckEnabled)
