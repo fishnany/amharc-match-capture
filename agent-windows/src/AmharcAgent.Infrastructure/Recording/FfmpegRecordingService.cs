@@ -13,19 +13,25 @@ namespace AmharcAgent.Infrastructure.Recording;
 public class FfmpegRecordingService : IRecordingService, IAsyncDisposable
 {
     private readonly ILogger<FfmpegRecordingService> _logger;
+    private readonly IRecordingSessionStore _sessionStore;
     private readonly string _ffmpegPath;
     private Process? _ffmpegProcess;
     private readonly Stopwatch _elapsedStopwatch = new();
     private RecordingState _state = RecordingState.Idle;
     private RecordingOptions? _currentOptions;
+    private RecordingSession? _currentSession;
     private readonly object _lock = new();
 
     public event Action<RecordingState>? StateChanged;
 
-    public FfmpegRecordingService(ILogger<FfmpegRecordingService> logger, string ffmpegPath = "ffmpeg.exe")
+    public FfmpegRecordingService(
+	ILogger<FfmpegRecordingService> logger,
+    	IRecordingSessionStore sessionStore,
+    	string ffmpegPath = "ffmpeg.exe")
     {
-        _logger = logger;
-        _ffmpegPath = ffmpegPath;
+    	_logger = logger;
+    	_sessionStore = sessionStore;
+    	_ffmpegPath = ffmpegPath;
     }
 
     public RecordingState State => _state;
@@ -33,86 +39,209 @@ public class FfmpegRecordingService : IRecordingService, IAsyncDisposable
     public int SegmentCount => GetSegments().Count;
     public string? OutputDirectory => _currentOptions?.OutputDirectory;
 
-    public async Task StartRecordingAsync(RecordingOptions options, CancellationToken ct = default)
+    public async Task StartRecordingAsync(
+    RecordingOptions options,
+    CancellationToken ct = default)
+{
+    if (_state == RecordingState.Recording)
+        throw new InvalidOperationException("Already recording.");
+
+    SetState(RecordingState.Starting);
+    _currentOptions = options;
+
+    _currentSession = new RecordingSession
     {
-        if (_state == RecordingState.Recording)
-            throw new InvalidOperationException("Already recording.");
+        RecordingId = Guid.NewGuid().ToString(),
+        MatchId = options.MatchId,
+        CameraId = options.CameraId,
+        State = RecordingState.Starting,
+        OutputDirectory = options.OutputDirectory,
+        RtspUrl = options.RtspUrl,
+        StartedAt = DateTimeOffset.UtcNow,
+        SegmentDurationSeconds = options.SegmentDurationSeconds,
+        IncludeAudio = options.IncludeAudio,
+        SegmentCount = 0,
+        CreatedAt = DateTimeOffset.UtcNow,
+        UpdatedAt = DateTimeOffset.UtcNow
+    };
 
-        SetState(RecordingState.Starting);
-        _currentOptions = options;
-        Directory.CreateDirectory(options.OutputDirectory);
+    await _sessionStore.SaveAsync(
+        _currentSession,
+        ct);
 
-        var outputPattern = Path.Combine(options.OutputDirectory,
-            $"{options.MatchId}_%Y%m%d_%H%M%S_%03d.mkv");
+    Directory.CreateDirectory(
+        options.OutputDirectory);
 
-        var audioArgs = options.IncludeAudio ? "-c:a copy" : "-an";
-        var args = string.Join(" ",
-            "-rtsp_transport tcp",
-            $"-i \"{options.RtspUrl}\"",
-            "-c:v copy",
-            audioArgs,
-            "-f segment",
-            $"-segment_time {options.SegmentDurationSeconds}",
-            "-segment_format mkv",
-            "-reset_timestamps 1",
-            "-strftime 1",
-            $"\"{outputPattern}\"");
+    var outputPattern = Path.Combine(
+        options.OutputDirectory,
+        $"{options.MatchId}_%Y%m%d_%H%M%S_%03d.mkv");
 
-        _logger.LogInformation("Starting FFmpeg recording: {Args}", args);
+    var audioArgs =
+        options.IncludeAudio
+            ? "-c:a copy"
+            : "-an";
 
-        _ffmpegProcess = new Process
+    var args = string.Join(
+        " ",
+        "-rtsp_transport tcp",
+        $"-i \"{options.RtspUrl}\"",
+        "-c:v copy",
+        audioArgs,
+        "-f segment",
+        $"-segment_time {options.SegmentDurationSeconds}",
+        "-segment_format mkv",
+        "-reset_timestamps 1",
+        "-strftime 1",
+        $"\"{outputPattern}\"");
+
+    _logger.LogInformation(
+        "Starting FFmpeg recording: {Args}",
+        args);
+
+    _ffmpegProcess = new Process
+    {
+        StartInfo = new ProcessStartInfo
         {
-            StartInfo = new ProcessStartInfo
-            {
-                FileName = _ffmpegPath,
-                Arguments = args,
-                UseShellExecute = false,
-                RedirectStandardInput = true,
-                RedirectStandardError = true,
-                CreateNoWindow = true
-            },
-            EnableRaisingEvents = true
-        };
-        _ffmpegProcess.ErrorDataReceived += OnFfmpegStderr;
-        _ffmpegProcess.Exited += OnFfmpegExited;
+            FileName = _ffmpegPath,
+            Arguments = args,
+            UseShellExecute = false,
+            RedirectStandardInput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true
+        },
+        EnableRaisingEvents = true
+    };
+
+    _ffmpegProcess.ErrorDataReceived +=
+        OnFfmpegStderr;
+
+    _ffmpegProcess.Exited +=
+        OnFfmpegExited;
+
+    try
+    {
         _ffmpegProcess.Start();
         _ffmpegProcess.BeginErrorReadLine();
+
         _elapsedStopwatch.Restart();
 
-        SetState(RecordingState.Recording);
-        _logger.LogInformation("Recording started for match {MatchId}", options.MatchId);
-        await Task.CompletedTask;
-    }
+        SetState(
+            RecordingState.Recording);
 
-    public async Task StopRecordingAsync(CancellationToken ct = default)
+        _currentSession.State =
+            RecordingState.Recording;
+
+        _currentSession.SegmentCount =
+            GetSegments().Count;
+
+        _currentSession.UpdatedAt =
+            DateTimeOffset.UtcNow;
+
+        await _sessionStore.SaveAsync(
+            _currentSession,
+            ct);
+
+        _logger.LogInformation(
+            "Recording started for match {MatchId}; recording session {RecordingId} persisted",
+            options.MatchId,
+            _currentSession.RecordingId);
+    }
+    catch
     {
-        if (_ffmpegProcess is null || _state != RecordingState.Recording) return;
-        SetState(RecordingState.Stopping);
+        SetState(
+            RecordingState.Error);
 
-        try
-        {
-            // Send 'q' to FFmpeg stdin for a clean segment-boundary shutdown
-            await _ffmpegProcess.StandardInput.WriteAsync('q');
-            await _ffmpegProcess.StandardInput.FlushAsync(ct);
+        _currentSession.State =
+            RecordingState.Error;
 
-            if (!_ffmpegProcess.WaitForExit(10_000))
-            {
-                _logger.LogWarning("FFmpeg did not exit cleanly — killing process");
-                _ffmpegProcess.Kill();
-            }
-        }
-        catch (Exception ex)
+        _currentSession.UpdatedAt =
+            DateTimeOffset.UtcNow;
+
+        await _sessionStore.SaveAsync(
+            _currentSession,
+            CancellationToken.None);
+
+        throw;
+    }
+}
+
+    public async Task StopRecordingAsync(
+    CancellationToken ct = default)
+{
+    if (_ffmpegProcess is null ||
+        _state != RecordingState.Recording)
+        return;
+
+    SetState(RecordingState.Stopping);
+
+    if (_currentSession is not null)
+    {
+        _currentSession.State =
+            RecordingState.Stopping;
+
+        _currentSession.SegmentCount =
+            GetSegments().Count;
+
+        _currentSession.UpdatedAt =
+            DateTimeOffset.UtcNow;
+
+        await _sessionStore.SaveAsync(
+            _currentSession,
+            ct);
+    }
+
+    try
+    {
+        // Send 'q' to FFmpeg stdin for a clean segment-boundary shutdown.
+        await _ffmpegProcess.StandardInput.WriteAsync('q');
+        await _ffmpegProcess.StandardInput.FlushAsync(ct);
+
+        if (!_ffmpegProcess.WaitForExit(10_000))
         {
-            _logger.LogError(ex, "Error stopping FFmpeg");
-        }
-        finally
-        {
-            _elapsedStopwatch.Stop();
-            _ffmpegProcess = null;
-            SetState(RecordingState.Complete);
-            _logger.LogInformation("Recording stopped. Elapsed: {Seconds:F1}s", ElapsedSeconds);
+            _logger.LogWarning(
+                "FFmpeg did not exit cleanly — killing process");
+
+            _ffmpegProcess.Kill();
         }
     }
+    catch (Exception ex)
+    {
+        _logger.LogError(
+            ex,
+            "Error stopping FFmpeg");
+    }
+    finally
+    {
+        _elapsedStopwatch.Stop();
+        _ffmpegProcess = null;
+
+        SetState(
+            RecordingState.Complete);
+
+        if (_currentSession is not null)
+        {
+            _currentSession.State =
+                RecordingState.Complete;
+
+            _currentSession.StoppedAt =
+                DateTimeOffset.UtcNow;
+
+            _currentSession.SegmentCount =
+                GetSegments().Count;
+
+            _currentSession.UpdatedAt =
+                DateTimeOffset.UtcNow;
+
+            await _sessionStore.SaveAsync(
+                _currentSession,
+                CancellationToken.None);
+        }
+
+        _logger.LogInformation(
+            "Recording stopped. Elapsed: {Seconds:F1}s",
+            ElapsedSeconds);
+    }
+}
 
     public async Task<string> RemuxToMp4Async(CancellationToken ct = default)
     {

@@ -118,9 +118,13 @@ services.AddSingleton<IAgentSettingsStore>(sp =>
 
         // ── Recording & Streaming ─────────────────────────────────────────────
         services.AddSingleton<IRecordingService>(sp =>
-            new FfmpegRecordingService(
-                sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<FfmpegRecordingService>>(),
-                settings.FfmpegPath));
+    new FfmpegRecordingService(
+        sp.GetRequiredService<
+            Microsoft.Extensions.Logging.ILogger<
+                FfmpegRecordingService>>(),
+        sp.GetRequiredService<
+            IRecordingSessionStore>(),
+        settings.FfmpegPath));
         services.AddSingleton<IStreamingService>(sp =>
             new RtmpStreamingService(
                 sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<RtmpStreamingService>>(),
