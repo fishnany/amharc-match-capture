@@ -20,6 +20,10 @@ public class RecordingSession
 
     /// <summary>Target MKV segment duration in seconds (default 5 minutes).</summary>
     public int SegmentDurationSeconds { get; set; } = 300;
+
+    /// <summary>Whether audio is included in the recording.</summary>
+    public bool IncludeAudio { get; set; } = true;
+
     public int SegmentCount { get; set; }
 
     /// <summary>Path to final remuxed MP4 file (set after RemuxToMp4).</summary>
