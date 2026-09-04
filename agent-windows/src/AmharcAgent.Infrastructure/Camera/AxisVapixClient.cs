@@ -16,11 +16,17 @@ public class AxisVapixClient : IDisposable
     private readonly HttpClient _http;
     private readonly ILogger<AxisVapixClient> _logger;
     private readonly string _baseUrl;
+    private readonly string _username;
+    private readonly string _password;
+    private readonly int _rtspPort;
 
-    public AxisVapixClient(string ipAddress, string username, string password, ILogger<AxisVapixClient> logger)
+    public AxisVapixClient(string ipAddress, string username, string password, ILogger<AxisVapixClient> logger, int rtspPort = 554)
     {
         _logger = logger;
         _baseUrl = $"http://{ipAddress}";
+        _username = username;
+        _password = password;
+        _rtspPort = rtspPort;
 
         var handler = new HttpClientHandler
         {
@@ -90,6 +96,24 @@ public async Task<VapixDeviceInfo> GetDeviceInfoAsync(
         return profileName is not null
             ? $"rtsp://{host}/axis-media/media.amp?streamprofile={Uri.EscapeDataString(profileName)}"
             : $"rtsp://{host}/axis-media/media.amp?videocodec=h264";
+    }
+
+    public string GetAuthenticatedRtspUrl(string? profileName = null)
+    {
+        var host = new Uri(_baseUrl).Host;
+
+        var username =
+            Uri.EscapeDataString(_username);
+
+        var password =
+            Uri.EscapeDataString(_password);
+
+        var authority =
+            $"{username}:{password}@{host}:{_rtspPort}";
+
+        return profileName is not null
+            ? $"rtsp://{authority}/axis-media/media.amp?streamprofile={Uri.EscapeDataString(profileName)}"
+            : $"rtsp://{authority}/axis-media/media.amp?videocodec=h264";
     }
 
     /// <summary>Continuous PTZ pan/tilt move. Speed range -100 to 100.</summary>

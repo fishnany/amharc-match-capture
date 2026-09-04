@@ -1,4 +1,5 @@
 using AmharcAgent.Api.Hubs;
+using AmharcAgent.Core.Domain;
 using AmharcAgent.Core.Interfaces;
 using AmharcAgent.Data;
 using AmharcAgent.Infrastructure.DependencyInjection;
@@ -102,6 +103,47 @@ using (var recoveryScope = app.Services.CreateScope())
 
         throw;
     }
+}
+
+// ── Recording recovery ────────────────────────────────────────────────────────
+try
+{
+    var recording =
+        app.Services.GetRequiredService<IRecordingService>();
+
+    Log.Information(
+        "Checking for interrupted recording session");
+
+    await recording.RecoverAsync(
+        app.Lifetime.ApplicationStopping);
+
+    if (recording.State == RecordingState.Recording)
+    {
+        Log.Information(
+            "Interrupted recording recovered successfully; output directory={OutputDirectory}, segments={SegmentCount}",
+            recording.OutputDirectory,
+            recording.SegmentCount);
+    }
+    else
+    {
+        Log.Information(
+            "No interrupted recording required recovery; recording state={State}",
+            recording.State);
+    }
+}
+catch (OperationCanceledException)
+    when (app.Lifetime.ApplicationStopping.IsCancellationRequested)
+{
+    Log.Information(
+        "Recording recovery cancelled because the application is stopping");
+}
+catch (Exception ex)
+{
+    Log.Error(
+        ex,
+        "Recording recovery failed during Agent startup");
+
+    throw;
 }
 
 // ── Background services: start hardware listeners ────────────────────────────

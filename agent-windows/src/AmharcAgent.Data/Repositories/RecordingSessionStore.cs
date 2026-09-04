@@ -1,4 +1,4 @@
-﻿using AmharcAgent.Core.Domain;
+using AmharcAgent.Core.Domain;
 using AmharcAgent.Core.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -23,39 +23,49 @@ public sealed class RecordingSessionStore(
     }
 
     public async Task<RecordingSession?> GetActiveForMatchAsync(
-        string matchId,
-        CancellationToken ct = default)
+    string matchId,
+    CancellationToken ct = default)
     {
         await using var db =
             await dbFactory.CreateDbContextAsync(ct);
 
-        return await db.RecordingSessions
-            .AsNoTracking()
-            .Where(r =>
-                r.MatchId == matchId &&
-                (r.State == RecordingState.Starting ||
-                 r.State == RecordingState.Recording ||
-                 r.State == RecordingState.Rotating ||
-                 r.State == RecordingState.Recovering))
+        var candidates =
+            await db.RecordingSessions
+                .AsNoTracking()
+                .Where(r =>
+                    r.MatchId == matchId &&
+                    (r.State == RecordingState.Starting ||
+                     r.State == RecordingState.Recording ||
+                     r.State == RecordingState.Rotating ||
+                     r.State == RecordingState.Recovering ||
+                     r.State == RecordingState.Error))
+                .ToListAsync(ct);
+
+        return candidates
             .OrderByDescending(r => r.UpdatedAt)
-            .FirstOrDefaultAsync(ct);
+            .FirstOrDefault();
     }
 
     public async Task<RecordingSession?> GetRecoverableAsync(
-        CancellationToken ct = default)
+    CancellationToken ct = default)
     {
         await using var db =
             await dbFactory.CreateDbContextAsync(ct);
 
-        return await db.RecordingSessions
-            .AsNoTracking()
-            .Where(r =>
-                r.State == RecordingState.Starting ||
-                r.State == RecordingState.Recording ||
-                r.State == RecordingState.Rotating ||
-                r.State == RecordingState.Recovering)
+        var candidates =
+            await db.RecordingSessions
+                .AsNoTracking()
+                .Where(r =>
+                    r.State == RecordingState.Starting ||
+                    r.State == RecordingState.Recording ||
+                    r.State == RecordingState.Rotating ||
+                    r.State == RecordingState.Recovering ||
+                     r.State == RecordingState.Error)
+                .ToListAsync(ct);
+
+        return candidates
             .OrderByDescending(r => r.UpdatedAt)
-            .FirstOrDefaultAsync(ct);
+            .FirstOrDefault();
     }
 
     public async Task SaveAsync(

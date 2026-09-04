@@ -15,6 +15,7 @@ public interface ICameraAdapter
     Task DisconnectAsync(CancellationToken ct = default);
     Task ReconnectAsync(CancellationToken ct = default);
     Task<string> GetStreamUrlAsync(string? profileName = null, CancellationToken ct = default);
+    Task<string> GetAuthenticatedStreamUrlAsync(string? profileName = null, CancellationToken ct = default);
     Task<CameraInfo> GetCameraInfoAsync(CancellationToken ct = default);
     Task<IEnumerable<StreamProfile>> GetStreamProfilesAsync(CancellationToken ct = default);
 

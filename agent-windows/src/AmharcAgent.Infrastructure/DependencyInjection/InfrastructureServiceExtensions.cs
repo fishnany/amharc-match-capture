@@ -1,3 +1,4 @@
+using System.Text.Json;
 using AmharcAgent.Core.Domain;
 using AmharcAgent.Core.Interfaces;
 using AmharcAgent.Core.Models;
@@ -5,22 +6,22 @@ using AmharcAgent.Data;
 using AmharcAgent.Data.Repositories;
 using AmharcAgent.Infrastructure.Camera;
 using AmharcAgent.Infrastructure.Clock;
+using AmharcAgent.Infrastructure.Commands;
 using AmharcAgent.Infrastructure.Events;
-using AmharcAgent.Infrastructure.Scoring;
 using AmharcAgent.Infrastructure.Export;
 using AmharcAgent.Infrastructure.Health;
 using AmharcAgent.Infrastructure.Joystick;
 using AmharcAgent.Infrastructure.Overlay;
 using AmharcAgent.Infrastructure.Recording;
+using AmharcAgent.Infrastructure.Scoring;
+using AmharcAgent.Infrastructure.Settings;
 using AmharcAgent.Infrastructure.Storage;
 using AmharcAgent.Infrastructure.StreamDeck;
 using AmharcAgent.Infrastructure.Streaming;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System.Text.Json;
-using AmharcAgent.Infrastructure.Settings;
-using AmharcAgent.Infrastructure.Commands;
+using Microsoft.Extensions.Logging;
 
 
 namespace AmharcAgent.Infrastructure.DependencyInjection;
@@ -118,16 +119,15 @@ services.AddSingleton<IAgentSettingsStore>(sp =>
 
         // ── Recording & Streaming ─────────────────────────────────────────────
         services.AddSingleton<IRecordingService>(sp =>
-    new FfmpegRecordingService(
-        sp.GetRequiredService<
-            Microsoft.Extensions.Logging.ILogger<
-                FfmpegRecordingService>>(),
-        sp.GetRequiredService<
-            IRecordingSessionStore>(),
-        settings.FfmpegPath));
+            new FfmpegRecordingService(
+                sp.GetRequiredService<ILogger<FfmpegRecordingService>>(),
+                sp.GetRequiredService<IRecordingSessionStore>(),
+                sp.GetRequiredService<ICameraAdapter>(),
+                settings.FfmpegPath));
+
         services.AddSingleton<IStreamingService>(sp =>
             new RtmpStreamingService(
-                sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<RtmpStreamingService>>(),
+                sp.GetRequiredService<ILogger<RtmpStreamingService>>(),
                 settings.FfmpegPath));
 
         // ── Stream Deck & Joystick ────────────────────────────────────────────

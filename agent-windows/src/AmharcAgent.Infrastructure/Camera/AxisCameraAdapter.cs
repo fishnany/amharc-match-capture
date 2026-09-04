@@ -37,7 +37,7 @@ public class AxisCameraAdapter : ICameraAdapter, IPtzController, IAsyncDisposabl
     {
         SetState(CameraConnectionState.Connecting);
         _client = new AxisVapixClient(_config.IpAddress, _config.Username, _config.Password,
-            _logger as ILogger<AxisVapixClient> ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<AxisVapixClient>.Instance);
+            _logger as ILogger<AxisVapixClient> ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<AxisVapixClient>.Instance, _config.RtspPort);
         try
         {
             var info = await _client.GetDeviceInfoAsync(ct);
@@ -99,6 +99,12 @@ public class AxisCameraAdapter : ICameraAdapter, IPtzController, IAsyncDisposabl
     {
         EnsureConnected();
         return Task.FromResult(_client!.GetRtspUrl(profileName));
+    }
+
+    public Task<string> GetAuthenticatedStreamUrlAsync(string? profileName = null, CancellationToken ct = default)
+    {
+        EnsureConnected();
+        return Task.FromResult(_client!.GetAuthenticatedRtspUrl(profileName));
     }
 
     public Task<CameraInfo> GetCameraInfoAsync(CancellationToken ct = default) =>
