@@ -368,6 +368,7 @@ public class FfmpegRecordingService : IRecordingService, IAsyncDisposable
     }
 
     public async Task RecoverAsync(
+        string matchId,
         CancellationToken ct = default)
     {
         if (_state == RecordingState.Recording)
@@ -381,7 +382,9 @@ public class FfmpegRecordingService : IRecordingService, IAsyncDisposable
         SetState(RecordingState.Recovering);
 
         var session =
-            await _sessionStore.GetRecoverableAsync(ct);
+            await _sessionStore.GetActiveForMatchAsync(
+                matchId,
+                ct);
 
         if (session is null)
         {

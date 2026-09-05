@@ -108,27 +108,50 @@ using (var recoveryScope = app.Services.CreateScope())
 // ── Recording recovery ────────────────────────────────────────────────────────
 try
 {
+    using var recordingRecoveryScope =
+        app.Services.CreateScope();
+
+    var recordingMatchRepository =
+        recordingRecoveryScope.ServiceProvider
+            .GetRequiredService<AmharcAgent.Data.Repositories.IMatchRepository>();
+
     var recording =
         app.Services.GetRequiredService<IRecordingService>();
 
-    Log.Information(
-        "Checking for interrupted recording session");
+    var activeRecordingMatch =
+        await recordingMatchRepository.GetActiveMatchAsync(
+            app.Lifetime.ApplicationStopping);
 
-    await recording.RecoverAsync(
-        app.Lifetime.ApplicationStopping);
-
-    if (recording.State == RecordingState.Recording)
+    if (activeRecordingMatch is null)
     {
         Log.Information(
-            "Interrupted recording recovered successfully; output directory={OutputDirectory}, segments={SegmentCount}",
-            recording.OutputDirectory,
-            recording.SegmentCount);
+            "No active or half-time match found; automatic recording recovery skipped");
     }
     else
     {
         Log.Information(
-            "No interrupted recording required recovery; recording state={State}",
-            recording.State);
+            "Checking for interrupted recording session for active match {MatchId}",
+            activeRecordingMatch.MatchId);
+
+        await recording.RecoverAsync(
+            activeRecordingMatch.MatchId,
+            app.Lifetime.ApplicationStopping);
+
+        if (recording.State == RecordingState.Recording)
+        {
+            Log.Information(
+                "Interrupted recording recovered successfully for match {MatchId}; output directory={OutputDirectory}, segments={SegmentCount}",
+                activeRecordingMatch.MatchId,
+                recording.OutputDirectory,
+                recording.SegmentCount);
+        }
+        else
+        {
+            Log.Information(
+                "No interrupted recording required recovery for match {MatchId}; recording state={State}",
+                activeRecordingMatch.MatchId,
+                recording.State);
+        }
     }
 }
 catch (OperationCanceledException)
