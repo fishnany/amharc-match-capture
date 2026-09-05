@@ -207,6 +207,317 @@ public class AmharcCommandDispatcher(
                     break;
                 }
 
+            case AmharcCommandIds.MatchClockHalfTimeStart:
+                {
+                    var matchId =
+                        await ResolveMatchIdAsync(
+                            command,
+                            ct);
+
+                    var match =
+                        await RequireMatchAsync(
+                            matchId,
+                            ct);
+
+                    if (match.Status != MatchStatus.Active)
+                    {
+                        throw new MatchLifecycleConflictException(
+                            $"Match {matchId} cannot enter half-time from state {match.Status}.");
+                    }
+
+                    if (match.PeriodStructure is not
+                        (PeriodStructure.TwoPeriods or PeriodStructure.ExtraTime))
+                    {
+                        throw new MatchLifecycleConflictException(
+                            $"Match {matchId} cannot use regulation half-time lifecycle with period structure {match.PeriodStructure}.");
+                    }
+
+                    if (match.CurrentPeriod != 1)
+                    {
+                        throw new MatchLifecycleConflictException(
+                            $"Match {matchId} cannot enter half-time from period {match.CurrentPeriod}.");
+                    }
+
+                    clock.EndPeriod(
+                        match.CurrentPeriod);
+
+                    clock.StartHalfTime();
+
+                    match.Status =
+                        MatchStatus.HalfTime;
+
+                    await matches.UpdateAsync(
+                        match,
+                        ct);
+
+                    await clock.SaveRuntimeStateAsync(
+                        matchId,
+                        ct);
+
+                    LogCommand(command);
+                    break;
+                }
+
+            case AmharcCommandIds.MatchClockHalfTimeEnd:
+                {
+                    var matchId =
+                        await ResolveMatchIdAsync(
+                            command,
+                            ct);
+
+                    var match =
+                        await RequireMatchAsync(
+                            matchId,
+                            ct);
+
+                    if (match.Status != MatchStatus.HalfTime)
+                    {
+                        throw new MatchLifecycleConflictException(
+                            $"Match {matchId} cannot end half-time from state {match.Status}.");
+                    }
+
+                    if (match.PeriodStructure is not
+                        (PeriodStructure.TwoPeriods or PeriodStructure.ExtraTime))
+                    {
+                        throw new MatchLifecycleConflictException(
+                            $"Match {matchId} cannot use regulation half-time lifecycle with period structure {match.PeriodStructure}.");
+                    }
+
+                    if (match.CurrentPeriod != 1)
+                    {
+                        throw new MatchLifecycleConflictException(
+                            $"Match {matchId} cannot end half-time from period {match.CurrentPeriod}.");
+                    }
+
+                    const int nextPeriod =
+                        2;
+
+                    clock.EndHalfTime();
+
+                    clock.StartPeriod(
+                        nextPeriod);
+
+                    clock.Resume();
+
+                    match.CurrentPeriod =
+                        nextPeriod;
+
+                    match.Status =
+                        MatchStatus.Active;
+
+                    await matches.UpdateAsync(
+                        match,
+                        ct);
+
+                    await clock.SaveRuntimeStateAsync(
+                        matchId,
+                        ct);
+
+                    LogCommand(command);
+                    break;
+                }
+
+            case AmharcCommandIds.MatchClockExtraTimeEnter:
+                {
+                    var matchId =
+                        await ResolveMatchIdAsync(
+                            command,
+                            ct);
+
+                    var match =
+                        await RequireMatchAsync(
+                            matchId,
+                            ct);
+
+                    if (match.Status != MatchStatus.Active ||
+                        match.PeriodStructure != PeriodStructure.ExtraTime ||
+                        match.CurrentPeriod != 2)
+                    {
+                        throw new MatchLifecycleConflictException(
+                            $"Match {matchId} cannot enter the extra-time interval from state {match.Status}, period {match.CurrentPeriod}, structure {match.PeriodStructure}.");
+                    }
+
+                    clock.EndPeriod(2);
+                    clock.Pause();
+
+                    match.Status =
+                        MatchStatus.ExtraTimeInterval;
+
+                    await matches.UpdateAsync(
+                        match,
+                        ct);
+
+                    await clock.SaveRuntimeStateAsync(
+                        matchId,
+                        ct);
+
+                    LogCommand(command);
+                    break;
+                }
+
+            case AmharcCommandIds.MatchClockExtraTimeStart:
+                {
+                    var matchId =
+                        await ResolveMatchIdAsync(
+                            command,
+                            ct);
+
+                    var match =
+                        await RequireMatchAsync(
+                            matchId,
+                            ct);
+
+                    if (match.Status != MatchStatus.ExtraTimeInterval ||
+                        match.PeriodStructure != PeriodStructure.ExtraTime ||
+                        match.CurrentPeriod != 2)
+                    {
+                        throw new MatchLifecycleConflictException(
+                            $"Match {matchId} cannot start ET1 from state {match.Status}, period {match.CurrentPeriod}, structure {match.PeriodStructure}.");
+                    }
+
+                    const int et1Period = 3;
+
+                    clock.StartPeriod(et1Period);
+                    clock.Resume();
+
+                    match.CurrentPeriod =
+                        et1Period;
+
+                    match.Status =
+                        MatchStatus.Active;
+
+                    await matches.UpdateAsync(
+                        match,
+                        ct);
+
+                    await clock.SaveRuntimeStateAsync(
+                        matchId,
+                        ct);
+
+                    LogCommand(command);
+                    break;
+                }
+
+            case AmharcCommandIds.MatchClockExtraTimeHalfTimeStart:
+                {
+                    var matchId =
+                        await ResolveMatchIdAsync(
+                            command,
+                            ct);
+
+                    var match =
+                        await RequireMatchAsync(
+                            matchId,
+                            ct);
+
+                    if (match.Status != MatchStatus.Active ||
+                        match.PeriodStructure != PeriodStructure.ExtraTime ||
+                        match.CurrentPeriod != 3)
+                    {
+                        throw new MatchLifecycleConflictException(
+                            $"Match {matchId} cannot enter the ET half-time interval from state {match.Status}, period {match.CurrentPeriod}, structure {match.PeriodStructure}.");
+                    }
+
+                    clock.EndPeriod(3);
+                    clock.Pause();
+
+                    match.Status =
+                        MatchStatus.ExtraTimeInterval;
+
+                    await matches.UpdateAsync(
+                        match,
+                        ct);
+
+                    await clock.SaveRuntimeStateAsync(
+                        matchId,
+                        ct);
+
+                    LogCommand(command);
+                    break;
+                }
+
+            case AmharcCommandIds.MatchClockExtraTimeHalfTimeEnd:
+                {
+                    var matchId =
+                        await ResolveMatchIdAsync(
+                            command,
+                            ct);
+
+                    var match =
+                        await RequireMatchAsync(
+                            matchId,
+                            ct);
+
+                    if (match.Status != MatchStatus.ExtraTimeInterval ||
+                        match.PeriodStructure != PeriodStructure.ExtraTime ||
+                        match.CurrentPeriod != 3)
+                    {
+                        throw new MatchLifecycleConflictException(
+                            $"Match {matchId} cannot start ET2 from state {match.Status}, period {match.CurrentPeriod}, structure {match.PeriodStructure}.");
+                    }
+
+                    const int et2Period = 4;
+
+                    clock.StartPeriod(et2Period);
+                    clock.Resume();
+
+                    match.CurrentPeriod =
+                        et2Period;
+
+                    match.Status =
+                        MatchStatus.Active;
+
+                    await matches.UpdateAsync(
+                        match,
+                        ct);
+
+                    await clock.SaveRuntimeStateAsync(
+                        matchId,
+                        ct);
+
+                    LogCommand(command);
+                    break;
+                }
+
+
+            case AmharcCommandIds.MatchAbandon:
+                {
+                    var matchId =
+                        await ResolveMatchIdAsync(
+                            command,
+                            ct);
+
+                    var match =
+                        await RequireMatchAsync(
+                            matchId,
+                            ct);
+
+                    if (match.Status is MatchStatus.Setup or
+                        MatchStatus.Complete or
+                        MatchStatus.Abandoned)
+                    {
+                        throw new MatchLifecycleConflictException(
+                            $"Match {matchId} cannot be abandoned from state {match.Status}.");
+                    }
+
+                    clock.Pause();
+
+                    match.Status =
+                        MatchStatus.Abandoned;
+
+                    await matches.UpdateAsync(
+                        match,
+                        ct);
+
+                    await clock.SaveRuntimeStateAsync(
+                        matchId,
+                        ct);
+
+                    LogCommand(command);
+                    break;
+                }
+
+
             case AmharcCommandIds.MatchClockFullTime:
                 {
                     var matchId =
@@ -218,6 +529,16 @@ public class AmharcCommandDispatcher(
                         await RequireMatchAsync(
                             matchId,
                             ct);
+
+
+                    if (match.Status is MatchStatus.Setup or
+                        MatchStatus.Ready or
+                        MatchStatus.Complete or
+                        MatchStatus.Abandoned)
+                    {
+                        throw new MatchLifecycleConflictException(
+                            $"Match {matchId} cannot reach full-time from state {match.Status}.");
+                    }
 
                     clock.MarkFullTime();
 

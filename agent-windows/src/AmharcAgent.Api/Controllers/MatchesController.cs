@@ -174,6 +174,41 @@ public class MatchesController(
         return Ok(match);
     }
 
+    [HttpPost("{matchId}/abandon")]
+    public async Task<IActionResult> AbandonMatch(
+        string matchId,
+        CancellationToken ct)
+    {
+        var match =
+            await repo.GetByIdAsync(
+                matchId,
+                ct);
+
+        if (match is null)
+            return NotFound();
+
+        await commandDispatcher.DispatchAsync(
+            new AmharcCommand(
+                AmharcCommandIds.MatchAbandon,
+                EventSource.Api,
+                MatchId: matchId),
+            ct);
+
+        match =
+            await repo.GetByIdAsync(
+                matchId,
+                ct)
+            ?? throw new InvalidOperationException(
+                $"Match {matchId} disappeared after abandonment.");
+
+        logger.LogInformation(
+            "Match {Id} abandoned",
+            matchId);
+
+        return Ok(match);
+    }
+
+
     // ── Clock ─────────────────────────────────────────────────────────────────
 
     [HttpGet("{matchId}/clock")]
@@ -225,6 +260,98 @@ public class MatchesController(
 
         return Ok(clock.State);
     }
+
+    [HttpPost("{matchId}/clock/half-time/start")]
+    public async Task<IActionResult> StartHalfTime(
+        string matchId,
+        CancellationToken ct)
+    {
+        await commandDispatcher.DispatchAsync(
+            new AmharcCommand(
+                AmharcCommandIds.MatchClockHalfTimeStart,
+                EventSource.Api,
+                MatchId: matchId),
+            ct);
+
+        return Ok(clock.State);
+    }
+
+    [HttpPost("{matchId}/clock/half-time/end")]
+    public async Task<IActionResult> EndHalfTime(
+        string matchId,
+        CancellationToken ct)
+    {
+        await commandDispatcher.DispatchAsync(
+            new AmharcCommand(
+                AmharcCommandIds.MatchClockHalfTimeEnd,
+                EventSource.Api,
+                MatchId: matchId),
+            ct);
+
+        return Ok(clock.State);
+    }
+
+    [HttpPost("{matchId}/clock/extra-time/enter")]
+    public async Task<IActionResult> EnterExtraTime(
+        string matchId,
+        CancellationToken ct)
+    {
+        await commandDispatcher.DispatchAsync(
+            new AmharcCommand(
+                AmharcCommandIds.MatchClockExtraTimeEnter,
+                EventSource.Api,
+                MatchId: matchId),
+            ct);
+
+        return Ok(clock.State);
+    }
+
+    [HttpPost("{matchId}/clock/extra-time/start")]
+    public async Task<IActionResult> StartExtraTime(
+        string matchId,
+        CancellationToken ct)
+    {
+        await commandDispatcher.DispatchAsync(
+            new AmharcCommand(
+                AmharcCommandIds.MatchClockExtraTimeStart,
+                EventSource.Api,
+                MatchId: matchId),
+            ct);
+
+        return Ok(clock.State);
+    }
+
+    [HttpPost("{matchId}/clock/extra-time/half-time/start")]
+    public async Task<IActionResult> StartExtraTimeHalfTime(
+        string matchId,
+        CancellationToken ct)
+    {
+        await commandDispatcher.DispatchAsync(
+            new AmharcCommand(
+                AmharcCommandIds.MatchClockExtraTimeHalfTimeStart,
+                EventSource.Api,
+                MatchId: matchId),
+            ct);
+
+        return Ok(clock.State);
+    }
+
+    [HttpPost("{matchId}/clock/extra-time/half-time/end")]
+    public async Task<IActionResult> EndExtraTimeHalfTime(
+        string matchId,
+        CancellationToken ct)
+    {
+        await commandDispatcher.DispatchAsync(
+            new AmharcCommand(
+                AmharcCommandIds.MatchClockExtraTimeHalfTimeEnd,
+                EventSource.Api,
+                MatchId: matchId),
+            ct);
+
+        return Ok(clock.State);
+    }
+
+
 
     [HttpPost("{matchId}/clock/correct")]
     public async Task<IActionResult> CorrectClock(

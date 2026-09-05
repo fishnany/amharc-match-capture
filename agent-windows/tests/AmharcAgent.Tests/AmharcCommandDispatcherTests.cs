@@ -297,6 +297,337 @@ public class AmharcCommandDispatcherTests
     }
 
     [Fact]
+    public async Task MatchClockHalfTimeStart_TransitionsToHalfTime()
+    {
+        var match = ActiveMatch();
+        match.PeriodStructure = PeriodStructure.TwoPeriods;
+        match.CurrentPeriod = 1;
+
+        var matches = new Mock<IMatchRepository>();
+        var events = new Mock<IEventTaggingService>();
+        var clock = new Mock<IMatchClockService>();
+
+        matches
+            .Setup(m => m.GetByIdAsync(
+                "m1",
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(match);
+
+        var sut = new AmharcCommandDispatcher(
+            matches.Object,
+            events.Object,
+            clock.Object,
+            NullLogger<AmharcCommandDispatcher>.Instance);
+
+        await sut.DispatchAsync(
+            new AmharcCommand(
+                AmharcCommandIds.MatchClockHalfTimeStart,
+                EventSource.OperatorUi,
+                MatchId: "m1"));
+
+        clock.Verify(c => c.EndPeriod(1), Times.Once);
+        clock.Verify(c => c.StartHalfTime(), Times.Once);
+
+        clock.Verify(
+            c => c.SaveRuntimeStateAsync(
+                "m1",
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+
+        match.Status.Should().Be(MatchStatus.HalfTime);
+        match.CurrentPeriod.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task MatchClockHalfTimeEnd_StartsSecondPeriod_AndResumes()
+    {
+        var match = ActiveMatch();
+        match.Status = MatchStatus.HalfTime;
+        match.PeriodStructure = PeriodStructure.TwoPeriods;
+        match.CurrentPeriod = 1;
+
+        var matches = new Mock<IMatchRepository>();
+        var events = new Mock<IEventTaggingService>();
+        var clock = new Mock<IMatchClockService>();
+
+        matches
+            .Setup(m => m.GetByIdAsync(
+                "m1",
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(match);
+
+        var sut = new AmharcCommandDispatcher(
+            matches.Object,
+            events.Object,
+            clock.Object,
+            NullLogger<AmharcCommandDispatcher>.Instance);
+
+        await sut.DispatchAsync(
+            new AmharcCommand(
+                AmharcCommandIds.MatchClockHalfTimeEnd,
+                EventSource.OperatorUi,
+                MatchId: "m1"));
+
+        clock.Verify(c => c.EndHalfTime(), Times.Once);
+        clock.Verify(c => c.StartPeriod(2), Times.Once);
+        clock.Verify(c => c.Resume(), Times.Once);
+
+        clock.Verify(
+            c => c.SaveRuntimeStateAsync(
+                "m1",
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+
+        match.Status.Should().Be(MatchStatus.Active);
+        match.CurrentPeriod.Should().Be(2);
+    }
+
+    [Fact]
+    public async Task MatchClockExtraTimeEnter_TransitionsToExtraTimeInterval()
+    {
+        var match = ActiveMatch();
+        match.PeriodStructure = PeriodStructure.ExtraTime;
+        match.CurrentPeriod = 2;
+
+        var matches = new Mock<IMatchRepository>();
+        var events = new Mock<IEventTaggingService>();
+        var clock = new Mock<IMatchClockService>();
+
+        matches
+            .Setup(m => m.GetByIdAsync("m1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(match);
+
+        var sut = new AmharcCommandDispatcher(
+            matches.Object,
+            events.Object,
+            clock.Object,
+            NullLogger<AmharcCommandDispatcher>.Instance);
+
+        await sut.DispatchAsync(
+            new AmharcCommand(
+                AmharcCommandIds.MatchClockExtraTimeEnter,
+                EventSource.OperatorUi,
+                MatchId: "m1"));
+
+        clock.Verify(c => c.EndPeriod(2), Times.Once);
+        clock.Verify(c => c.Pause(), Times.Once);
+
+        match.Status.Should().Be(MatchStatus.ExtraTimeInterval);
+        match.CurrentPeriod.Should().Be(2);
+    }
+
+    [Fact]
+    public async Task MatchClockExtraTimeStart_StartsET1()
+    {
+        var match = ActiveMatch();
+        match.Status = MatchStatus.ExtraTimeInterval;
+        match.PeriodStructure = PeriodStructure.ExtraTime;
+        match.CurrentPeriod = 2;
+
+        var matches = new Mock<IMatchRepository>();
+        var events = new Mock<IEventTaggingService>();
+        var clock = new Mock<IMatchClockService>();
+
+        matches
+            .Setup(m => m.GetByIdAsync("m1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(match);
+
+        var sut = new AmharcCommandDispatcher(
+            matches.Object,
+            events.Object,
+            clock.Object,
+            NullLogger<AmharcCommandDispatcher>.Instance);
+
+        await sut.DispatchAsync(
+            new AmharcCommand(
+                AmharcCommandIds.MatchClockExtraTimeStart,
+                EventSource.OperatorUi,
+                MatchId: "m1"));
+
+        clock.Verify(c => c.StartPeriod(3), Times.Once);
+        clock.Verify(c => c.Resume(), Times.Once);
+
+        match.Status.Should().Be(MatchStatus.Active);
+        match.CurrentPeriod.Should().Be(3);
+    }
+
+    [Fact]
+    public async Task MatchClockExtraTimeHalfTimeStart_EndsET1()
+    {
+        var match = ActiveMatch();
+        match.PeriodStructure = PeriodStructure.ExtraTime;
+        match.CurrentPeriod = 3;
+
+        var matches = new Mock<IMatchRepository>();
+        var events = new Mock<IEventTaggingService>();
+        var clock = new Mock<IMatchClockService>();
+
+        matches
+            .Setup(m => m.GetByIdAsync("m1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(match);
+
+        var sut = new AmharcCommandDispatcher(
+            matches.Object,
+            events.Object,
+            clock.Object,
+            NullLogger<AmharcCommandDispatcher>.Instance);
+
+        await sut.DispatchAsync(
+            new AmharcCommand(
+                AmharcCommandIds.MatchClockExtraTimeHalfTimeStart,
+                EventSource.OperatorUi,
+                MatchId: "m1"));
+
+        clock.Verify(c => c.EndPeriod(3), Times.Once);
+        clock.Verify(c => c.Pause(), Times.Once);
+
+        match.Status.Should().Be(MatchStatus.ExtraTimeInterval);
+        match.CurrentPeriod.Should().Be(3);
+    }
+
+    [Fact]
+    public async Task MatchClockExtraTimeHalfTimeEnd_StartsET2()
+    {
+        var match = ActiveMatch();
+        match.Status = MatchStatus.ExtraTimeInterval;
+        match.PeriodStructure = PeriodStructure.ExtraTime;
+        match.CurrentPeriod = 3;
+
+        var matches = new Mock<IMatchRepository>();
+        var events = new Mock<IEventTaggingService>();
+        var clock = new Mock<IMatchClockService>();
+
+        matches
+            .Setup(m => m.GetByIdAsync("m1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(match);
+
+        var sut = new AmharcCommandDispatcher(
+            matches.Object,
+            events.Object,
+            clock.Object,
+            NullLogger<AmharcCommandDispatcher>.Instance);
+
+        await sut.DispatchAsync(
+            new AmharcCommand(
+                AmharcCommandIds.MatchClockExtraTimeHalfTimeEnd,
+                EventSource.OperatorUi,
+                MatchId: "m1"));
+
+        clock.Verify(c => c.StartPeriod(4), Times.Once);
+        clock.Verify(c => c.Resume(), Times.Once);
+
+        match.Status.Should().Be(MatchStatus.Active);
+        match.CurrentPeriod.Should().Be(4);
+    }
+
+    [Fact]
+    public async Task MatchClockHalfTimeStart_AllowsExtraTimeCapableMatch()
+    {
+        var match = ActiveMatch();
+        match.PeriodStructure = PeriodStructure.ExtraTime;
+        match.CurrentPeriod = 1;
+
+        var matches = new Mock<IMatchRepository>();
+        var events = new Mock<IEventTaggingService>();
+        var clock = new Mock<IMatchClockService>();
+
+        matches
+            .Setup(m => m.GetByIdAsync("m1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(match);
+
+        var sut = new AmharcCommandDispatcher(
+            matches.Object,
+            events.Object,
+            clock.Object,
+            NullLogger<AmharcCommandDispatcher>.Instance);
+
+        await sut.DispatchAsync(
+            new AmharcCommand(
+                AmharcCommandIds.MatchClockHalfTimeStart,
+                EventSource.OperatorUi,
+                MatchId: "m1"));
+
+        clock.Verify(c => c.StartHalfTime(), Times.Once);
+        match.Status.Should().Be(MatchStatus.HalfTime);
+    }
+
+
+    [Fact]
+    public async Task MatchAbandon_TransitionsOperationalMatchToAbandoned()
+    {
+        var match = ActiveMatch();
+
+        var matches = new Mock<IMatchRepository>();
+        var events = new Mock<IEventTaggingService>();
+        var clock = new Mock<IMatchClockService>();
+
+        matches
+            .Setup(m => m.GetByIdAsync(
+                "m1",
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(match);
+
+        var sut = new AmharcCommandDispatcher(
+            matches.Object,
+            events.Object,
+            clock.Object,
+            NullLogger<AmharcCommandDispatcher>.Instance);
+
+        await sut.DispatchAsync(
+            new AmharcCommand(
+                AmharcCommandIds.MatchAbandon,
+                EventSource.OperatorUi,
+                MatchId: "m1"));
+
+        clock.Verify(c => c.Pause(), Times.Once);
+
+        clock.Verify(
+            c => c.SaveRuntimeStateAsync(
+                "m1",
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+
+        match.Status.Should().Be(MatchStatus.Abandoned);
+    }
+
+    [Fact]
+    public async Task MatchClockHalfTimeStart_RejectsNonActiveMatch()
+    {
+        var match = ActiveMatch();
+        match.Status = MatchStatus.Paused;
+
+        var matches = new Mock<IMatchRepository>();
+        var events = new Mock<IEventTaggingService>();
+        var clock = new Mock<IMatchClockService>();
+
+        matches
+            .Setup(m => m.GetByIdAsync(
+                "m1",
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(match);
+
+        var sut = new AmharcCommandDispatcher(
+            matches.Object,
+            events.Object,
+            clock.Object,
+            NullLogger<AmharcCommandDispatcher>.Instance);
+
+        var act = async () =>
+            await sut.DispatchAsync(
+                new AmharcCommand(
+                    AmharcCommandIds.MatchClockHalfTimeStart,
+                    EventSource.OperatorUi,
+                    MatchId: "m1"));
+
+        await act.Should()
+            .ThrowAsync<MatchLifecycleConflictException>()
+            .WithMessage("*cannot enter half-time*");
+
+        clock.Verify(c => c.StartHalfTime(), Times.Never);
+    }
+
+
+    [Fact]
     public async Task MatchClockFullTime_MarksFullTime_AndPersistsRuntimeState()
     {
         var match = ActiveMatch();

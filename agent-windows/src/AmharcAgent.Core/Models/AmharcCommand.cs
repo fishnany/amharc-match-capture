@@ -1,4 +1,4 @@
-﻿using AmharcAgent.Core.Domain;
+using AmharcAgent.Core.Domain;
 
 namespace AmharcAgent.Core.Models;
 
@@ -22,6 +22,13 @@ public static class AmharcCommandIds
     public const string MatchClockStart = "match.clock.start";
     public const string MatchClockPause = "match.clock.pause";
     public const string MatchClockResume = "match.clock.resume";
+    public const string MatchClockHalfTimeStart = "match.clock.half-time.start";
+    public const string MatchClockHalfTimeEnd = "match.clock.half-time.end";
+    public const string MatchClockExtraTimeEnter = "match.clock.extra-time.enter";
+    public const string MatchClockExtraTimeStart = "match.clock.extra-time.start";
+    public const string MatchClockExtraTimeHalfTimeStart = "match.clock.extra-time.half-time.start";
+    public const string MatchClockExtraTimeHalfTimeEnd = "match.clock.extra-time.half-time.end";
+    public const string MatchAbandon = "match.abandon";
     public const string MatchClockFullTime = "match.clock.full-time";
     public const string MatchClockCorrect = "match.clock.correct";
 

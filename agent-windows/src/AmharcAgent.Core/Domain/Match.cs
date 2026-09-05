@@ -6,7 +6,7 @@ namespace AmharcAgent.Core.Domain;
 public enum Sport { GaelicFootball, Hurling, Camogie, LadiesFootball }
 
 /// <summary>Match lifecycle status.</summary>
-public enum MatchStatus { Setup, Ready, Active, Paused, HalfTime, Complete, Abandoned }
+public enum MatchStatus { Setup, Ready, Active, Paused, HalfTime, ExtraTimeInterval, Complete, Abandoned }
 
 /// <summary>Period structure of the match.</summary>
 public enum PeriodStructure { TwoPeriods, FourQuarters, ExtraTime }

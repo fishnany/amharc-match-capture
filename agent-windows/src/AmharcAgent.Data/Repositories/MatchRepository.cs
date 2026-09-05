@@ -29,7 +29,8 @@ public class MatchRepository(AmharcDbContext db) : IMatchRepository
         .Where(m =>
             m.Status == MatchStatus.Active ||
             m.Status == MatchStatus.Paused ||
-            m.Status == MatchStatus.HalfTime)
+            m.Status == MatchStatus.HalfTime ||
+            m.Status == MatchStatus.ExtraTimeInterval)
         .ToListAsync(ct))
     .OrderByDescending(m => m.UpdatedAt)
     .ToList();
