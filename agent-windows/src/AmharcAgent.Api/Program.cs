@@ -1,5 +1,6 @@
 using AmharcAgent.Api.Hubs;
 using AmharcAgent.Core.Domain;
+using AmharcAgent.Core.Exceptions;
 using AmharcAgent.Core.Interfaces;
 using AmharcAgent.Data;
 using AmharcAgent.Infrastructure.DependencyInjection;
@@ -253,7 +254,42 @@ if (settings.JoystickEnabled)
 }
 
 // ── Pipeline ─────────────────────────────────────────────────────────────────
+
 app.UseSerilogRequestLogging();
+
+app.Use(async (context, next) =>
+{
+    try
+    {
+        await next();
+    }
+    catch (MatchLifecycleConflictException ex)
+    {
+        Log.Warning(
+            ex,
+            "Match lifecycle conflict for {Method} {Path}",
+            context.Request.Method,
+            context.Request.Path);
+
+        context.Response.StatusCode =
+            StatusCodes.Status409Conflict;
+
+        context.Response.ContentType =
+            "application/problem+json";
+
+        await context.Response.WriteAsJsonAsync(
+            new
+            {
+                type = "https://httpstatuses.com/409",
+                title = "Match lifecycle conflict",
+                status = StatusCodes.Status409Conflict,
+                detail = ex.Message,
+                instance = context.Request.Path.Value
+            },
+            context.RequestAborted);
+    }
+});
+
 app.UseCors();
 
 if (app.Environment.IsDevelopment())

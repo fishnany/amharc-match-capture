@@ -1,4 +1,5 @@
-﻿using AmharcAgent.Core.Domain;
+using AmharcAgent.Core.Domain;
+using AmharcAgent.Core.Exceptions;
 using AmharcAgent.Core.Interfaces;
 using AmharcAgent.Core.Models;
 using AmharcAgent.Data.Repositories;
@@ -80,7 +81,42 @@ public class AmharcCommandDispatcher(
                             command,
                             ct);
 
+                    var match =
+                        await RequireMatchAsync(
+                            matchId,
+                            ct);
+
+                    if (match.Status is MatchStatus.Complete or MatchStatus.Abandoned)
+                    {
+                        throw new MatchLifecycleConflictException(
+                            $"Match {matchId} cannot be started from terminal state {match.Status}.");
+                    }
+
+                    var liveMatch =
+                        await matches.GetActiveMatchAsync(ct);
+
+                    if (liveMatch is not null &&
+                        liveMatch.MatchId != matchId)
+                    {
+                        throw new MatchLifecycleConflictException(
+                            $"Cannot start match {matchId} because match {liveMatch.MatchId} " +
+                            $"is already operationally live with status {liveMatch.Status}.");
+                    }
+
                     clock.Start();
+
+                    match.Status =
+                        MatchStatus.Active;
+
+                    if (match.CurrentPeriod <= 0)
+                    {
+                        match.CurrentPeriod =
+                            1;
+                    }
+
+                    await matches.UpdateAsync(
+                        match,
+                        ct);
 
                     await clock.SaveRuntimeStateAsync(
                         matchId,
@@ -97,7 +133,25 @@ public class AmharcCommandDispatcher(
                             command,
                             ct);
 
+                    var match =
+                        await RequireMatchAsync(
+                            matchId,
+                            ct);
+
+                    if (match.Status is MatchStatus.Complete or MatchStatus.Abandoned)
+                    {
+                        throw new MatchLifecycleConflictException(
+                            $"Match {matchId} cannot be paused from terminal state {match.Status}.");
+                    }
+
                     clock.Pause();
+
+                    match.Status =
+                        MatchStatus.Paused;
+
+                    await matches.UpdateAsync(
+                        match,
+                        ct);
 
                     await clock.SaveRuntimeStateAsync(
                         matchId,
@@ -114,7 +168,36 @@ public class AmharcCommandDispatcher(
                             command,
                             ct);
 
+                    var match =
+                        await RequireMatchAsync(
+                            matchId,
+                            ct);
+
+                    if (match.Status is MatchStatus.Complete or MatchStatus.Abandoned)
+                    {
+                        throw new MatchLifecycleConflictException(
+                            $"Match {matchId} cannot be resumed from terminal state {match.Status}.");
+                    }
+
+                    var liveMatch =
+                        await matches.GetActiveMatchAsync(ct);
+
+                    if (liveMatch is not null &&
+                        liveMatch.MatchId != matchId)
+                    {
+                        throw new MatchLifecycleConflictException(
+                            $"Cannot resume match {matchId} because match {liveMatch.MatchId} " +
+                            $"is already operationally live with status {liveMatch.Status}.");
+                    }
+
                     clock.Resume();
+
+                    match.Status =
+                        MatchStatus.Active;
+
+                    await matches.UpdateAsync(
+                        match,
+                        ct);
 
                     await clock.SaveRuntimeStateAsync(
                         matchId,
@@ -131,7 +214,19 @@ public class AmharcCommandDispatcher(
                             command,
                             ct);
 
+                    var match =
+                        await RequireMatchAsync(
+                            matchId,
+                            ct);
+
                     clock.MarkFullTime();
+
+                    match.Status =
+                        MatchStatus.Complete;
+
+                    await matches.UpdateAsync(
+                        match,
+                        ct);
 
                     await clock.SaveRuntimeStateAsync(
                         matchId,
@@ -226,6 +321,23 @@ public class AmharcCommandDispatcher(
         LogCommand(command);
     }
 
+    private async Task<Match> RequireMatchAsync(
+        string matchId,
+        CancellationToken ct)
+    {
+        var match =
+            await matches.GetByIdAsync(
+                matchId,
+                ct);
+
+        if (match is null)
+        {
+            throw new InvalidOperationException(
+                $"Match {matchId} could not be found.");
+        }
+
+        return match;
+    }
     private async Task<string> ResolveMatchIdAsync(
         AmharcCommand command,
         CancellationToken ct)

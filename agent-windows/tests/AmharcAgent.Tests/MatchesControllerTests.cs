@@ -1,4 +1,4 @@
-﻿using AmharcAgent.Api.Controllers;
+using AmharcAgent.Api.Controllers;
 using AmharcAgent.Core.Domain;
 using AmharcAgent.Core.Interfaces;
 using AmharcAgent.Core.Models;
@@ -231,6 +231,21 @@ public class MatchesControllerTests
             .ReturnsAsync(
                 (DomainMatch m, CancellationToken _) => m);
 
+        dispatcher
+            .Setup(d => d.DispatchAsync(
+                It.Is<AmharcCommand>(
+                    c =>
+                        c.CommandId ==
+                            AmharcCommandIds.MatchClockStart &&
+                        c.MatchId == "m1"),
+                It.IsAny<CancellationToken>()))
+            .Callback<AmharcCommand, CancellationToken>(
+                (_, _) =>
+                {
+                    match.Status = MatchStatus.Active;
+                    match.CurrentPeriod = 1;
+                })
+            .Returns(Task.CompletedTask);
         var sut = new MatchesController(
             repo.Object,
             clock.Object,
@@ -287,6 +302,20 @@ public class MatchesControllerTests
             .ReturnsAsync(
                 (DomainMatch m, CancellationToken _) => m);
 
+        dispatcher
+            .Setup(d => d.DispatchAsync(
+                It.Is<AmharcCommand>(
+                    c =>
+                        c.CommandId ==
+                            AmharcCommandIds.MatchClockFullTime &&
+                        c.MatchId == "m1"),
+                It.IsAny<CancellationToken>()))
+            .Callback<AmharcCommand, CancellationToken>(
+                (_, _) =>
+                {
+                    match.Status = MatchStatus.Complete;
+                })
+            .Returns(Task.CompletedTask);
         var sut = new MatchesController(
             repo.Object,
             clock.Object,

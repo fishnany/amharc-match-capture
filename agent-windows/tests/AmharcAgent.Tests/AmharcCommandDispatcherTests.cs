@@ -1,4 +1,5 @@
-﻿using AmharcAgent.Core.Domain;
+using AmharcAgent.Core.Domain;
+using AmharcAgent.Core.Exceptions;
 using AmharcAgent.Core.Interfaces;
 using AmharcAgent.Core.Models;
 using AmharcAgent.Data.Repositories;
@@ -161,6 +162,12 @@ public class AmharcCommandDispatcherTests
         var clock = new Mock<IMatchClockService>();
 
         matches
+            .Setup(m => m.GetByIdAsync(
+                "m1",
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(match);
+
+        matches
             .Setup(m => m.GetActiveMatchAsync(
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(match);
@@ -201,6 +208,12 @@ public class AmharcCommandDispatcherTests
         var matches = new Mock<IMatchRepository>();
         var events = new Mock<IEventTaggingService>();
         var clock = new Mock<IMatchClockService>();
+
+        matches
+            .Setup(m => m.GetByIdAsync(
+                "m1",
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(match);
 
         matches
             .Setup(m => m.GetActiveMatchAsync(
@@ -245,6 +258,12 @@ public class AmharcCommandDispatcherTests
         var clock = new Mock<IMatchClockService>();
 
         matches
+            .Setup(m => m.GetByIdAsync(
+                "m1",
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(match);
+
+        matches
             .Setup(m => m.GetActiveMatchAsync(
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(match);
@@ -287,6 +306,12 @@ public class AmharcCommandDispatcherTests
         var clock = new Mock<IMatchClockService>();
 
         matches
+            .Setup(m => m.GetByIdAsync(
+                "m1",
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(match);
+
+        matches
             .Setup(m => m.GetActiveMatchAsync(
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(match);
@@ -319,6 +344,111 @@ public class AmharcCommandDispatcherTests
             Times.Once);
     }
 
+    [Fact]
+    public async Task MatchClockStart_RejectsSecondOperationallyLiveMatch()
+    {
+        var targetMatch = new DomainMatch
+        {
+            MatchId = "m2",
+            Sport = Sport.GaelicFootball,
+            HomeTeam = "Target Home",
+            AwayTeam = "Target Away",
+            Status = MatchStatus.Ready,
+            CurrentPeriod = 0
+        };
+
+        var existingLiveMatch = ActiveMatch();
+
+        var matches = new Mock<IMatchRepository>();
+        var events = new Mock<IEventTaggingService>();
+        var clock = new Mock<IMatchClockService>();
+
+        matches
+            .Setup(m => m.GetByIdAsync(
+                "m2",
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(targetMatch);
+
+        matches
+            .Setup(m => m.GetActiveMatchAsync(
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingLiveMatch);
+
+        var sut = new AmharcCommandDispatcher(
+            matches.Object,
+            events.Object,
+            clock.Object,
+            NullLogger<AmharcCommandDispatcher>.Instance);
+
+        var act = async () =>
+            await sut.DispatchAsync(
+                new AmharcCommand(
+                    AmharcCommandIds.MatchClockStart,
+                    EventSource.OperatorUi,
+                    MatchId: "m2"));
+
+        await act.Should()
+            .ThrowAsync<MatchLifecycleConflictException>()
+            .WithMessage("*already operationally live*");
+
+        targetMatch.Status.Should().Be(MatchStatus.Ready);
+
+        clock.Verify(
+            c => c.Start(),
+            Times.Never);
+
+        matches.Verify(
+            m => m.UpdateAsync(
+                It.IsAny<DomainMatch>(),
+                It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task MatchClockStart_RejectsTerminalMatch()
+    {
+        var match = ActiveMatch();
+        match.Status = MatchStatus.Complete;
+
+        var matches = new Mock<IMatchRepository>();
+        var events = new Mock<IEventTaggingService>();
+        var clock = new Mock<IMatchClockService>();
+
+        matches
+            .Setup(m => m.GetByIdAsync(
+                "m1",
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(match);
+
+        var sut = new AmharcCommandDispatcher(
+            matches.Object,
+            events.Object,
+            clock.Object,
+            NullLogger<AmharcCommandDispatcher>.Instance);
+
+        var act = async () =>
+            await sut.DispatchAsync(
+                new AmharcCommand(
+                    AmharcCommandIds.MatchClockStart,
+                    EventSource.OperatorUi,
+                    MatchId: "m1"));
+
+        await act.Should()
+            .ThrowAsync<MatchLifecycleConflictException>()
+            .WithMessage("*terminal state*");
+
+        match.Status.Should().Be(MatchStatus.Complete);
+
+        clock.Verify(
+            c => c.Start(),
+            Times.Never);
+
+        matches.Verify(
+            m => m.UpdateAsync(
+                It.IsAny<DomainMatch>(),
+                It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
     [Fact]
     public async Task MatchClockCorrect_CorrectsClock_AndPersistsRuntimeState()
     {

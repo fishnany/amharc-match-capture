@@ -113,22 +113,19 @@ public class MatchesController(
         if (match is null)
             return NotFound();
 
-        match.Status =
-            MatchStatus.Active;
-
-        match.CurrentPeriod =
-            1;
-
-        await repo.UpdateAsync(
-            match,
-            ct);
-
         await commandDispatcher.DispatchAsync(
             new AmharcCommand(
                 AmharcCommandIds.MatchClockStart,
                 EventSource.Api,
                 MatchId: matchId),
             ct);
+
+        match =
+            await repo.GetByIdAsync(
+                matchId,
+                ct)
+            ?? throw new InvalidOperationException(
+                $"Match {matchId} disappeared after start.");
 
         overlay.UpdateScore(
             match.HomeGoals,
@@ -156,19 +153,19 @@ public class MatchesController(
         if (match is null)
             return NotFound();
 
-        match.Status =
-            MatchStatus.Complete;
-
-        await repo.UpdateAsync(
-            match,
-            ct);
-
         await commandDispatcher.DispatchAsync(
             new AmharcCommand(
                 AmharcCommandIds.MatchClockFullTime,
                 EventSource.Api,
                 MatchId: matchId),
             ct);
+
+        match =
+            await repo.GetByIdAsync(
+                matchId,
+                ct)
+            ?? throw new InvalidOperationException(
+                $"Match {matchId} disappeared after completion.");
 
         logger.LogInformation(
             "Match {Id} completed",

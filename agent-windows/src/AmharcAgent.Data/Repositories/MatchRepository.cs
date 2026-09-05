@@ -21,9 +21,28 @@ public class MatchRepository(AmharcDbContext db) : IMatchRepository
     public async Task<Match?> GetByIdAsync(string matchId, CancellationToken ct = default) =>
         await db.Matches.FindAsync([matchId], ct);
 
-    public async Task<Match?> GetActiveMatchAsync(CancellationToken ct = default) =>
-        await db.Matches.FirstOrDefaultAsync(
-            m => m.Status == MatchStatus.Active || m.Status == MatchStatus.HalfTime, ct);
+    public async Task<Match?> GetActiveMatchAsync(
+        CancellationToken ct = default)
+    {
+        var liveMatches =
+        (await db.Matches
+        .Where(m =>
+            m.Status == MatchStatus.Active ||
+            m.Status == MatchStatus.Paused ||
+            m.Status == MatchStatus.HalfTime)
+        .ToListAsync(ct))
+    .OrderByDescending(m => m.UpdatedAt)
+    .ToList();
+
+        if (liveMatches.Count > 1)
+        {
+            throw new InvalidOperationException(
+                $"Multiple operationally live matches were found ({liveMatches.Count}). " +
+                "Expected at most one match in Active, Paused or HalfTime state.");
+        }
+
+        return liveMatches.SingleOrDefault();
+    }
 
     public async Task<Match> CreateAsync(Match match, CancellationToken ct = default)
     {
