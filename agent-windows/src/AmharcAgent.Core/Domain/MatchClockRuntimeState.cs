@@ -29,6 +29,13 @@ public class MatchClockRuntimeState
 
     public int CurrentPeriod { get; set; }
 
+    /// <summary>
+    /// Official cumulative match-clock position at which the current period began.
+    /// Null indicates that the boundary is unknown, for example for legacy persisted
+    /// state created before canonical period-boundary persistence was introduced.
+    /// </summary>
+    public int? PeriodStartTotalMatchElapsedSeconds { get; set; }
+
     public string ClockMode { get; set; } = "count-up";
 
     /// <summary>

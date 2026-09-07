@@ -31,6 +31,7 @@ public class MatchClockService : IMatchClockService, IDisposable
 
     private bool _isRunning;
     private int _currentPeriod;
+    private int? _periodStartTotalMatchElapsedSeconds;
 
     public event Action<ClockState>? StateChanged;
 
@@ -62,6 +63,7 @@ public class MatchClockService : IMatchClockService, IDisposable
 
             _isRunning = true;
             _currentPeriod = 1;
+            _periodStartTotalMatchElapsedSeconds = 0;
 
             _timer.Change(
                 500,
@@ -132,6 +134,7 @@ public class MatchClockService : IMatchClockService, IDisposable
 
             _isRunning = false;
             _currentPeriod = 0;
+            _periodStartTotalMatchElapsedSeconds = null;
 
             _timer.Change(
                 Timeout.Infinite,
@@ -181,11 +184,17 @@ public class MatchClockService : IMatchClockService, IDisposable
         lock (_lock)
         {
             _currentPeriod = period;
+
+            _periodStartTotalMatchElapsedSeconds =
+                period <= 1
+                    ? 0
+                    : (int)GetMatchClockSeconds();
         }
 
         _logger.LogInformation(
-            "Period {Period} started",
-            period);
+            "Period {Period} started at total match clock {Boundary}s",
+            period,
+            _periodStartTotalMatchElapsedSeconds);
 
         StateChanged?.Invoke(State);
     }
@@ -253,6 +262,8 @@ public class MatchClockService : IMatchClockService, IDisposable
                     state.IsRunning,
                 CurrentPeriod =
                     state.CurrentPeriod,
+                PeriodStartTotalMatchElapsedSeconds =
+                    _periodStartTotalMatchElapsedSeconds,
                 ClockMode =
                     state.ClockMode,
                 PersistedAt =
@@ -331,6 +342,10 @@ public class MatchClockService : IMatchClockService, IDisposable
 
             _currentPeriod =
                 persisted.CurrentPeriod;
+
+            _periodStartTotalMatchElapsedSeconds =
+                persisted.PeriodStartTotalMatchElapsedSeconds
+                ?? (persisted.CurrentPeriod <= 1 ? 0 : null);
 
             _timer.Change(
                 _isRunning

@@ -255,6 +255,138 @@ public class MatchClockServiceTests : IDisposable
         _sut.State.CurrentPeriod.Should().Be(2);
     }
 
+    [Fact]
+    public async Task SaveRuntimeStateAsync_PeriodOneBoundary_IsZero()
+    {
+        MatchClockRuntimeState? captured = null;
+
+        _stateStore
+            .Setup(s => s.SaveAsync(
+                It.IsAny<MatchClockRuntimeState>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<MatchClockRuntimeState, CancellationToken>(
+                (state, _) => captured = state)
+            .Returns(Task.CompletedTask);
+
+        _sut.Start();
+        _sut.Pause();
+
+        await _sut.SaveRuntimeStateAsync("match-1");
+
+        captured.Should().NotBeNull();
+        captured!.CurrentPeriod.Should().Be(1);
+        captured.PeriodStartTotalMatchElapsedSeconds.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task StartPeriod_CapturesCurrentOfficialMatchClockAsBoundary()
+    {
+        MatchClockRuntimeState? captured = null;
+
+        _stateStore
+            .Setup(s => s.SaveAsync(
+                It.IsAny<MatchClockRuntimeState>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<MatchClockRuntimeState, CancellationToken>(
+                (state, _) => captured = state)
+            .Returns(Task.CompletedTask);
+
+        _sut.Start();
+        _sut.Pause();
+
+        _sut.Correct(
+            120,
+            "establish period boundary");
+
+        _sut.StartPeriod(2);
+
+        await _sut.SaveRuntimeStateAsync("match-1");
+
+        captured.Should().NotBeNull();
+        captured!.CurrentPeriod.Should().Be(2);
+        captured.MatchClockSeconds.Should().Be(120);
+        captured.PeriodStartTotalMatchElapsedSeconds.Should().Be(120);
+    }
+
+    [Fact]
+    public async Task Correct_AfterPeriodStart_DoesNotRewritePeriodBoundary()
+    {
+        MatchClockRuntimeState? captured = null;
+
+        _stateStore
+            .Setup(s => s.SaveAsync(
+                It.IsAny<MatchClockRuntimeState>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<MatchClockRuntimeState, CancellationToken>(
+                (state, _) => captured = state)
+            .Returns(Task.CompletedTask);
+
+        _sut.Start();
+        _sut.Pause();
+
+        _sut.Correct(
+            120,
+            "period one complete");
+
+        _sut.StartPeriod(2);
+
+        _sut.Correct(
+            150,
+            "authorised in-period correction");
+
+        await _sut.SaveRuntimeStateAsync("match-1");
+
+        captured.Should().NotBeNull();
+        captured!.CurrentPeriod.Should().Be(2);
+        captured.MatchClockSeconds.Should().Be(150);
+        captured.PeriodStartTotalMatchElapsedSeconds.Should().Be(120);
+    }
+
+    [Fact]
+    public async Task RecoverRuntimeStateAsync_RestoresPersistedPeriodBoundary()
+    {
+        var persistedAt = DateTimeOffset.UtcNow;
+
+        _stateStore
+            .Setup(s => s.LoadAsync(
+                "match-1",
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                new MatchClockRuntimeState
+                {
+                    MatchId = "match-1",
+                    MatchClockSeconds = 500,
+                    RecordingElapsedSeconds = 700,
+                    IsRunning = false,
+                    CurrentPeriod = 2,
+                    PeriodStartTotalMatchElapsedSeconds = 360,
+                    ClockMode = "count-up",
+                    PersistedAt = persistedAt
+                });
+
+        MatchClockRuntimeState? captured = null;
+
+        _stateStore
+            .Setup(s => s.SaveAsync(
+                It.IsAny<MatchClockRuntimeState>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<MatchClockRuntimeState, CancellationToken>(
+                (state, _) => captured = state)
+            .Returns(Task.CompletedTask);
+
+        var recovered =
+            await _sut.RecoverRuntimeStateAsync("match-1");
+
+        recovered.Should().BeTrue();
+
+        await _sut.SaveRuntimeStateAsync("match-1");
+
+        captured.Should().NotBeNull();
+        captured!.CurrentPeriod.Should().Be(2);
+        captured.MatchClockSeconds.Should().Be(500);
+        captured.PeriodStartTotalMatchElapsedSeconds.Should().Be(360);
+    }
+
     public void Dispose()
     {
         _sut.Dispose();
