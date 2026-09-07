@@ -17,6 +17,7 @@ public class AmharcCommandDispatcher(
     IMatchRepository matches,
     IEventTaggingService events,
     IMatchClockService clock,
+    IClockSnapshotPublicationScheduler publicationScheduler,
     ILogger<AmharcCommandDispatcher> logger)
     : IAmharcCommandDispatcher
 {
@@ -121,6 +122,9 @@ public class AmharcCommandDispatcher(
                     await clock.SaveRuntimeStateAsync(
                         matchId,
                         ct);
+
+                    publicationScheduler.RequestPublication(
+                        matchId);
 
                     LogCommand(command);
                     break;

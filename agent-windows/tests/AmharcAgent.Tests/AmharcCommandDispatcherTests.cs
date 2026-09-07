@@ -32,6 +32,18 @@ public class AmharcCommandDispatcherTests
         PeriodStartTotalMatchElapsedSeconds: 0,
         ClockMode: "match",
         UpdatedAt: DateTimeOffset.UtcNow);
+    private static AmharcCommandDispatcher CreateDispatcher(
+        Mock<IMatchRepository> matches,
+        Mock<IEventTaggingService> events,
+        Mock<IMatchClockService> clock,
+        Mock<IClockSnapshotPublicationScheduler>? publicationScheduler = null) =>
+        new(
+            matches.Object,
+            events.Object,
+            clock.Object,
+            (publicationScheduler ??
+                new Mock<IClockSnapshotPublicationScheduler>()).Object,
+            NullLogger<AmharcCommandDispatcher>.Instance);
 
     [Fact]
     public async Task ScoreHomeTwoPoint_CreatesCanonicalStreamDeckEvent()
@@ -57,11 +69,10 @@ public class AmharcCommandDispatcherTests
                 (opts, _) => captured = opts)
             .ReturnsAsync(new MatchEvent());
 
-        var sut = new AmharcCommandDispatcher(
-            matches.Object,
-            events.Object,
-            clock.Object,
-            NullLogger<AmharcCommandDispatcher>.Instance);
+        var sut = CreateDispatcher(
+            matches,
+            events,
+            clock);
 
         await sut.DispatchAsync(
             new AmharcCommand(
@@ -93,11 +104,10 @@ public class AmharcCommandDispatcherTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MatchEvent());
 
-        var sut = new AmharcCommandDispatcher(
-            matches.Object,
-            events.Object,
-            clock.Object,
-            NullLogger<AmharcCommandDispatcher>.Instance);
+        var sut = CreateDispatcher(
+            matches,
+            events,
+            clock);
 
         await sut.DispatchAsync(
             new AmharcCommand(
@@ -130,11 +140,10 @@ public class AmharcCommandDispatcherTests
         matches.Setup(m => m.GetActiveMatchAsync(default))
             .ReturnsAsync((DomainMatch?)null);
 
-        var sut = new AmharcCommandDispatcher(
-            matches.Object,
-            events.Object,
-            clock.Object,
-            NullLogger<AmharcCommandDispatcher>.Instance);
+        var sut = CreateDispatcher(
+            matches,
+            events,
+            clock);
 
         var act = async () =>
             await sut.DispatchAsync(
@@ -161,6 +170,11 @@ public class AmharcCommandDispatcherTests
         var matches = new Mock<IMatchRepository>();
         var events = new Mock<IEventTaggingService>();
         var clock = new Mock<IMatchClockService>();
+        var publicationScheduler =
+            new Mock<IClockSnapshotPublicationScheduler>();
+
+        var persistenceOrder =
+            new List<string>();
 
         matches
             .Setup(m => m.GetByIdAsync(
@@ -173,17 +187,37 @@ public class AmharcCommandDispatcherTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(match);
 
+        matches
+            .Setup(m => m.UpdateAsync(
+                It.IsAny<DomainMatch>(),
+                It.IsAny<CancellationToken>()))
+            .Callback(
+                () => persistenceOrder.Add(
+                    "match"))
+            .ReturnsAsync(
+                (DomainMatch m, CancellationToken _) => m);
+
         clock
             .Setup(c => c.SaveRuntimeStateAsync(
                 "m1",
                 It.IsAny<CancellationToken>()))
+            .Callback(
+                () => persistenceOrder.Add(
+                    "runtime"))
             .Returns(Task.CompletedTask);
 
-        var sut = new AmharcCommandDispatcher(
-            matches.Object,
-            events.Object,
-            clock.Object,
-            NullLogger<AmharcCommandDispatcher>.Instance);
+        publicationScheduler
+            .Setup(s => s.RequestPublication(
+                "m1"))
+            .Callback(
+                () => persistenceOrder.Add(
+                    "publication"));
+
+        var sut = CreateDispatcher(
+            matches,
+            events,
+            clock,
+            publicationScheduler);
 
         await sut.DispatchAsync(
             new AmharcCommand(
@@ -199,6 +233,16 @@ public class AmharcCommandDispatcherTests
                 "m1",
                 It.IsAny<CancellationToken>()),
             Times.Once);
+
+        publicationScheduler.Verify(
+            s => s.RequestPublication(
+                "m1"),
+            Times.Once);
+
+        persistenceOrder.Should().Equal(
+            "match",
+            "runtime",
+            "publication");
     }
 
     [Fact]
@@ -227,11 +271,10 @@ public class AmharcCommandDispatcherTests
                 It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        var sut = new AmharcCommandDispatcher(
-            matches.Object,
-            events.Object,
-            clock.Object,
-            NullLogger<AmharcCommandDispatcher>.Instance);
+        var sut = CreateDispatcher(
+            matches,
+            events,
+            clock);
 
         await sut.DispatchAsync(
             new AmharcCommand(
@@ -275,11 +318,10 @@ public class AmharcCommandDispatcherTests
                 It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        var sut = new AmharcCommandDispatcher(
-            matches.Object,
-            events.Object,
-            clock.Object,
-            NullLogger<AmharcCommandDispatcher>.Instance);
+        var sut = CreateDispatcher(
+            matches,
+            events,
+            clock);
 
         await sut.DispatchAsync(
             new AmharcCommand(
@@ -314,11 +356,10 @@ public class AmharcCommandDispatcherTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(match);
 
-        var sut = new AmharcCommandDispatcher(
-            matches.Object,
-            events.Object,
-            clock.Object,
-            NullLogger<AmharcCommandDispatcher>.Instance);
+        var sut = CreateDispatcher(
+            matches,
+            events,
+            clock);
 
         await sut.DispatchAsync(
             new AmharcCommand(
@@ -357,11 +398,10 @@ public class AmharcCommandDispatcherTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(match);
 
-        var sut = new AmharcCommandDispatcher(
-            matches.Object,
-            events.Object,
-            clock.Object,
-            NullLogger<AmharcCommandDispatcher>.Instance);
+        var sut = CreateDispatcher(
+            matches,
+            events,
+            clock);
 
         await sut.DispatchAsync(
             new AmharcCommand(
@@ -398,11 +438,10 @@ public class AmharcCommandDispatcherTests
             .Setup(m => m.GetByIdAsync("m1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(match);
 
-        var sut = new AmharcCommandDispatcher(
-            matches.Object,
-            events.Object,
-            clock.Object,
-            NullLogger<AmharcCommandDispatcher>.Instance);
+        var sut = CreateDispatcher(
+            matches,
+            events,
+            clock);
 
         await sut.DispatchAsync(
             new AmharcCommand(
@@ -433,11 +472,10 @@ public class AmharcCommandDispatcherTests
             .Setup(m => m.GetByIdAsync("m1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(match);
 
-        var sut = new AmharcCommandDispatcher(
-            matches.Object,
-            events.Object,
-            clock.Object,
-            NullLogger<AmharcCommandDispatcher>.Instance);
+        var sut = CreateDispatcher(
+            matches,
+            events,
+            clock);
 
         await sut.DispatchAsync(
             new AmharcCommand(
@@ -467,11 +505,10 @@ public class AmharcCommandDispatcherTests
             .Setup(m => m.GetByIdAsync("m1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(match);
 
-        var sut = new AmharcCommandDispatcher(
-            matches.Object,
-            events.Object,
-            clock.Object,
-            NullLogger<AmharcCommandDispatcher>.Instance);
+        var sut = CreateDispatcher(
+            matches,
+            events,
+            clock);
 
         await sut.DispatchAsync(
             new AmharcCommand(
@@ -502,11 +539,10 @@ public class AmharcCommandDispatcherTests
             .Setup(m => m.GetByIdAsync("m1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(match);
 
-        var sut = new AmharcCommandDispatcher(
-            matches.Object,
-            events.Object,
-            clock.Object,
-            NullLogger<AmharcCommandDispatcher>.Instance);
+        var sut = CreateDispatcher(
+            matches,
+            events,
+            clock);
 
         await sut.DispatchAsync(
             new AmharcCommand(
@@ -536,11 +572,10 @@ public class AmharcCommandDispatcherTests
             .Setup(m => m.GetByIdAsync("m1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(match);
 
-        var sut = new AmharcCommandDispatcher(
-            matches.Object,
-            events.Object,
-            clock.Object,
-            NullLogger<AmharcCommandDispatcher>.Instance);
+        var sut = CreateDispatcher(
+            matches,
+            events,
+            clock);
 
         await sut.DispatchAsync(
             new AmharcCommand(
@@ -568,11 +603,10 @@ public class AmharcCommandDispatcherTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(match);
 
-        var sut = new AmharcCommandDispatcher(
-            matches.Object,
-            events.Object,
-            clock.Object,
-            NullLogger<AmharcCommandDispatcher>.Instance);
+        var sut = CreateDispatcher(
+            matches,
+            events,
+            clock);
 
         await sut.DispatchAsync(
             new AmharcCommand(
@@ -607,11 +641,10 @@ public class AmharcCommandDispatcherTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(match);
 
-        var sut = new AmharcCommandDispatcher(
-            matches.Object,
-            events.Object,
-            clock.Object,
-            NullLogger<AmharcCommandDispatcher>.Instance);
+        var sut = CreateDispatcher(
+            matches,
+            events,
+            clock);
 
         var act = async () =>
             await sut.DispatchAsync(
@@ -654,11 +687,10 @@ public class AmharcCommandDispatcherTests
                 It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        var sut = new AmharcCommandDispatcher(
-            matches.Object,
-            events.Object,
-            clock.Object,
-            NullLogger<AmharcCommandDispatcher>.Instance);
+        var sut = CreateDispatcher(
+            matches,
+            events,
+            clock);
 
         await sut.DispatchAsync(
             new AmharcCommand(
@@ -694,6 +726,8 @@ public class AmharcCommandDispatcherTests
         var matches = new Mock<IMatchRepository>();
         var events = new Mock<IEventTaggingService>();
         var clock = new Mock<IMatchClockService>();
+        var publicationScheduler =
+            new Mock<IClockSnapshotPublicationScheduler>();
 
         matches
             .Setup(m => m.GetByIdAsync(
@@ -706,11 +740,11 @@ public class AmharcCommandDispatcherTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingLiveMatch);
 
-        var sut = new AmharcCommandDispatcher(
-            matches.Object,
-            events.Object,
-            clock.Object,
-            NullLogger<AmharcCommandDispatcher>.Instance);
+        var sut = CreateDispatcher(
+            matches,
+            events,
+            clock,
+            publicationScheduler);
 
         var act = async () =>
             await sut.DispatchAsync(
@@ -734,6 +768,11 @@ public class AmharcCommandDispatcherTests
                 It.IsAny<DomainMatch>(),
                 It.IsAny<CancellationToken>()),
             Times.Never);
+
+        publicationScheduler.Verify(
+            s => s.RequestPublication(
+                It.IsAny<string>()),
+            Times.Never);
     }
 
     [Fact]
@@ -745,6 +784,8 @@ public class AmharcCommandDispatcherTests
         var matches = new Mock<IMatchRepository>();
         var events = new Mock<IEventTaggingService>();
         var clock = new Mock<IMatchClockService>();
+        var publicationScheduler =
+            new Mock<IClockSnapshotPublicationScheduler>();
 
         matches
             .Setup(m => m.GetByIdAsync(
@@ -752,11 +793,11 @@ public class AmharcCommandDispatcherTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(match);
 
-        var sut = new AmharcCommandDispatcher(
-            matches.Object,
-            events.Object,
-            clock.Object,
-            NullLogger<AmharcCommandDispatcher>.Instance);
+        var sut = CreateDispatcher(
+            matches,
+            events,
+            clock,
+            publicationScheduler);
 
         var act = async () =>
             await sut.DispatchAsync(
@@ -780,6 +821,11 @@ public class AmharcCommandDispatcherTests
                 It.IsAny<DomainMatch>(),
                 It.IsAny<CancellationToken>()),
             Times.Never);
+
+        publicationScheduler.Verify(
+            s => s.RequestPublication(
+                It.IsAny<string>()),
+            Times.Never);
     }
     [Fact]
     public async Task MatchClockCorrect_CorrectsClock_AndPersistsRuntimeState()
@@ -801,11 +847,10 @@ public class AmharcCommandDispatcherTests
                 It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        var sut = new AmharcCommandDispatcher(
-            matches.Object,
-            events.Object,
-            clock.Object,
-            NullLogger<AmharcCommandDispatcher>.Instance);
+        var sut = CreateDispatcher(
+            matches,
+            events,
+            clock);
 
         await sut.DispatchAsync(
             new AmharcCommand(
@@ -848,11 +893,10 @@ public class AmharcCommandDispatcherTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MatchEvent());
 
-        var sut = new AmharcCommandDispatcher(
-            matches.Object,
-            events.Object,
-            clock.Object,
-            NullLogger<AmharcCommandDispatcher>.Instance);
+        var sut = CreateDispatcher(
+            matches,
+            events,
+            clock);
 
         await sut.DispatchAsync(
             new AmharcCommand(
@@ -873,11 +917,10 @@ public class AmharcCommandDispatcherTests
         var events = new Mock<IEventTaggingService>();
         var clock = new Mock<IMatchClockService>();
 
-        var sut = new AmharcCommandDispatcher(
-            matches.Object,
-            events.Object,
-            clock.Object,
-            NullLogger<AmharcCommandDispatcher>.Instance);
+        var sut = CreateDispatcher(
+            matches,
+            events,
+            clock);
 
         var act = async () =>
             await sut.DispatchAsync(

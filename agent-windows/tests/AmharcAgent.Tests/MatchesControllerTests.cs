@@ -1,4 +1,5 @@
 using AmharcAgent.Api.Controllers;
+using AmharcAgent.Core.Contracts;
 using AmharcAgent.Core.Domain;
 using AmharcAgent.Core.Interfaces;
 using AmharcAgent.Core.Models;
@@ -38,6 +39,7 @@ public class MatchesControllerTests
     {
         var repo = new Mock<IMatchRepository>();
         var clock = new Mock<IMatchClockService>();
+        var canonicalSnapshotService = new Mock<ICanonicalClockSnapshotService>();
         var dispatcher = new Mock<IAmharcCommandDispatcher>();
         var overlay = new Mock<IOverlayService>();
 
@@ -57,6 +59,7 @@ public class MatchesControllerTests
         var sut = new MatchesController(
             repo.Object,
             clock.Object,
+            canonicalSnapshotService.Object,
             dispatcher.Object,
             overlay.Object,
             NullLogger<MatchesController>.Instance);
@@ -84,6 +87,7 @@ public class MatchesControllerTests
     {
         var repo = new Mock<IMatchRepository>();
         var clock = new Mock<IMatchClockService>();
+        var canonicalSnapshotService = new Mock<ICanonicalClockSnapshotService>();
         var dispatcher = new Mock<IAmharcCommandDispatcher>();
         var overlay = new Mock<IOverlayService>();
 
@@ -93,6 +97,7 @@ public class MatchesControllerTests
         await new MatchesController(
                 repo.Object,
                 clock.Object,
+                canonicalSnapshotService.Object,
                 dispatcher.Object,
                 overlay.Object,
                 NullLogger<MatchesController>.Instance)
@@ -121,6 +126,7 @@ public class MatchesControllerTests
     {
         var repo = new Mock<IMatchRepository>();
         var clock = new Mock<IMatchClockService>();
+        var canonicalSnapshotService = new Mock<ICanonicalClockSnapshotService>();
         var dispatcher = new Mock<IAmharcCommandDispatcher>();
         var overlay = new Mock<IOverlayService>();
 
@@ -130,6 +136,7 @@ public class MatchesControllerTests
         await new MatchesController(
                 repo.Object,
                 clock.Object,
+                canonicalSnapshotService.Object,
                 dispatcher.Object,
                 overlay.Object,
                 NullLogger<MatchesController>.Instance)
@@ -157,6 +164,7 @@ public class MatchesControllerTests
     {
         var repo = new Mock<IMatchRepository>();
         var clock = new Mock<IMatchClockService>();
+        var canonicalSnapshotService = new Mock<ICanonicalClockSnapshotService>();
         var dispatcher = new Mock<IAmharcCommandDispatcher>();
         var overlay = new Mock<IOverlayService>();
 
@@ -176,6 +184,7 @@ public class MatchesControllerTests
         var sut = new MatchesController(
             repo.Object,
             clock.Object,
+            canonicalSnapshotService.Object,
             dispatcher.Object,
             overlay.Object,
             NullLogger<MatchesController>.Instance);
@@ -216,6 +225,7 @@ public class MatchesControllerTests
 
         var repo = new Mock<IMatchRepository>();
         var clock = new Mock<IMatchClockService>();
+        var canonicalSnapshotService = new Mock<ICanonicalClockSnapshotService>();
         var dispatcher = new Mock<IAmharcCommandDispatcher>();
         var overlay = new Mock<IOverlayService>();
 
@@ -250,6 +260,7 @@ public class MatchesControllerTests
         var sut = new MatchesController(
             repo.Object,
             clock.Object,
+            canonicalSnapshotService.Object,
             dispatcher.Object,
             overlay.Object,
             NullLogger<MatchesController>.Instance);
@@ -287,6 +298,7 @@ public class MatchesControllerTests
 
         var repo = new Mock<IMatchRepository>();
         var clock = new Mock<IMatchClockService>();
+        var canonicalSnapshotService = new Mock<ICanonicalClockSnapshotService>();
         var dispatcher = new Mock<IAmharcCommandDispatcher>();
         var overlay = new Mock<IOverlayService>();
 
@@ -320,6 +332,7 @@ public class MatchesControllerTests
         var sut = new MatchesController(
             repo.Object,
             clock.Object,
+            canonicalSnapshotService.Object,
             dispatcher.Object,
             overlay.Object,
             NullLogger<MatchesController>.Instance);
@@ -347,4 +360,93 @@ public class MatchesControllerTests
             c => c.MarkFullTime(),
             Times.Never);
     }
-}
+
+    [Fact]
+    public void GetClockSnapshot_ReturnsCanonicalSnapshot()
+    {
+        var repo =
+            new Mock<IMatchRepository>();
+
+        var clock =
+            new Mock<IMatchClockService>();
+
+        var canonicalSnapshotService =
+            new Mock<ICanonicalClockSnapshotService>();
+
+        var dispatcher =
+            new Mock<IAmharcCommandDispatcher>();
+
+        var overlay =
+            new Mock<IOverlayService>();
+
+        var expected =
+            new ClockSnapshotV1(
+                ContractVersion: "1.0",
+                MatchId: "m1",
+                Period: 2,
+                PeriodClockSeconds: 315,
+                TotalMatchElapsedSeconds: 2115,
+                IsRunning: true,
+                RecordingElapsedSeconds: 2200,
+                ObservedAtUtc:
+                    new DateTimeOffset(
+                        2026,
+                        9,
+                        7,
+                        16,
+                        45,
+                        0,
+                        TimeSpan.Zero),
+                Authority:
+                    new ClockAuthorityV1(
+                        "AMHARC Capture",
+                        "capture-instance-1"),
+                AuthorityEpoch: 123456,
+                Sequence: 42);
+
+        canonicalSnapshotService
+            .Setup(s => s.CreateSnapshot(
+                "m1"))
+            .Returns(expected);
+
+        var sut =
+            new MatchesController(
+                repo.Object,
+                clock.Object,
+                canonicalSnapshotService.Object,
+                dispatcher.Object,
+                overlay.Object,
+                NullLogger<MatchesController>.Instance);
+
+        var result =
+            sut.GetClockSnapshot(
+                "m1");
+
+        var ok =
+            result.Should()
+                .BeOfType<OkObjectResult>()
+                .Subject;
+
+        ok.Value.Should()
+            .BeSameAs(expected);
+
+        canonicalSnapshotService.Verify(
+            s => s.CreateSnapshot(
+                "m1"),
+            Times.Once);
+
+        repo.Verify(
+            r => r.GetByIdAsync(
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()),
+            Times.Never);
+
+        repo.Verify(
+            r => r.GetActiveMatchAsync(
+                It.IsAny<CancellationToken>()),
+            Times.Never);
+
+        clock.VerifyGet(
+            c => c.State,
+            Times.Never);
+    }}

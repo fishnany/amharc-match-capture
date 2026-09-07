@@ -11,6 +11,7 @@ namespace AmharcAgent.Api.Controllers;
 public class MatchesController(
     IMatchRepository repo,
     IMatchClockService clock,
+    ICanonicalClockSnapshotService canonicalClockSnapshotService,
     IAmharcCommandDispatcher commandDispatcher,
     IOverlayService overlay,
     ILogger<MatchesController> logger) : ControllerBase
@@ -215,6 +216,11 @@ public class MatchesController(
     public IActionResult GetClock(
         string matchId) =>
         Ok(clock.State);
+
+    [HttpGet("{matchId}/clock/snapshot")]
+    public IActionResult GetClockSnapshot(
+        string matchId) =>
+        Ok(canonicalClockSnapshotService.CreateSnapshot(matchId));
 
     [HttpPost("{matchId}/clock/start")]
     public async Task<IActionResult> StartClock(

@@ -1,4 +1,5 @@
 using AmharcAgent.Api.Hubs;
+using AmharcAgent.Api.Publication;
 using AmharcAgent.Core.Domain;
 using AmharcAgent.Core.Exceptions;
 using AmharcAgent.Core.Interfaces;
@@ -19,6 +20,14 @@ builder.Host.UseSerilog();
 builder.Services.AddAmharcInfrastructure(builder.Configuration);
 builder.Services.AddControllers();
 builder.Services.AddSignalR();
+builder.Services.AddSingleton<
+    IClockSnapshotPublisher,
+    SignalRClockSnapshotPublisher>();
+builder.Services.AddSingleton<ClockSnapshotPublicationHostedService>();
+builder.Services.AddSingleton<IClockSnapshotPublicationScheduler>(
+    sp => sp.GetRequiredService<ClockSnapshotPublicationHostedService>());
+builder.Services.AddSingleton<IHostedService>(
+    sp => sp.GetRequiredService<ClockSnapshotPublicationHostedService>());
 builder.Services.AddCors(opts =>
     opts.AddDefaultPolicy(policy =>
         policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
