@@ -13,6 +13,7 @@ using AmharcAgent.Infrastructure.Health;
 using AmharcAgent.Infrastructure.Joystick;
 using AmharcAgent.Infrastructure.Overlay;
 using AmharcAgent.Infrastructure.Recording;
+using AmharcAgent.Infrastructure.Runtime;
 using AmharcAgent.Infrastructure.Scoring;
 using AmharcAgent.Infrastructure.Settings;
 using AmharcAgent.Infrastructure.Storage;
@@ -76,6 +77,13 @@ if (File.Exists(persistedSettingsPath))
 
 services.AddSingleton(settings);
 
+
+var resolvedFfmpegPath =
+    FfmpegRuntimeResolver.Resolve(
+        settings.FfmpegPath);
+
+settings.FfmpegPath =
+    resolvedFfmpegPath;
 services.AddSingleton<IAgentSettingsStore>(sp =>
     new JsonAgentSettingsStore(
         persistedSettingsPath,
