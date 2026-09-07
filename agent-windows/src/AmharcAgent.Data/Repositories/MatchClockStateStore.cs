@@ -53,6 +53,9 @@ public class MatchClockStateStore(
             existing.CurrentPeriod =
                 state.CurrentPeriod;
 
+            existing.PeriodStartTotalMatchElapsedSeconds =
+                state.PeriodStartTotalMatchElapsedSeconds;
+
             existing.ClockMode =
                 state.ClockMode;
 
