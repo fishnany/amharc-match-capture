@@ -394,6 +394,9 @@ public class MatchClockService : IMatchClockService, IDisposable
             CurrentPeriod:
                 _currentPeriod,
 
+            PeriodStartTotalMatchElapsedSeconds:
+                _periodStartTotalMatchElapsedSeconds,
+
             ClockMode:
                 "count-up",
 

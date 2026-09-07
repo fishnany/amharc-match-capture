@@ -9,6 +9,7 @@ public record ClockState(
     int RecordingElapsedSeconds,
     bool IsRunning,
     int CurrentPeriod,
+    int? PeriodStartTotalMatchElapsedSeconds,
     string ClockMode,
     DateTimeOffset UpdatedAt);
 

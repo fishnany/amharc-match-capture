@@ -151,6 +151,8 @@ services.AddSingleton<IAgentSettingsStore>(sp =>
         // ── Clock ─────────────────────────────────────────────────────────────
         services.AddSingleton<IMatchClockStateStore, MatchClockStateStore>();
         services.AddSingleton<IMatchClockService, MatchClockService>();
+        services.AddSingleton<IClockAuthorityContext, ClockAuthorityContext>();
+        services.AddSingleton<ICanonicalClockSnapshotService, CanonicalClockSnapshotService>();
         services.AddSingleton<IRecordingSessionStore, RecordingSessionStore>();
 
         // ── Commands, Events, Scoring, Storage, Overlay ───────────────────────

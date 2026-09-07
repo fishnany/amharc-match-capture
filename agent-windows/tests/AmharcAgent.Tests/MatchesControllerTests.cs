@@ -29,6 +29,7 @@ public class MatchesControllerTests
         RecordingElapsedSeconds: 150,
         IsRunning: true,
         CurrentPeriod: 1,
+        PeriodStartTotalMatchElapsedSeconds: 0,
         ClockMode: "count-up",
         UpdatedAt: DateTimeOffset.UtcNow);
 

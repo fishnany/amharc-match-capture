@@ -29,6 +29,7 @@ public class AmharcCommandDispatcherTests
         RecordingElapsedSeconds: 345,
         IsRunning: true,
         CurrentPeriod: 1,
+        PeriodStartTotalMatchElapsedSeconds: 0,
         ClockMode: "match",
         UpdatedAt: DateTimeOffset.UtcNow);
 
