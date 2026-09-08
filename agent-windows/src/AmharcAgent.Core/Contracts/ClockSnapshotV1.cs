@@ -2,7 +2,7 @@ namespace AmharcAgent.Core.Contracts;
 
 /// <summary>
 /// Canonical AMHARC temporal interoperability contract.
-/// Semantics are governed by ClockSnapshot v1 in gaelic-games-ontology.
+/// Semantics are governed by ClockSnapshot v1 in amharc-ontology.
 /// </summary>
 public sealed record ClockSnapshotV1(
     string ContractVersion,
