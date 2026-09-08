@@ -1,3 +1,4 @@
+using AmharcAgent.Core.Domain;
 using AmharcAgent.Core.Interfaces;
 using AmharcAgent.Core.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -7,40 +8,66 @@ namespace AmharcAgent.Api.Controllers;
 [ApiController]
 [Route("api/recording")]
 public class RecordingController(
+    IAmharcCommandDispatcher commandDispatcher,
     IRecordingService recording,
-    ICameraAdapter camera,
-    AmharcAgent.Core.Domain.AgentSettings settings,
     ILogger<RecordingController> logger) : ControllerBase
 {
     [HttpPost("start")]
-    public async Task<IActionResult> StartRecording([FromBody] StartRecordingRequest req, CancellationToken ct)
+    public async Task<IActionResult> StartRecording(
+        [FromBody] StartRecordingRequest req,
+        CancellationToken ct)
     {
         try
         {
-            var rtspUrl = await camera.GetStreamUrlAsync(null, ct);
-            var outputDir = req.OutputDirectory
-                ?? Path.Combine(settings.RecordingDirectory, req.MatchId, DateTime.UtcNow.ToString("yyyyMMdd"));
+            var parameters = new Dictionary<string, string?>
+            {
+                ["cameraId"] = req.CameraId,
+                ["outputDirectory"] = req.OutputDirectory
+            };
 
-            var opts = new RecordingOptions(
-                req.MatchId, req.CameraId ?? camera.CameraId, rtspUrl,
-                outputDir, settings.SegmentDurationSeconds, true);
+            await commandDispatcher.DispatchAsync(
+                new AmharcCommand(
+                    AmharcCommandIds.RecordingStart,
+                    EventSource.Api,
+                    MatchId: req.MatchId,
+                    Parameters: parameters),
+                ct);
 
-            await recording.StartRecordingAsync(opts, ct);
-            logger.LogInformation("Recording started for match {MatchId}", req.MatchId);
-            return Ok(new { state = recording.State.ToString().ToLower(), outputDirectory = outputDir });
+            logger.LogInformation(
+                "Recording start command dispatched for match {MatchId}",
+                req.MatchId);
+
+            return Ok(new
+            {
+                state = recording.State.ToString().ToLower(),
+                outputDirectory = recording.OutputDirectory
+            });
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to start recording");
-            return BadRequest(new { error = ex.Message });
+
+            return BadRequest(new
+            {
+                error = ex.Message
+            });
         }
     }
 
     [HttpPost("stop")]
     public async Task<IActionResult> StopRecording(CancellationToken ct)
     {
-        await recording.StopRecordingAsync(ct);
-        return Ok(new { state = recording.State.ToString().ToLower(), segments = recording.GetSegments() });
+        await commandDispatcher.DispatchAsync(
+            new AmharcCommand(
+                AmharcCommandIds.RecordingStop,
+                EventSource.Api),
+            ct);
+
+        return Ok(new
+        {
+            state = recording.State.ToString().ToLower(),
+            segments = recording.GetSegments()
+        });
     }
 
     [HttpGet("status")]
@@ -54,4 +81,7 @@ public class RecordingController(
     });
 }
 
-public record StartRecordingRequest(string MatchId, string? CameraId, string? OutputDirectory);
+public record StartRecordingRequest(
+    string MatchId,
+    string? CameraId,
+    string? OutputDirectory);

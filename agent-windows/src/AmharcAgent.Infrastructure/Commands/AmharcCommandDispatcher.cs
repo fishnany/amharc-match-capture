@@ -18,6 +18,9 @@ public class AmharcCommandDispatcher(
     IEventTaggingService events,
     IMatchClockService clock,
     IClockSnapshotPublicationScheduler publicationScheduler,
+    IRecordingService recording,
+    ICameraAdapter camera,
+    AgentSettings settings,
     ILogger<AmharcCommandDispatcher> logger)
     : IAmharcCommandDispatcher
 {
@@ -596,6 +599,77 @@ public class AmharcCommandDispatcher(
                     break;
                 }
 
+            case AmharcCommandIds.RecordingStart:
+                {
+                    var matchId =
+                        await ResolveMatchIdAsync(
+                            command,
+                            ct);
+
+                    await RequireMatchAsync(
+                        matchId,
+                        ct);
+
+                    var rtspUrl =
+                        await camera.GetStreamUrlAsync(
+                            null,
+                            ct);
+
+                    string? requestedCameraId =
+                        null;
+
+                    string? requestedOutputDirectory =
+                        null;
+
+                    command.Parameters?.TryGetValue(
+                        "cameraId",
+                        out requestedCameraId);
+
+                    command.Parameters?.TryGetValue(
+                        "outputDirectory",
+                        out requestedOutputDirectory);
+
+                    var cameraId =
+                        string.IsNullOrWhiteSpace(
+                            requestedCameraId)
+                            ? camera.CameraId
+                            : requestedCameraId;
+
+                    var outputDirectory =
+                        string.IsNullOrWhiteSpace(
+                            requestedOutputDirectory)
+                            ? Path.Combine(
+                                settings.RecordingDirectory,
+                                matchId,
+                                DateTime.UtcNow.ToString(
+                                    "yyyyMMdd"))
+                            : requestedOutputDirectory;
+
+                    var options =
+                        new RecordingOptions(
+                            matchId,
+                            cameraId,
+                            rtspUrl,
+                            outputDirectory,
+                            settings.SegmentDurationSeconds,
+                            true);
+
+                    await recording.StartRecordingAsync(
+                        options,
+                        ct);
+
+                    LogCommand(command);
+                    break;
+                }
+
+            case AmharcCommandIds.RecordingStop:
+                {
+                    await recording.StopRecordingAsync(
+                        ct);
+
+                    LogCommand(command);
+                    break;
+                }
             case AmharcCommandIds.EventUndo:
                 {
                     var matchId =

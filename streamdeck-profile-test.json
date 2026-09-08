@@ -103,6 +103,24 @@
             "eventType": "clock-resume",
             "clipRequest": false,
             "enabled": true
+        },
+        {
+            "buttonNumber": 10,
+            "commandId": "recording.start",
+            "label": "REC START",
+            "colour": "#CC3333",
+            "eventType": "recording-start",
+            "clipRequest": false,
+            "enabled": true
+        },
+        {
+            "buttonNumber": 11,
+            "commandId": "recording.stop",
+            "label": "REC STOP",
+            "colour": "#CC3333",
+            "eventType": "recording-stop",
+            "clipRequest": false,
+            "enabled": true
         }
     ]
 }

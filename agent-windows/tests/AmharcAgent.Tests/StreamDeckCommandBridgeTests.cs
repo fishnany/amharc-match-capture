@@ -1,4 +1,4 @@
-﻿using AmharcAgent.Core.Domain;
+using AmharcAgent.Core.Domain;
 using AmharcAgent.Core.Interfaces;
 using AmharcAgent.Core.Models;
 using AmharcAgent.Infrastructure.StreamDeck;
@@ -188,5 +188,143 @@ public class StreamDeckCommandBridgeTests
                          AmharcCommandIds.ScoreHomeGoal),
                 It.IsAny<CancellationToken>()),
             Times.Once);
+    }
+
+    [Fact]
+    public async Task RecordingStartButton_DispatchesCanonicalStreamDeckCommand()
+    {
+        var streamDeck = new Mock<IStreamDeckService>();
+        var dispatcher = new Mock<IAmharcCommandDispatcher>();
+
+        AmharcCommand? capturedCommand = null;
+
+        var dispatched = new TaskCompletionSource<bool>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+
+        dispatcher.Setup(d => d.DispatchAsync(
+                It.IsAny<AmharcCommand>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<AmharcCommand, CancellationToken>(
+                (command, _) =>
+                {
+                    capturedCommand = command;
+                    dispatched.TrySetResult(true);
+                })
+            .Returns(Task.CompletedTask);
+
+        var services = new ServiceCollection();
+
+        services.AddScoped<IAmharcCommandDispatcher>(
+            _ => dispatcher.Object);
+
+        using var provider =
+            services.BuildServiceProvider();
+
+        var bridge = new StreamDeckCommandBridge(
+            streamDeck.Object,
+            provider.GetRequiredService<IServiceScopeFactory>(),
+            NullLogger<StreamDeckCommandBridge>.Instance);
+
+        bridge.Start();
+
+        var button = new StreamDeckButton
+        {
+            ButtonNumber = 10,
+            CommandId = AmharcCommandIds.RecordingStart,
+            Label = "REC START",
+            Enabled = true
+        };
+
+        streamDeck.Raise(
+            s => s.ButtonPressed += null,
+            10,
+            button);
+
+        var completed = await Task.WhenAny(
+            dispatched.Task,
+            Task.Delay(1000));
+
+        completed.Should().Be(
+            dispatched.Task,
+            "recording.start should be dispatched promptly");
+
+        capturedCommand.Should().NotBeNull();
+
+        capturedCommand!.CommandId
+            .Should().Be(
+                AmharcCommandIds.RecordingStart);
+
+        capturedCommand.Source
+            .Should().Be(
+                EventSource.StreamDeck);
+    }
+
+    [Fact]
+    public async Task RecordingStopButton_DispatchesCanonicalStreamDeckCommand()
+    {
+        var streamDeck = new Mock<IStreamDeckService>();
+        var dispatcher = new Mock<IAmharcCommandDispatcher>();
+
+        AmharcCommand? capturedCommand = null;
+
+        var dispatched = new TaskCompletionSource<bool>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+
+        dispatcher.Setup(d => d.DispatchAsync(
+                It.IsAny<AmharcCommand>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<AmharcCommand, CancellationToken>(
+                (command, _) =>
+                {
+                    capturedCommand = command;
+                    dispatched.TrySetResult(true);
+                })
+            .Returns(Task.CompletedTask);
+
+        var services = new ServiceCollection();
+
+        services.AddScoped<IAmharcCommandDispatcher>(
+            _ => dispatcher.Object);
+
+        using var provider =
+            services.BuildServiceProvider();
+
+        var bridge = new StreamDeckCommandBridge(
+            streamDeck.Object,
+            provider.GetRequiredService<IServiceScopeFactory>(),
+            NullLogger<StreamDeckCommandBridge>.Instance);
+
+        bridge.Start();
+
+        var button = new StreamDeckButton
+        {
+            ButtonNumber = 11,
+            CommandId = AmharcCommandIds.RecordingStop,
+            Label = "REC STOP",
+            Enabled = true
+        };
+
+        streamDeck.Raise(
+            s => s.ButtonPressed += null,
+            11,
+            button);
+
+        var completed = await Task.WhenAny(
+            dispatched.Task,
+            Task.Delay(1000));
+
+        completed.Should().Be(
+            dispatched.Task,
+            "recording.stop should be dispatched promptly");
+
+        capturedCommand.Should().NotBeNull();
+
+        capturedCommand!.CommandId
+            .Should().Be(
+                AmharcCommandIds.RecordingStop);
+
+        capturedCommand.Source
+            .Should().Be(
+                EventSource.StreamDeck);
     }
 }

@@ -36,13 +36,22 @@ public class AmharcCommandDispatcherTests
         Mock<IMatchRepository> matches,
         Mock<IEventTaggingService> events,
         Mock<IMatchClockService> clock,
-        Mock<IClockSnapshotPublicationScheduler>? publicationScheduler = null) =>
+        Mock<IClockSnapshotPublicationScheduler>? publicationScheduler = null,
+        Mock<IRecordingService>? recording = null,
+        Mock<ICameraAdapter>? camera = null,
+        AgentSettings? settings = null) =>
         new(
             matches.Object,
             events.Object,
             clock.Object,
             (publicationScheduler ??
                 new Mock<IClockSnapshotPublicationScheduler>()).Object,
+            (recording ??
+                new Mock<IRecordingService>()).Object,
+            (camera ??
+                new Mock<ICameraAdapter>()).Object,
+            settings ??
+                new AgentSettings(),
             NullLogger<AmharcCommandDispatcher>.Instance);
 
     [Fact]
@@ -930,5 +939,257 @@ public class AmharcCommandDispatcherTests
 
         await act.Should()
             .ThrowAsync<NotSupportedException>();
+    }
+
+    [Fact]
+    public async Task RecordingStart_BuildsCanonicalOptions()
+    {
+        var match = ActiveMatch();
+
+        var matches = new Mock<IMatchRepository>();
+        var events = new Mock<IEventTaggingService>();
+        var clock = new Mock<IMatchClockService>();
+        var recording = new Mock<IRecordingService>();
+        var camera = new Mock<ICameraAdapter>();
+
+        matches
+            .Setup(m => m.GetActiveMatchAsync(
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(match);
+
+        matches
+            .Setup(m => m.GetByIdAsync(
+                "m1",
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(match);
+
+        camera
+            .SetupGet(c => c.CameraId)
+            .Returns("CAM-01");
+
+        camera
+            .Setup(c => c.GetStreamUrlAsync(
+                null,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                "rtsp://camera/live");
+
+        RecordingOptions? captured = null;
+
+        recording
+            .Setup(r => r.StartRecordingAsync(
+                It.IsAny<RecordingOptions>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<RecordingOptions, CancellationToken>(
+                (options, _) =>
+                    captured = options)
+            .Returns(Task.CompletedTask);
+
+        var settings =
+            new AgentSettings
+            {
+                RecordingDirectory =
+                    @"C:\AMHARC-Test",
+                SegmentDurationSeconds =
+                    240
+            };
+
+        var sut =
+            CreateDispatcher(
+                matches,
+                events,
+                clock,
+                recording: recording,
+                camera: camera,
+                settings: settings);
+
+        await sut.DispatchAsync(
+            new AmharcCommand(
+                AmharcCommandIds.RecordingStart,
+                EventSource.Api));
+
+        captured.Should().NotBeNull();
+
+        captured!.MatchId.Should().Be("m1");
+        captured.CameraId.Should().Be("CAM-01");
+        captured.RtspUrl.Should().Be(
+            "rtsp://camera/live");
+
+        captured.OutputDirectory.Should().StartWith(
+            Path.Combine(
+                @"C:\AMHARC-Test",
+                "m1"));
+
+        captured.SegmentDurationSeconds
+            .Should()
+            .Be(240);
+
+        captured.IncludeAudio
+            .Should()
+            .BeTrue();
+    }
+
+
+    [Fact]
+    public async Task RecordingStart_UsesExplicitOverrides()
+    {
+        var match = ActiveMatch();
+
+        var matches = new Mock<IMatchRepository>();
+        var events = new Mock<IEventTaggingService>();
+        var clock = new Mock<IMatchClockService>();
+        var recording = new Mock<IRecordingService>();
+        var camera = new Mock<ICameraAdapter>();
+
+        matches
+            .Setup(m => m.GetByIdAsync(
+                "m1",
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(match);
+
+        camera
+            .Setup(c => c.GetStreamUrlAsync(
+                null,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                "rtsp://camera/live");
+
+        RecordingOptions? captured = null;
+
+        recording
+            .Setup(r => r.StartRecordingAsync(
+                It.IsAny<RecordingOptions>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<RecordingOptions, CancellationToken>(
+                (options, _) =>
+                    captured = options)
+            .Returns(Task.CompletedTask);
+
+        var sut =
+            CreateDispatcher(
+                matches,
+                events,
+                clock,
+                recording: recording,
+                camera: camera);
+
+        await sut.DispatchAsync(
+            new AmharcCommand(
+                AmharcCommandIds.RecordingStart,
+                EventSource.Api,
+                MatchId: "m1",
+                Parameters:
+                    new Dictionary<string, string?>
+                    {
+                        ["cameraId"] =
+                            "CAM-OVERRIDE",
+                        ["outputDirectory"] =
+                            @"D:\Recordings\Explicit"
+                    }));
+
+        captured.Should().NotBeNull();
+
+        captured!.CameraId
+            .Should()
+            .Be("CAM-OVERRIDE");
+
+        captured.OutputDirectory
+            .Should()
+            .Be(
+                @"D:\Recordings\Explicit");
+    }
+
+
+    [Fact]
+    public async Task RecordingStart_ResolvesActiveMatchWhenMatchIdOmitted()
+    {
+        var match = ActiveMatch();
+
+        var matches = new Mock<IMatchRepository>();
+        var events = new Mock<IEventTaggingService>();
+        var clock = new Mock<IMatchClockService>();
+        var recording = new Mock<IRecordingService>();
+        var camera = new Mock<ICameraAdapter>();
+
+        matches
+            .Setup(m => m.GetActiveMatchAsync(
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(match);
+
+        matches
+            .Setup(m => m.GetByIdAsync(
+                "m1",
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(match);
+
+        camera
+            .SetupGet(c => c.CameraId)
+            .Returns("CAM-01");
+
+        camera
+            .Setup(c => c.GetStreamUrlAsync(
+                null,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                "rtsp://camera/live");
+
+        recording
+            .Setup(r => r.StartRecordingAsync(
+                It.Is<RecordingOptions>(
+                    o => o.MatchId == "m1"),
+                It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        var sut =
+            CreateDispatcher(
+                matches,
+                events,
+                clock,
+                recording: recording,
+                camera: camera);
+
+        await sut.DispatchAsync(
+            new AmharcCommand(
+                AmharcCommandIds.RecordingStart,
+                EventSource.StreamDeck));
+
+        recording.Verify(
+            r => r.StartRecordingAsync(
+                It.Is<RecordingOptions>(
+                    o => o.MatchId == "m1"),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+
+    [Fact]
+    public async Task RecordingStop_StopsRecordingService()
+    {
+        var matches = new Mock<IMatchRepository>();
+        var events = new Mock<IEventTaggingService>();
+        var clock = new Mock<IMatchClockService>();
+        var recording = new Mock<IRecordingService>();
+
+        recording
+            .Setup(r => r.StopRecordingAsync(
+                It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        var sut =
+            CreateDispatcher(
+                matches,
+                events,
+                clock,
+                recording: recording);
+
+        await sut.DispatchAsync(
+            new AmharcCommand(
+                AmharcCommandIds.RecordingStop,
+                EventSource.StreamDeck));
+
+        recording.Verify(
+            r => r.StopRecordingAsync(
+                It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 }

@@ -32,5 +32,8 @@ public static class AmharcCommandIds
     public const string MatchClockFullTime = "match.clock.full-time";
     public const string MatchClockCorrect = "match.clock.correct";
 
+    public const string RecordingStart = "recording.start";
+    public const string RecordingStop = "recording.stop";
+
     public const string EventUndo = "event.undo";
 }
