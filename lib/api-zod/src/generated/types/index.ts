@@ -6,6 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './broadcastPresentationControlV1';
+export * from './broadcastPresentationControlV1OutputMode';
+export * from './broadcastPresentationStateV1';
+export * from './broadcastPresentationStateV1ContractVersion';
 export * from './camera';
 export * from './cameraConnectionResult';
 export * from './cameraConnectionState';
@@ -13,7 +17,10 @@ export * from './cameraInput';
 export * from './cameraInputManufacturer';
 export * from './cameraManufacturer';
 export * from './cameraTestResult';
+export * from './clockAuthorityV1';
 export * from './clockCorrection';
+export * from './clockSnapshotV1';
+export * from './clockSnapshotV1ContractVersion';
 export * from './clockState';
 export * from './clockStateClockMode';
 export * from './deviceStatus';
@@ -54,6 +61,8 @@ export * from './ptzPreset';
 export * from './ptzPresetInput';
 export * from './recordingStatus';
 export * from './scoreState';
+export * from './scoreStateScoringModel';
+export * from './scoreStateSport';
 export * from './scoreUpdate';
 export * from './scoreUpdateScoreType';
 export * from './scoreUpdateTeam';

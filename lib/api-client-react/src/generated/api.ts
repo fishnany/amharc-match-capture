@@ -20,6 +20,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  BroadcastPresentationStateV1,
   Camera,
   CameraConnectionResult,
   CameraInput,
@@ -1828,6 +1829,84 @@ export function useGetMatchClock<TData = Awaited<ReturnType<typeof getMatchClock
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetMatchClockQueryOptions(matchId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetMatchBroadcastPresentationUrl = (matchId: string,) => {
+
+
+
+
+  return `/api/matches/${matchId}/broadcast`
+}
+
+/**
+ * Returns the versioned broadcast presentation contract composed from canonical score state, canonical clock state, and presentation-control state. Consumers must not independently calculate score or advance the match clock.
+ * @summary Get canonical broadcast presentation state
+ */
+export const getMatchBroadcastPresentation = async (matchId: string, options?: RequestInit): Promise<BroadcastPresentationStateV1> => {
+
+  return customFetch<BroadcastPresentationStateV1>(getGetMatchBroadcastPresentationUrl(matchId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMatchBroadcastPresentationQueryKey = (matchId: string,) => {
+    return [
+    `/api/matches/${matchId}/broadcast`
+    ] as const;
+    }
+
+
+export const getGetMatchBroadcastPresentationQueryOptions = <TData = Awaited<ReturnType<typeof getMatchBroadcastPresentation>>, TError = ErrorType<void>>(matchId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMatchBroadcastPresentation>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMatchBroadcastPresentationQueryKey(matchId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMatchBroadcastPresentation>>> = ({ signal }) => getMatchBroadcastPresentation(matchId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: matchId !== null && matchId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMatchBroadcastPresentation>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetMatchBroadcastPresentationQueryResult = NonNullable<Awaited<ReturnType<typeof getMatchBroadcastPresentation>>>
+export type GetMatchBroadcastPresentationQueryError = ErrorType<void>
+
+
+/**
+ * @summary Get canonical broadcast presentation state
+ */
+
+export function useGetMatchBroadcastPresentation<TData = Awaited<ReturnType<typeof getMatchBroadcastPresentation>>, TError = ErrorType<void>>(
+ matchId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMatchBroadcastPresentation>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetMatchBroadcastPresentationQueryOptions(matchId,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

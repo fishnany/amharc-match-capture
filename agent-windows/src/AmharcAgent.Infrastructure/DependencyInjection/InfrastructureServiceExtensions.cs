@@ -164,6 +164,7 @@ services.AddSingleton<IAgentSettingsStore>(sp =>
                 sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<StorageMonitorService>>(),
                 settings.RecordingDirectory));
         services.AddSingleton<IOverlayService, OverlayService>();
+        services.AddScoped<IBroadcastPresentationStateService, BroadcastPresentationStateService>();
 
         // ── Health ────────────────────────────────────────────────────────────
         services.AddSingleton<IHealthMonitoringService, HealthMonitoringService>();

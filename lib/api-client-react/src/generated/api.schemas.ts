@@ -403,16 +403,101 @@ export interface ClockCorrection {
   reason?: string;
 }
 
+export interface ClockAuthorityV1 {
+  sourceApplication: string;
+  instanceId: string;
+}
+
+export type ClockSnapshotV1ContractVersion = typeof ClockSnapshotV1ContractVersion[keyof typeof ClockSnapshotV1ContractVersion];
+
+
+export const ClockSnapshotV1ContractVersion = {
+  '10': '1.0',
+} as const;
+
+export interface ClockSnapshotV1 {
+  contractVersion: ClockSnapshotV1ContractVersion;
+  matchId: string;
+  period: number;
+  periodClockSeconds: number;
+  totalMatchElapsedSeconds: number;
+  isRunning: boolean;
+  /** @nullable */
+  recordingElapsedSeconds?: number | null;
+  observedAtUtc: string;
+  authority: ClockAuthorityV1;
+  authorityEpoch: number;
+  sequence: number;
+}
+
+export type BroadcastPresentationControlV1OutputMode = typeof BroadcastPresentationControlV1OutputMode[keyof typeof BroadcastPresentationControlV1OutputMode];
+
+
+export const BroadcastPresentationControlV1OutputMode = {
+  clean: 'clean',
+  programme: 'programme',
+  'overlay-only': 'overlay-only',
+  'operator-preview': 'operator-preview',
+} as const;
+
+export interface BroadcastPresentationControlV1 {
+  /** @nullable */
+  activeTemplateId?: string | null;
+  scoreboardVisible: boolean;
+  outputMode: BroadcastPresentationControlV1OutputMode;
+  /** @nullable */
+  activeGraphic?: string | null;
+  graphicVisible: boolean;
+}
+
+export type BroadcastPresentationStateV1ContractVersion = typeof BroadcastPresentationStateV1ContractVersion[keyof typeof BroadcastPresentationStateV1ContractVersion];
+
+
+export const BroadcastPresentationStateV1ContractVersion = {
+  '10': '1.0',
+} as const;
+
+export type ScoreStateSport = typeof ScoreStateSport[keyof typeof ScoreStateSport];
+
+
+export const ScoreStateSport = {
+  'gaelic-football': 'gaelic-football',
+  hurling: 'hurling',
+  camogie: 'camogie',
+  'ladies-football': 'ladies-football',
+} as const;
+
+export type ScoreStateScoringModel = typeof ScoreStateScoringModel[keyof typeof ScoreStateScoringModel];
+
+
+export const ScoreStateScoringModel = {
+  'goals-points': 'goals-points',
+  'goals-two-point-one-point': 'goals-two-point-one-point',
+} as const;
+
 export interface ScoreState {
   matchId: string;
+  sport: ScoreStateSport;
+  scoringModel: ScoreStateScoringModel;
   homeGoals: number;
+  homeTwoPointScores: number;
   homePoints: number;
   awayGoals: number;
+  awayTwoPointScores: number;
   awayPoints: number;
   homeTotal: number;
   awayTotal: number;
-  /** @nullable */
-  updatedAt?: string | null;
+  homeDisplay: string;
+  awayDisplay: string;
+  updatedAt: string;
+}
+
+export interface BroadcastPresentationStateV1 {
+  contractVersion: BroadcastPresentationStateV1ContractVersion;
+  matchId: string;
+  score: ScoreState;
+  clock: ClockSnapshotV1;
+  presentation: BroadcastPresentationControlV1;
 }
 
 export type ScoreUpdateTeam = typeof ScoreUpdateTeam[keyof typeof ScoreUpdateTeam];

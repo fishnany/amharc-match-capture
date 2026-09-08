@@ -488,6 +488,31 @@ paths:
               schema:
                 $ref: "#/components/schemas/ClockState"
 
+  /matches/{matchId}/broadcast:
+    get:
+      operationId: getMatchBroadcastPresentation
+      tags: [matches]
+      summary: Get canonical broadcast presentation state
+      description: >
+        Returns the versioned broadcast presentation contract composed from
+        canonical score state, canonical clock state, and presentation-control
+        state. Consumers must not independently calculate score or advance the
+        match clock.
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Canonical broadcast presentation state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BroadcastPresentationStateV1"
+        "404":
+          description: Broadcast presentation state cannot be composed for the match
   /matches/{matchId}/score:
     get:
       operationId: getMatchScore
@@ -1377,17 +1402,98 @@ components:
         reason:
           type: string
 
+    ClockAuthorityV1:
+      type: object
+      required: [sourceApplication, instanceId]
+      properties:
+        sourceApplication:
+          type: string
+        instanceId:
+          type: string
+
+    ClockSnapshotV1:
+      type: object
+      required: [contractVersion, matchId, period, periodClockSeconds, totalMatchElapsedSeconds, isRunning, observedAtUtc, authority, authorityEpoch, sequence]
+      properties:
+        contractVersion:
+          type: string
+          enum: ["1.0"]
+        matchId:
+          type: string
+        period:
+          type: integer
+        periodClockSeconds:
+          type: integer
+        totalMatchElapsedSeconds:
+          type: integer
+        isRunning:
+          type: boolean
+        recordingElapsedSeconds:
+          type: ["integer", "null"]
+        observedAtUtc:
+          type: string
+          format: date-time
+        authority:
+          $ref: "#/components/schemas/ClockAuthorityV1"
+        authorityEpoch:
+          type: integer
+          format: int64
+        sequence:
+          type: integer
+          format: int64
+
+    BroadcastPresentationControlV1:
+      type: object
+      required: [scoreboardVisible, outputMode, graphicVisible]
+      properties:
+        activeTemplateId:
+          type: ["string", "null"]
+        scoreboardVisible:
+          type: boolean
+        outputMode:
+          type: string
+          enum: [clean, programme, overlay-only, operator-preview]
+        activeGraphic:
+          type: ["string", "null"]
+        graphicVisible:
+          type: boolean
+
+    BroadcastPresentationStateV1:
+      type: object
+      required: [contractVersion, matchId, score, clock, presentation]
+      properties:
+        contractVersion:
+          type: string
+          enum: ["1.0"]
+        matchId:
+          type: string
+        score:
+          $ref: "#/components/schemas/ScoreState"
+        clock:
+          $ref: "#/components/schemas/ClockSnapshotV1"
+        presentation:
+          $ref: "#/components/schemas/BroadcastPresentationControlV1"
     ScoreState:
       type: object
-      required: [matchId, homeGoals, homePoints, awayGoals, awayPoints, homeTotal, awayTotal]
+      required: [matchId, sport, scoringModel, homeGoals, homeTwoPointScores, homePoints, awayGoals, awayTwoPointScores, awayPoints, homeTotal, awayTotal, homeDisplay, awayDisplay, updatedAt]
       properties:
         matchId:
           type: string
+        sport:
+          type: string
+          enum: [gaelic-football, hurling, camogie, ladies-football]
+        scoringModel:
+          type: string
+          enum: [goals-points, goals-two-point-one-point]
         homeGoals:
+          type: integer
+        homeTwoPointScores:
           type: integer
         homePoints:
           type: integer
         awayGoals:
+          type: integer
+        awayTwoPointScores:
           type: integer
         awayPoints:
           type: integer
@@ -1395,8 +1501,12 @@ components:
           type: integer
         awayTotal:
           type: integer
+        homeDisplay:
+          type: string
+        awayDisplay:
+          type: string
         updatedAt:
-          type: ["string", "null"]
+          type: string
           format: date-time
 
     ScoreUpdate:

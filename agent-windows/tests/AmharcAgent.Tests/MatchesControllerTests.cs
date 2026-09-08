@@ -40,6 +40,7 @@ public class MatchesControllerTests
         var repo = new Mock<IMatchRepository>();
         var clock = new Mock<IMatchClockService>();
         var canonicalSnapshotService = new Mock<ICanonicalClockSnapshotService>();
+        var broadcast = new Mock<IBroadcastPresentationStateService>();
         var dispatcher = new Mock<IAmharcCommandDispatcher>();
         var overlay = new Mock<IOverlayService>();
 
@@ -60,6 +61,7 @@ public class MatchesControllerTests
             repo.Object,
             clock.Object,
             canonicalSnapshotService.Object,
+            broadcast.Object,
             dispatcher.Object,
             overlay.Object,
             NullLogger<MatchesController>.Instance);
@@ -88,6 +90,7 @@ public class MatchesControllerTests
         var repo = new Mock<IMatchRepository>();
         var clock = new Mock<IMatchClockService>();
         var canonicalSnapshotService = new Mock<ICanonicalClockSnapshotService>();
+        var broadcast = new Mock<IBroadcastPresentationStateService>();
         var dispatcher = new Mock<IAmharcCommandDispatcher>();
         var overlay = new Mock<IOverlayService>();
 
@@ -98,6 +101,7 @@ public class MatchesControllerTests
                 repo.Object,
                 clock.Object,
                 canonicalSnapshotService.Object,
+                broadcast.Object,
                 dispatcher.Object,
                 overlay.Object,
                 NullLogger<MatchesController>.Instance)
@@ -127,6 +131,7 @@ public class MatchesControllerTests
         var repo = new Mock<IMatchRepository>();
         var clock = new Mock<IMatchClockService>();
         var canonicalSnapshotService = new Mock<ICanonicalClockSnapshotService>();
+        var broadcast = new Mock<IBroadcastPresentationStateService>();
         var dispatcher = new Mock<IAmharcCommandDispatcher>();
         var overlay = new Mock<IOverlayService>();
 
@@ -137,6 +142,7 @@ public class MatchesControllerTests
                 repo.Object,
                 clock.Object,
                 canonicalSnapshotService.Object,
+                broadcast.Object,
                 dispatcher.Object,
                 overlay.Object,
                 NullLogger<MatchesController>.Instance)
@@ -165,6 +171,7 @@ public class MatchesControllerTests
         var repo = new Mock<IMatchRepository>();
         var clock = new Mock<IMatchClockService>();
         var canonicalSnapshotService = new Mock<ICanonicalClockSnapshotService>();
+        var broadcast = new Mock<IBroadcastPresentationStateService>();
         var dispatcher = new Mock<IAmharcCommandDispatcher>();
         var overlay = new Mock<IOverlayService>();
 
@@ -185,6 +192,7 @@ public class MatchesControllerTests
             repo.Object,
             clock.Object,
             canonicalSnapshotService.Object,
+            broadcast.Object,
             dispatcher.Object,
             overlay.Object,
             NullLogger<MatchesController>.Instance);
@@ -226,6 +234,7 @@ public class MatchesControllerTests
         var repo = new Mock<IMatchRepository>();
         var clock = new Mock<IMatchClockService>();
         var canonicalSnapshotService = new Mock<ICanonicalClockSnapshotService>();
+        var broadcast = new Mock<IBroadcastPresentationStateService>();
         var dispatcher = new Mock<IAmharcCommandDispatcher>();
         var overlay = new Mock<IOverlayService>();
 
@@ -261,6 +270,7 @@ public class MatchesControllerTests
             repo.Object,
             clock.Object,
             canonicalSnapshotService.Object,
+            broadcast.Object,
             dispatcher.Object,
             overlay.Object,
             NullLogger<MatchesController>.Instance);
@@ -299,6 +309,7 @@ public class MatchesControllerTests
         var repo = new Mock<IMatchRepository>();
         var clock = new Mock<IMatchClockService>();
         var canonicalSnapshotService = new Mock<ICanonicalClockSnapshotService>();
+        var broadcast = new Mock<IBroadcastPresentationStateService>();
         var dispatcher = new Mock<IAmharcCommandDispatcher>();
         var overlay = new Mock<IOverlayService>();
 
@@ -333,6 +344,7 @@ public class MatchesControllerTests
             repo.Object,
             clock.Object,
             canonicalSnapshotService.Object,
+            broadcast.Object,
             dispatcher.Object,
             overlay.Object,
             NullLogger<MatchesController>.Instance);
@@ -359,6 +371,145 @@ public class MatchesControllerTests
         clock.Verify(
             c => c.MarkFullTime(),
             Times.Never);
+
+    }
+    [Fact]
+    public async Task GetBroadcastPresentation_ReturnsCanonicalState()
+    {
+        var repo = new Mock<IMatchRepository>();
+        var clock = new Mock<IMatchClockService>();
+        var canonicalSnapshotService = new Mock<ICanonicalClockSnapshotService>();
+        var broadcast = new Mock<IBroadcastPresentationStateService>();
+        var dispatcher = new Mock<IAmharcCommandDispatcher>();
+        var overlay = new Mock<IOverlayService>();
+
+        var state =
+            BroadcastPresentationStateV1.FromCanonical(
+                new ScoreState(
+                    MatchId: "match-1",
+                    Sport: Sport.GaelicFootball,
+                    ScoringModel: ScoringModel.GoalsTwoPointOnePoint,
+                    HomeGoals: 1,
+                    HomeTwoPointScores: 2,
+                    HomePoints: 5,
+                    AwayGoals: 0,
+                    AwayTwoPointScores: 1,
+                    AwayPoints: 8,
+                    UpdatedAt:
+                        new DateTimeOffset(
+                            2026,
+                            9,
+                            8,
+                            10,
+                            0,
+                            0,
+                            TimeSpan.Zero)),
+                new ClockSnapshotV1(
+                    ContractVersion: "1.0",
+                    MatchId: "match-1",
+                    Period: 2,
+                    PeriodClockSeconds: 245,
+                    TotalMatchElapsedSeconds: 2345,
+                    IsRunning: true,
+                    RecordingElapsedSeconds: 2500,
+                    ObservedAtUtc:
+                        new DateTimeOffset(
+                            2026,
+                            9,
+                            8,
+                            10,
+                            0,
+                            1,
+                            TimeSpan.Zero),
+                    Authority:
+                        new ClockAuthorityV1(
+                            "amharc-match-capture",
+                            "capture-instance-1"),
+                    AuthorityEpoch: 1,
+                    Sequence: 42),
+                new OverlayState(
+                    ActiveTemplateId: "standard-scoreboard",
+                    IsVisible: true,
+                    OutputMode: OverlayOutputMode.Programme,
+                    CurrentGraphic: null,
+                    GraphicVisible: false,
+                    HomeGoals: 99,
+                    HomePoints: 98,
+                    AwayGoals: 97,
+                    AwayPoints: 96,
+                    MatchClockSeconds: 9999,
+                    CurrentPeriod: 9));
+
+        broadcast
+            .Setup(b => b.CreateStateAsync(
+                "match-1",
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(state);
+
+        var sut =
+            new MatchesController(
+                repo.Object,
+                clock.Object,
+                canonicalSnapshotService.Object,
+                broadcast.Object,
+                dispatcher.Object,
+                overlay.Object,
+                NullLogger<MatchesController>.Instance);
+
+        var result =
+            await sut.GetBroadcastPresentation(
+                "match-1",
+                CancellationToken.None);
+
+        var ok =
+            result.Should()
+                .BeOfType<OkObjectResult>()
+                .Subject;
+
+        ok.Value.Should().BeSameAs(state);
+
+        broadcast.Verify(
+            b => b.CreateStateAsync(
+                "match-1",
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task GetBroadcastPresentation_ReturnsNotFoundWhenStateCannotBeComposed()
+    {
+        var repo = new Mock<IMatchRepository>();
+        var clock = new Mock<IMatchClockService>();
+        var canonicalSnapshotService = new Mock<ICanonicalClockSnapshotService>();
+        var broadcast = new Mock<IBroadcastPresentationStateService>();
+        var dispatcher = new Mock<IAmharcCommandDispatcher>();
+        var overlay = new Mock<IOverlayService>();
+
+        broadcast
+            .Setup(b => b.CreateStateAsync(
+                "missing-match",
+                It.IsAny<CancellationToken>()))
+            .ThrowsAsync(
+                new InvalidOperationException(
+                    "Cannot create broadcast presentation state because match 'missing-match' does not exist."));
+
+        var sut =
+            new MatchesController(
+                repo.Object,
+                clock.Object,
+                canonicalSnapshotService.Object,
+                broadcast.Object,
+                dispatcher.Object,
+                overlay.Object,
+                NullLogger<MatchesController>.Instance);
+
+        var result =
+            await sut.GetBroadcastPresentation(
+                "missing-match",
+                CancellationToken.None);
+
+        result.Should()
+            .BeOfType<NotFoundObjectResult>();
     }
 
     [Fact]
@@ -372,6 +523,7 @@ public class MatchesControllerTests
 
         var canonicalSnapshotService =
             new Mock<ICanonicalClockSnapshotService>();
+        var broadcast = new Mock<IBroadcastPresentationStateService>();
 
         var dispatcher =
             new Mock<IAmharcCommandDispatcher>();
@@ -414,6 +566,7 @@ public class MatchesControllerTests
                 repo.Object,
                 clock.Object,
                 canonicalSnapshotService.Object,
+                broadcast.Object,
                 dispatcher.Object,
                 overlay.Object,
                 NullLogger<MatchesController>.Instance);

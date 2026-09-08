@@ -5,15 +5,22 @@
  * AMHARC Match Capture — Local Agent API
  * OpenAPI spec version: 0.1.0
  */
+import type { ScoreStateScoringModel } from './scoreStateScoringModel';
+import type { ScoreStateSport } from './scoreStateSport';
 
 export interface ScoreState {
   matchId: string;
+  sport: ScoreStateSport;
+  scoringModel: ScoreStateScoringModel;
   homeGoals: number;
+  homeTwoPointScores: number;
   homePoints: number;
   awayGoals: number;
+  awayTwoPointScores: number;
   awayPoints: number;
   homeTotal: number;
   awayTotal: number;
-  /** @nullable */
-  updatedAt?: Date | null;
+  homeDisplay: string;
+  awayDisplay: string;
+  updatedAt: Date;
 }

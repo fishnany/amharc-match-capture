@@ -1,5 +1,6 @@
 using AmharcAgent.Core.Domain;
 using System.Text.Json.Serialization;
+using AmharcAgent.Core.Contracts;
 
 namespace AmharcAgent.Core.Models;
 
@@ -28,7 +29,9 @@ public sealed record TeamScoreState(int Goals, int TwoPointScores, int OnePointS
 /// </summary>
 public sealed record ScoreState(
     string MatchId,
+    [property: JsonConverter(typeof(SportWireJsonConverter))]
     Sport Sport,
+    [property: JsonConverter(typeof(ScoringModelWireJsonConverter))]
     ScoringModel ScoringModel,
     int HomeGoals,
     int HomeTwoPointScores,

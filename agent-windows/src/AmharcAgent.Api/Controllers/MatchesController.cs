@@ -12,6 +12,7 @@ public class MatchesController(
     IMatchRepository repo,
     IMatchClockService clock,
     ICanonicalClockSnapshotService canonicalClockSnapshotService,
+    IBroadcastPresentationStateService broadcastPresentation,
     IAmharcCommandDispatcher commandDispatcher,
     IOverlayService overlay,
     ILogger<MatchesController> logger) : ControllerBase
@@ -20,6 +21,29 @@ public class MatchesController(
     public async Task<IActionResult> GetMatches(
         CancellationToken ct) =>
         Ok(await repo.GetAllAsync(ct));
+
+    [HttpGet("{matchId}/broadcast")]
+    public async Task<IActionResult> GetBroadcastPresentation(
+        string matchId,
+        CancellationToken ct)
+    {
+        try
+        {
+            var state =
+                await broadcastPresentation.CreateStateAsync(
+                    matchId,
+                    ct);
+
+            return Ok(state);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(new
+            {
+                error = ex.Message
+            });
+        }
+    }
 
     [HttpPost]
     public async Task<IActionResult> CreateMatch(

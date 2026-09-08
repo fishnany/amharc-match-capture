@@ -631,6 +631,59 @@ export const GetMatchClockResponse = zod.object({
 
 
 /**
+ * Returns the versioned broadcast presentation contract composed from canonical score state, canonical clock state, and presentation-control state. Consumers must not independently calculate score or advance the match clock.
+ * @summary Get canonical broadcast presentation state
+ */
+export const GetMatchBroadcastPresentationParams = zod.object({
+  "matchId": zod.coerce.string()
+})
+
+export const GetMatchBroadcastPresentationResponse = zod.object({
+  "contractVersion": zod.enum(['1.0']),
+  "matchId": zod.string(),
+  "score": zod.object({
+  "matchId": zod.string(),
+  "sport": zod.enum(['gaelic-football', 'hurling', 'camogie', 'ladies-football']),
+  "scoringModel": zod.enum(['goals-points', 'goals-two-point-one-point']),
+  "homeGoals": zod.number(),
+  "homeTwoPointScores": zod.number(),
+  "homePoints": zod.number(),
+  "awayGoals": zod.number(),
+  "awayTwoPointScores": zod.number(),
+  "awayPoints": zod.number(),
+  "homeTotal": zod.number(),
+  "awayTotal": zod.number(),
+  "homeDisplay": zod.string(),
+  "awayDisplay": zod.string(),
+  "updatedAt": zod.coerce.date()
+}),
+  "clock": zod.object({
+  "contractVersion": zod.enum(['1.0']),
+  "matchId": zod.string(),
+  "period": zod.number(),
+  "periodClockSeconds": zod.number(),
+  "totalMatchElapsedSeconds": zod.number(),
+  "isRunning": zod.boolean(),
+  "recordingElapsedSeconds": zod.number().nullish(),
+  "observedAtUtc": zod.coerce.date(),
+  "authority": zod.object({
+  "sourceApplication": zod.string(),
+  "instanceId": zod.string()
+}),
+  "authorityEpoch": zod.number(),
+  "sequence": zod.number()
+}),
+  "presentation": zod.object({
+  "activeTemplateId": zod.string().nullish(),
+  "scoreboardVisible": zod.boolean(),
+  "outputMode": zod.enum(['clean', 'programme', 'overlay-only', 'operator-preview']),
+  "activeGraphic": zod.string().nullish(),
+  "graphicVisible": zod.boolean()
+})
+})
+
+
+/**
  * @summary Get current match score
  */
 export const GetMatchScoreParams = zod.object({
@@ -639,13 +692,19 @@ export const GetMatchScoreParams = zod.object({
 
 export const GetMatchScoreResponse = zod.object({
   "matchId": zod.string(),
+  "sport": zod.enum(['gaelic-football', 'hurling', 'camogie', 'ladies-football']),
+  "scoringModel": zod.enum(['goals-points', 'goals-two-point-one-point']),
   "homeGoals": zod.number(),
+  "homeTwoPointScores": zod.number(),
   "homePoints": zod.number(),
   "awayGoals": zod.number(),
+  "awayTwoPointScores": zod.number(),
   "awayPoints": zod.number(),
   "homeTotal": zod.number(),
   "awayTotal": zod.number(),
-  "updatedAt": zod.coerce.date().nullish()
+  "homeDisplay": zod.string(),
+  "awayDisplay": zod.string(),
+  "updatedAt": zod.coerce.date()
 })
 
 
@@ -665,13 +724,19 @@ export const UpdateMatchScoreBody = zod.object({
 
 export const UpdateMatchScoreResponse = zod.object({
   "matchId": zod.string(),
+  "sport": zod.enum(['gaelic-football', 'hurling', 'camogie', 'ladies-football']),
+  "scoringModel": zod.enum(['goals-points', 'goals-two-point-one-point']),
   "homeGoals": zod.number(),
+  "homeTwoPointScores": zod.number(),
   "homePoints": zod.number(),
   "awayGoals": zod.number(),
+  "awayTwoPointScores": zod.number(),
   "awayPoints": zod.number(),
   "homeTotal": zod.number(),
   "awayTotal": zod.number(),
-  "updatedAt": zod.coerce.date().nullish()
+  "homeDisplay": zod.string(),
+  "awayDisplay": zod.string(),
+  "updatedAt": zod.coerce.date()
 })
 
 
