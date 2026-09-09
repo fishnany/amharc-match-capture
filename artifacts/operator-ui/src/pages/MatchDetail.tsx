@@ -3,7 +3,8 @@ import { useRoute, Link } from "wouter";
 import { 
   useGetMatch, 
   useGetMatchClock, 
-  useGetMatchScore, 
+  useGetMatchScore,
+  getLiveReadiness,
   useStartMatch,
   useStartMatchClock,
   usePauseMatchClock,
@@ -13,6 +14,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Play, Pause, Square, PlayCircle, Trophy, Settings2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { LiveReadinessPanel } from "@/components/readiness/LiveReadinessPanel";
+import { useQuery } from "@tanstack/react-query";
 
 export default function MatchDetail() {
   const [, params] = useRoute("/match/:matchId");
@@ -28,6 +31,18 @@ export default function MatchDetail() {
 
   const { data: score } = useGetMatchScore(matchId, {
     query: { enabled: !!matchId, refetchInterval: 2000 }
+  });
+  const {
+    data: readiness,
+    isLoading: readinessLoading,
+    isFetching: readinessFetching,
+    isError: readinessError,
+    refetch: refetchReadiness,
+  } = useQuery({
+    queryKey: ["live-readiness", matchId],
+    queryFn: () => getLiveReadiness(matchId),
+    enabled: !!matchId,
+    refetchInterval: 2000,
   });
 
   const startMatch = useStartMatch();
@@ -59,16 +74,19 @@ export default function MatchDetail() {
               {match.status}
             </span>
           </div>
-          <p className="text-neutral-400 mt-1">{match.competition} • {match.date}</p>
-        </div>
-        <div className="flex gap-3">
-          <Link href="/capture" className="flex items-center gap-2 bg-amharc-green hover:bg-amharc-green/90 text-white px-4 py-2 rounded-md font-medium transition-colors">
-            <PlayCircle className="w-5 h-5" />
-            Live Capture
-          </Link>
+          <p className="text-neutral-400 mt-1">{match.competition} ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ {match.date}</p>
         </div>
       </div>
 
+      <LiveReadinessPanel
+        readiness={readiness}
+        isLoading={readinessLoading}
+        isFetching={readinessFetching}
+        hasError={readinessError}
+        onRefresh={() => {
+          void refetchReadiness();
+        }}
+      />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Score & Clock Controls */}
         <Card className="bg-[#0f0f0f] border-white/10 md:col-span-2">
