@@ -1458,15 +1458,36 @@ components:
         graphicVisible:
           type: boolean
 
+    BroadcastMatchIdentityV1:
+      type: object
+      required: [competition, season, homeTeam, awayTeam, date]
+      properties:
+        competition:
+          type: string
+        season:
+          type: string
+        round:
+          type: ["string", "null"]
+        homeTeam:
+          type: string
+        awayTeam:
+          type: string
+        venue:
+          type: ["string", "null"]
+        date:
+          type: string
+          format: date
     BroadcastPresentationStateV1:
       type: object
-      required: [contractVersion, matchId, score, clock, presentation]
+      required: [contractVersion, matchId, match, score, clock, presentation]
       properties:
         contractVersion:
           type: string
-          enum: ["1.0"]
+          enum: ["1.1"]
         matchId:
           type: string
+        match:
+          $ref: "#/components/schemas/BroadcastMatchIdentityV1"
         score:
           $ref: "#/components/schemas/ScoreState"
         clock:

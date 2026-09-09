@@ -1,4 +1,5 @@
 using AmharcAgent.Core.Domain;
+using AmharcAgent.Core.Interfaces;
 using AmharcAgent.Core.Models;
 using AmharcAgent.Data.Repositories;
 using AmharcAgent.Infrastructure.Events;
@@ -30,12 +31,17 @@ public class EventTaggingServiceTests
 
     private static EventTaggingService CreateSut(
         Mock<IEventRepository> events,
-        Mock<IMatchRepository> matches)
+        Mock<IMatchRepository> matches,
+        Mock<IBroadcastPresentationPublicationScheduler>? broadcastPublication = null)
     {
+        broadcastPublication ??=
+            new Mock<IBroadcastPresentationPublicationScheduler>();
+
         return new EventTaggingService(
             events.Object,
             matches.Object,
             new ScoringService(),
+            broadcastPublication.Object,
             NullLogger<EventTaggingService>.Instance);
     }
 
@@ -57,6 +63,7 @@ public class EventTaggingServiceTests
 
         var events = new Mock<IEventRepository>();
         var matches = new Mock<IMatchRepository>();
+        var broadcastPublication = new Mock<IBroadcastPresentationPublicationScheduler>();
 
         matches.Setup(m => m.GetByIdAsync("m1", default))
             .ReturnsAsync(match);
@@ -68,7 +75,7 @@ public class EventTaggingServiceTests
 
         ConfigureEventCreate(events);
 
-        var sut = CreateSut(events, matches);
+        var sut = CreateSut(events, matches, broadcastPublication);
 
         var opts = new CreateEventOptions(
             "m1",
@@ -103,6 +110,10 @@ public class EventTaggingServiceTests
         result.RecordingElapsedSeconds.Should().Be(
             125,
             "RecordingElapsedSeconds must be stored independently from MatchClockSeconds");
+
+        broadcastPublication.Verify(
+            p => p.RequestPublication("m1"),
+            Times.Once);
     }
 
     [Fact]
@@ -268,6 +279,7 @@ public class EventTaggingServiceTests
 
         var events = new Mock<IEventRepository>();
         var matches = new Mock<IMatchRepository>();
+        var broadcastPublication = new Mock<IBroadcastPresentationPublicationScheduler>();
 
         events.Setup(e => e.GetLastEventAsync("m1", default))
             .ReturnsAsync(lastEvent);
@@ -285,7 +297,7 @@ public class EventTaggingServiceTests
                 default))
             .Returns(Task.CompletedTask);
 
-        var sut = CreateSut(events, matches);
+        var sut = CreateSut(events, matches, broadcastPublication);
 
         var undone = await sut.UndoLastEventAsync(
             "m1",
@@ -311,6 +323,10 @@ public class EventTaggingServiceTests
             e => e.DeleteAsync(
                 "e-last",
                 It.IsAny<CancellationToken>()),
+            Times.Once);
+
+        broadcastPublication.Verify(
+            p => p.RequestPublication("m1"),
             Times.Once);
     }
 

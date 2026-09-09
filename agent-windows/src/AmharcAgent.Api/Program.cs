@@ -23,6 +23,14 @@ builder.Services.AddSignalR();
 builder.Services.AddSingleton<
     IClockSnapshotPublisher,
     SignalRClockSnapshotPublisher>();
+builder.Services.AddScoped<
+    IBroadcastPresentationPublisher,
+    SignalRBroadcastPresentationPublisher>();
+builder.Services.AddSingleton<BroadcastPresentationPublicationHostedService>();
+builder.Services.AddSingleton<IBroadcastPresentationPublicationScheduler>(
+    sp => sp.GetRequiredService<BroadcastPresentationPublicationHostedService>());
+builder.Services.AddSingleton<IHostedService>(
+    sp => sp.GetRequiredService<BroadcastPresentationPublicationHostedService>());
 builder.Services.AddSingleton<ClockSnapshotPublicationHostedService>();
 builder.Services.AddSingleton<IClockSnapshotPublicationScheduler>(
     sp => sp.GetRequiredService<ClockSnapshotPublicationHostedService>());

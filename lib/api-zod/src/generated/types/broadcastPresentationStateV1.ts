@@ -5,6 +5,7 @@
  * AMHARC Match Capture — Local Agent API
  * OpenAPI spec version: 0.1.0
  */
+import type { BroadcastMatchIdentityV1 } from './broadcastMatchIdentityV1';
 import type { BroadcastPresentationControlV1 } from './broadcastPresentationControlV1';
 import type { BroadcastPresentationStateV1ContractVersion } from './broadcastPresentationStateV1ContractVersion';
 import type { ClockSnapshotV1 } from './clockSnapshotV1';
@@ -13,6 +14,7 @@ import type { ScoreState } from './scoreState';
 export interface BroadcastPresentationStateV1 {
   contractVersion: BroadcastPresentationStateV1ContractVersion;
   matchId: string;
+  match: BroadcastMatchIdentityV1;
   score: ScoreState;
   clock: ClockSnapshotV1;
   presentation: BroadcastPresentationControlV1;

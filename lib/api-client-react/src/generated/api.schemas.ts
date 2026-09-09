@@ -450,11 +450,23 @@ export interface BroadcastPresentationControlV1 {
   graphicVisible: boolean;
 }
 
+export interface BroadcastMatchIdentityV1 {
+  competition: string;
+  season: string;
+  /** @nullable */
+  round?: string | null;
+  homeTeam: string;
+  awayTeam: string;
+  /** @nullable */
+  venue?: string | null;
+  date: string;
+}
+
 export type BroadcastPresentationStateV1ContractVersion = typeof BroadcastPresentationStateV1ContractVersion[keyof typeof BroadcastPresentationStateV1ContractVersion];
 
 
 export const BroadcastPresentationStateV1ContractVersion = {
-  '10': '1.0',
+  '11': '1.1',
 } as const;
 
 export type ScoreStateSport = typeof ScoreStateSport[keyof typeof ScoreStateSport];
@@ -495,6 +507,7 @@ export interface ScoreState {
 export interface BroadcastPresentationStateV1 {
   contractVersion: BroadcastPresentationStateV1ContractVersion;
   matchId: string;
+  match: BroadcastMatchIdentityV1;
   score: ScoreState;
   clock: ClockSnapshotV1;
   presentation: BroadcastPresentationControlV1;

@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './broadcastMatchIdentityV1';
 export * from './broadcastPresentationControlV1';
 export * from './broadcastPresentationControlV1OutputMode';
 export * from './broadcastPresentationStateV1';

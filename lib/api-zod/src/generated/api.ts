@@ -639,8 +639,17 @@ export const GetMatchBroadcastPresentationParams = zod.object({
 })
 
 export const GetMatchBroadcastPresentationResponse = zod.object({
-  "contractVersion": zod.enum(['1.0']),
+  "contractVersion": zod.enum(['1.1']),
   "matchId": zod.string(),
+  "match": zod.object({
+  "competition": zod.string(),
+  "season": zod.string(),
+  "round": zod.string().nullish(),
+  "homeTeam": zod.string(),
+  "awayTeam": zod.string(),
+  "venue": zod.string().nullish(),
+  "date": zod.coerce.date()
+}),
   "score": zod.object({
   "matchId": zod.string(),
   "sport": zod.enum(['gaelic-football', 'hurling', 'camogie', 'ladies-football']),

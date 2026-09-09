@@ -385,6 +385,18 @@ public class MatchesControllerTests
 
         var state =
             BroadcastPresentationStateV1.FromCanonical(
+                new DomainMatch
+                {
+                    MatchId = "match-1",
+                    Sport = Sport.GaelicFootball,
+                    Competition = "Controller Test",
+                    Season = "2026",
+                    Round = "Final",
+                    HomeTeam = "Home",
+                    AwayTeam = "Away",
+                    Venue = "AMHARC Test",
+                    Date = new DateOnly(2026, 9, 8)
+                },
                 new ScoreState(
                     MatchId: "match-1",
                     Sport: Sport.GaelicFootball,

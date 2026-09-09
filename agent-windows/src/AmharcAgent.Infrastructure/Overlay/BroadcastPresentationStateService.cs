@@ -40,6 +40,7 @@ public sealed class BroadcastPresentationStateService(
             clockSnapshots.CreateSnapshot(matchId);
 
         return BroadcastPresentationStateV1.FromCanonical(
+            match,
             score,
             clock,
             overlay.State);

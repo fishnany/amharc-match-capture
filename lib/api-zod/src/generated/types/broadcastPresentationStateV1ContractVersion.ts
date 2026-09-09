@@ -10,5 +10,5 @@ export type BroadcastPresentationStateV1ContractVersion = typeof BroadcastPresen
 
 
 export const BroadcastPresentationStateV1ContractVersion = {
-  '10': '1.0',
+  '11': '1.1',
 } as const;

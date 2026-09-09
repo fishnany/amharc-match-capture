@@ -10,6 +10,21 @@ namespace AmharcAgent.Tests;
 
 public class BroadcastPresentationStateV1Tests
 {
+    private static Match CanonicalMatch(
+        string matchId = "match-1") =>
+        new()
+        {
+            MatchId = matchId,
+            Sport = Sport.GaelicFootball,
+            Competition = "Leinster Senior Football Championship",
+            Season = "2026",
+            Round = "Final",
+            HomeTeam = "Kildare",
+            AwayTeam = "Dublin",
+            Venue = "Croke Park",
+            Date = new DateOnly(2026, 9, 8)
+        };
+
     private static ScoreState GaelicFootballScore(
         string matchId = "match-1") =>
         new(
@@ -76,6 +91,48 @@ public class BroadcastPresentationStateV1Tests
             CurrentPeriod: 9);
 
     [Fact]
+    public void FromCanonical_MapsCanonicalMatchIdentity()
+    {
+        var match =
+            CanonicalMatch();
+
+        var result =
+            BroadcastPresentationStateV1.FromCanonical(
+                match,
+                GaelicFootballScore(),
+                Clock(),
+                LegacyOverlay());
+
+        result.Match.Competition
+            .Should()
+            .Be("Leinster Senior Football Championship");
+
+        result.Match.Season
+            .Should()
+            .Be("2026");
+
+        result.Match.Round
+            .Should()
+            .Be("Final");
+
+        result.Match.HomeTeam
+            .Should()
+            .Be("Kildare");
+
+        result.Match.AwayTeam
+            .Should()
+            .Be("Dublin");
+
+        result.Match.Venue
+            .Should()
+            .Be("Croke Park");
+
+        result.Match.Date
+            .Should()
+            .Be(new DateOnly(2026, 9, 8));
+    }
+
+    [Fact]
     public void FromCanonical_PreservesCanonicalScoreState()
     {
         var score =
@@ -83,6 +140,7 @@ public class BroadcastPresentationStateV1Tests
 
         var result =
             BroadcastPresentationStateV1.FromCanonical(
+                    CanonicalMatch(),
                 score,
                 Clock(),
                 LegacyOverlay());
@@ -109,6 +167,7 @@ public class BroadcastPresentationStateV1Tests
 
         var result =
             BroadcastPresentationStateV1.FromCanonical(
+                    CanonicalMatch(),
                 GaelicFootballScore(),
                 clock,
                 LegacyOverlay());
@@ -128,6 +187,7 @@ public class BroadcastPresentationStateV1Tests
     {
         var result =
             BroadcastPresentationStateV1.FromCanonical(
+                    CanonicalMatch(),
                 GaelicFootballScore(),
                 Clock(),
                 LegacyOverlay());
@@ -158,6 +218,7 @@ public class BroadcastPresentationStateV1Tests
     {
         var result =
             BroadcastPresentationStateV1.FromCanonical(
+                    CanonicalMatch(),
                 GaelicFootballScore(),
                 Clock(),
                 LegacyOverlay());
@@ -178,6 +239,7 @@ public class BroadcastPresentationStateV1Tests
         var act =
             () =>
                 BroadcastPresentationStateV1.FromCanonical(
+                    CanonicalMatch(),
                     GaelicFootballScore("match-score"),
                     Clock("match-clock"),
                     LegacyOverlay());
@@ -189,10 +251,28 @@ public class BroadcastPresentationStateV1Tests
     }
 
     [Fact]
+    public void FromCanonical_RejectsMismatchedDomainMatchAuthority()
+    {
+        var act =
+            () =>
+                BroadcastPresentationStateV1.FromCanonical(
+                    CanonicalMatch("match-domain"),
+                    GaelicFootballScore("match-score"),
+                    Clock("match-score"),
+                    LegacyOverlay());
+
+        act.Should()
+            .Throw<InvalidOperationException>()
+            .WithMessage(
+                "*Match 'match-domain'*ScoreState match 'match-score'*");
+    }
+
+    [Fact]
     public void ContractVersion_IsExplicitAndStable()
     {
         var result =
             BroadcastPresentationStateV1.FromCanonical(
+                    CanonicalMatch(),
                 GaelicFootballScore(),
                 Clock(),
                 LegacyOverlay());
@@ -200,11 +280,11 @@ public class BroadcastPresentationStateV1Tests
         BroadcastPresentationStateV1
             .CurrentContractVersion
             .Should()
-            .Be("1.0");
+            .Be("1.1");
 
         result.ContractVersion
             .Should()
-            .Be("1.0");
+            .Be("1.1");
 
         result.MatchId
             .Should()
@@ -256,6 +336,14 @@ public class BroadcastPresentationStateV1Tests
             new BroadcastPresentationStateV1(
                 BroadcastPresentationStateV1.CurrentContractVersion,
                 "m1",
+                new BroadcastMatchIdentityV1(
+                    Competition: "Leinster Final",
+                    Season: "2026",
+                    Round: "Final",
+                    HomeTeam: "Kildare",
+                    AwayTeam: "Dublin",
+                    Venue: "Croke Park",
+                    Date: new DateOnly(2026, 9, 8)),
                 score,
                 clock,
                 new BroadcastPresentationControlV1(
@@ -267,6 +355,15 @@ public class BroadcastPresentationStateV1Tests
 
         var json =
             JsonSerializer.Serialize(state);
+
+        json.Should().Contain(
+            "\"HomeTeam\":\"Kildare\"");
+
+        json.Should().Contain(
+            "\"AwayTeam\":\"Dublin\"");
+
+        json.Should().Contain(
+            "\"Competition\":\"Leinster Final\"");
 
         json.Should().Contain(
             "\"Sport\":\"gaelic-football\"");

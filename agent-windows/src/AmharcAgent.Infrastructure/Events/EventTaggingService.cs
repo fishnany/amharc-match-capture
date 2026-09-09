@@ -11,6 +11,7 @@ public class EventTaggingService(
     IEventRepository events,
     IMatchRepository matches,
     IScoringService scoring,
+    IBroadcastPresentationPublicationScheduler broadcastPublication,
     ILogger<EventTaggingService> logger) : IEventTaggingService
 {
     private static readonly HashSet<string> ScoreEvents =
@@ -50,6 +51,9 @@ public class EventTaggingService(
                 1);
 
             await matches.UpdateAsync(match, ct);
+
+            broadcastPublication.RequestPublication(
+                match.MatchId);
         }
 
         var afterState =
@@ -134,6 +138,9 @@ public class EventTaggingService(
                 last.ScoreBeforeState);
 
             await matches.UpdateAsync(match, ct);
+
+            broadcastPublication.RequestPublication(
+                match.MatchId);
         }
 
         await events.DeleteAsync(last.EventId, ct);

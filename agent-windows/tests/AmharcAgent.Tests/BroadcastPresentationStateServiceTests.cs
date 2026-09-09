@@ -82,7 +82,15 @@ public class BroadcastPresentationStateServiceTests
         var match =
             new DomainMatch
             {
-                MatchId = "match-1"
+                MatchId = "match-1",
+                Sport = Sport.GaelicFootball,
+                Competition = "All-Ireland Senior Football Championship",
+                Season = "2026",
+                Round = "Semi-Final",
+                HomeTeam = "Kildare",
+                AwayTeam = "Galway",
+                Venue = "Croke Park",
+                Date = new DateOnly(2026, 8, 9)
             };
 
         var matches =
@@ -138,6 +146,34 @@ public class BroadcastPresentationStateServiceTests
         result.MatchId
             .Should()
             .Be("match-1");
+
+        result.Match.HomeTeam
+            .Should()
+            .Be("Kildare");
+
+        result.Match.AwayTeam
+            .Should()
+            .Be("Galway");
+
+        result.Match.Competition
+            .Should()
+            .Be("All-Ireland Senior Football Championship");
+
+        result.Match.Season
+            .Should()
+            .Be("2026");
+
+        result.Match.Round
+            .Should()
+            .Be("Semi-Final");
+
+        result.Match.Venue
+            .Should()
+            .Be("Croke Park");
+
+        result.Match.Date
+            .Should()
+            .Be(new DateOnly(2026, 8, 9));
 
         result.Score
             .Should()
