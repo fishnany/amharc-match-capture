@@ -62,6 +62,7 @@ public class MatchesControllerTests
             clock.Object,
             canonicalSnapshotService.Object,
             broadcast.Object,
+            new Mock<ILiveReadinessService>().Object,
             dispatcher.Object,
             overlay.Object,
             NullLogger<MatchesController>.Instance);
@@ -102,6 +103,7 @@ public class MatchesControllerTests
                 clock.Object,
                 canonicalSnapshotService.Object,
                 broadcast.Object,
+                new Mock<ILiveReadinessService>().Object,
                 dispatcher.Object,
                 overlay.Object,
                 NullLogger<MatchesController>.Instance)
@@ -143,6 +145,7 @@ public class MatchesControllerTests
                 clock.Object,
                 canonicalSnapshotService.Object,
                 broadcast.Object,
+                new Mock<ILiveReadinessService>().Object,
                 dispatcher.Object,
                 overlay.Object,
                 NullLogger<MatchesController>.Instance)
@@ -193,6 +196,7 @@ public class MatchesControllerTests
             clock.Object,
             canonicalSnapshotService.Object,
             broadcast.Object,
+            new Mock<ILiveReadinessService>().Object,
             dispatcher.Object,
             overlay.Object,
             NullLogger<MatchesController>.Instance);
@@ -271,6 +275,7 @@ public class MatchesControllerTests
             clock.Object,
             canonicalSnapshotService.Object,
             broadcast.Object,
+            new Mock<ILiveReadinessService>().Object,
             dispatcher.Object,
             overlay.Object,
             NullLogger<MatchesController>.Instance);
@@ -345,6 +350,7 @@ public class MatchesControllerTests
             clock.Object,
             canonicalSnapshotService.Object,
             broadcast.Object,
+            new Mock<ILiveReadinessService>().Object,
             dispatcher.Object,
             overlay.Object,
             NullLogger<MatchesController>.Instance);
@@ -464,6 +470,7 @@ public class MatchesControllerTests
                 clock.Object,
                 canonicalSnapshotService.Object,
                 broadcast.Object,
+                new Mock<ILiveReadinessService>().Object,
                 dispatcher.Object,
                 overlay.Object,
                 NullLogger<MatchesController>.Instance);
@@ -511,6 +518,7 @@ public class MatchesControllerTests
                 clock.Object,
                 canonicalSnapshotService.Object,
                 broadcast.Object,
+                new Mock<ILiveReadinessService>().Object,
                 dispatcher.Object,
                 overlay.Object,
                 NullLogger<MatchesController>.Instance);
@@ -579,6 +587,7 @@ public class MatchesControllerTests
                 clock.Object,
                 canonicalSnapshotService.Object,
                 broadcast.Object,
+                new Mock<ILiveReadinessService>().Object,
                 dispatcher.Object,
                 overlay.Object,
                 NullLogger<MatchesController>.Instance);
@@ -613,5 +622,186 @@ public class MatchesControllerTests
 
         clock.VerifyGet(
             c => c.State,
+            Times.Never);
+    }
+    [Fact]
+    public async Task GetLiveReadiness_ReturnsCanonicalState()
+    {
+        var repo = new Mock<IMatchRepository>();
+        var clock = new Mock<IMatchClockService>();
+        var canonicalSnapshotService = new Mock<ICanonicalClockSnapshotService>();
+        var broadcast = new Mock<IBroadcastPresentationStateService>();
+        var readiness = new Mock<ILiveReadinessService>();
+        var dispatcher = new Mock<IAmharcCommandDispatcher>();
+        var overlay = new Mock<IOverlayService>();
+
+        var expected =
+            LiveReadinessStateV1.Create(
+                matchId: "match-1",
+                checks:
+                [
+                    new(
+                        LiveReadinessDimensionV1.Match,
+                        LiveReadinessStatusV1.Ready,
+                        Required: true,
+                        Summary: "KILDARE v DUBLIN")
+                ],
+                observedAtUtc:
+                    new DateTimeOffset(
+                        2026, 9, 9, 12, 0, 0, TimeSpan.Zero));
+
+        using var tokenSource =
+            new CancellationTokenSource();
+
+        readiness
+            .Setup(service =>
+                service.EvaluateAsync(
+                    "match-1",
+                    tokenSource.Token))
+            .ReturnsAsync(expected);
+
+        var sut =
+            new MatchesController(
+                repo.Object,
+                clock.Object,
+                canonicalSnapshotService.Object,
+                broadcast.Object,
+                readiness.Object,
+                dispatcher.Object,
+                overlay.Object,
+                NullLogger<MatchesController>.Instance);
+
+        var result =
+            await sut.GetLiveReadiness(
+                "match-1",
+                tokenSource.Token);
+
+        var ok =
+            result.Should()
+                .BeOfType<OkObjectResult>()
+                .Subject;
+
+        ok.Value.Should().BeSameAs(expected);
+
+        readiness.Verify(
+            service =>
+                service.EvaluateAsync(
+                    "match-1",
+                    tokenSource.Token),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task GetLiveReadiness_ReturnsNotFoundForUnknownMatch()
+    {
+        var repo = new Mock<IMatchRepository>();
+        var clock = new Mock<IMatchClockService>();
+        var canonicalSnapshotService = new Mock<ICanonicalClockSnapshotService>();
+        var broadcast = new Mock<IBroadcastPresentationStateService>();
+        var readiness = new Mock<ILiveReadinessService>();
+        var dispatcher = new Mock<IAmharcCommandDispatcher>();
+        var overlay = new Mock<IOverlayService>();
+
+        var missing =
+            LiveReadinessStateV1.Create(
+                matchId: "missing-match",
+                checks:
+                [
+                    new(
+                        LiveReadinessDimensionV1.Match,
+                        LiveReadinessStatusV1.Blocked,
+                        Required: true,
+                        Summary: "Selected match does not exist.")
+                ],
+                findings:
+                [
+                    new(
+                        LiveReadinessDimensionV1.Match,
+                        LiveReadinessSeverityV1.Blocking,
+                        Code: "match.not-found",
+                        Message: "Match 'missing-match' does not exist.")
+                ]);
+
+        readiness
+            .Setup(service =>
+                service.EvaluateAsync(
+                    "missing-match",
+                    It.IsAny<CancellationToken>()))
+            .ReturnsAsync(missing);
+
+        var sut =
+            new MatchesController(
+                repo.Object,
+                clock.Object,
+                canonicalSnapshotService.Object,
+                broadcast.Object,
+                readiness.Object,
+                dispatcher.Object,
+                overlay.Object,
+                NullLogger<MatchesController>.Instance);
+
+        var result =
+            await sut.GetLiveReadiness(
+                "missing-match",
+                CancellationToken.None);
+
+        result.Should().BeOfType<NotFoundObjectResult>();
+
+        readiness.Verify(
+            service =>
+                service.EvaluateAsync(
+                    "missing-match",
+                    It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task GetLiveReadiness_DoesNotDispatchCommands()
+    {
+        var repo = new Mock<IMatchRepository>();
+        var clock = new Mock<IMatchClockService>();
+        var canonicalSnapshotService = new Mock<ICanonicalClockSnapshotService>();
+        var broadcast = new Mock<IBroadcastPresentationStateService>();
+        var readiness = new Mock<ILiveReadinessService>();
+        var dispatcher = new Mock<IAmharcCommandDispatcher>();
+        var overlay = new Mock<IOverlayService>();
+
+        readiness
+            .Setup(service =>
+                service.EvaluateAsync(
+                    "match-1",
+                    It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                LiveReadinessStateV1.Create(
+                    matchId: "match-1",
+                    checks:
+                    [
+                        new(
+                            LiveReadinessDimensionV1.Match,
+                            LiveReadinessStatusV1.Ready,
+                            Required: true,
+                            Summary: "Match ready")
+                    ]));
+
+        var sut =
+            new MatchesController(
+                repo.Object,
+                clock.Object,
+                canonicalSnapshotService.Object,
+                broadcast.Object,
+                readiness.Object,
+                dispatcher.Object,
+                overlay.Object,
+                NullLogger<MatchesController>.Instance);
+
+        await sut.GetLiveReadiness(
+            "match-1",
+            CancellationToken.None);
+
+        dispatcher.Verify(
+            service =>
+                service.DispatchAsync(
+                    It.IsAny<AmharcCommand>(),
+                    It.IsAny<CancellationToken>()),
             Times.Never);
     }}

@@ -13,6 +13,7 @@ using AmharcAgent.Infrastructure.Health;
 using AmharcAgent.Infrastructure.Joystick;
 using AmharcAgent.Infrastructure.Overlay;
 using AmharcAgent.Infrastructure.Recording;
+using AmharcAgent.Infrastructure.Readiness;
 using AmharcAgent.Infrastructure.Runtime;
 using AmharcAgent.Infrastructure.Scoring;
 using AmharcAgent.Infrastructure.Settings;
@@ -33,7 +34,7 @@ public static class InfrastructureServiceExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        // ── Settings ─────────────────────────────────────────────────────────
+        // â”€â”€ Settings â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 var settings = configuration
     .GetSection("AmharcAgent")
     .Get<AgentSettings>()
@@ -91,7 +92,7 @@ services.AddSingleton<IAgentSettingsStore>(sp =>
             Microsoft.Extensions.Logging.ILogger<
                 JsonAgentSettingsStore>>()));
 
-        // ── Database ─────────────────────────────────────────────────────────
+        // â”€â”€ Database â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         services.AddDbContextFactory<AmharcDbContext>(opts =>
             opts.UseSqlite(
                 configuration.GetConnectionString("DefaultConnection")
@@ -101,12 +102,12 @@ services.AddSingleton<IAgentSettingsStore>(sp =>
             sp.GetRequiredService<IDbContextFactory<AmharcDbContext>>()
                 .CreateDbContext());
 
-        // ── Repositories ─────────────────────────────────────────────────────
+        // â”€â”€ Repositories â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         services.AddScoped<IMatchRepository, MatchRepository>();
         services.AddScoped<ICameraRepository, CameraRepository>();
         services.AddScoped<IEventRepository, EventRepository>();
 
-        // ── Camera ───────────────────────────────────────────────────────────
+        // â”€â”€ Camera â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         // Use a placeholder camera; the real one is configured after first-run setup
         var placeholderCamera = new AmharcAgent.Core.Domain.Camera
         {
@@ -125,7 +126,7 @@ services.AddSingleton<IAgentSettingsStore>(sp =>
         services.AddSingleton<ICameraAdapter>(sp => sp.GetRequiredService<AxisCameraAdapter>());
         services.AddSingleton<IPtzController>(sp => sp.GetRequiredService<AxisCameraAdapter>());
 
-        // ── Recording & Streaming ─────────────────────────────────────────────
+        // â”€â”€ Recording & Streaming â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         services.AddSingleton<IRecordingService>(sp =>
             new FfmpegRecordingService(
                 sp.GetRequiredService<ILogger<FfmpegRecordingService>>(),
@@ -138,7 +139,7 @@ services.AddSingleton<IAgentSettingsStore>(sp =>
                 sp.GetRequiredService<ILogger<RtmpStreamingService>>(),
                 settings.FfmpegPath));
 
-        // ── Stream Deck & Joystick ────────────────────────────────────────────
+        // â”€â”€ Stream Deck & Joystick â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         // Stream Deck
         services.AddSingleton<AmharcStreamDeckButtonRenderer>();
         services.AddSingleton<IStreamDeckProcessManager, StreamDeckProcessManager>();
@@ -148,14 +149,14 @@ services.AddSingleton<IAgentSettingsStore>(sp =>
         services.AddSingleton<IJoystickService>(sp => new JoystickService(sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<JoystickService>>(), settings.Joystick));
         services.AddSingleton<JoystickPtzBridge>();
 
-        // ── Clock ─────────────────────────────────────────────────────────────
+        // â”€â”€ Clock â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         services.AddSingleton<IMatchClockStateStore, MatchClockStateStore>();
         services.AddSingleton<IMatchClockService, MatchClockService>();
         services.AddSingleton<IClockAuthorityContext, ClockAuthorityContext>();
         services.AddSingleton<ICanonicalClockSnapshotService, CanonicalClockSnapshotService>();
         services.AddSingleton<IRecordingSessionStore, RecordingSessionStore>();
 
-        // ── Commands, Events, Scoring, Storage, Overlay ───────────────────────
+        // â”€â”€ Commands, Events, Scoring, Storage, Overlay â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         services.AddScoped<IAmharcCommandDispatcher, AmharcCommandDispatcher>();
         services.AddScoped<IScoringService, ScoringService>();
         services.AddScoped<IEventTaggingService, EventTaggingService>();
@@ -166,10 +167,11 @@ services.AddSingleton<IAgentSettingsStore>(sp =>
         services.AddSingleton<IOverlayService, OverlayService>();
         services.AddScoped<IBroadcastPresentationStateService, BroadcastPresentationStateService>();
 
-        // ── Health ────────────────────────────────────────────────────────────
+        // â”€â”€ Health â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         services.AddSingleton<IHealthMonitoringService, HealthMonitoringService>();
+        services.AddScoped<ILiveReadinessService, LiveReadinessService>();
 
-        // ── Export ────────────────────────────────────────────────────────────
+        // â”€â”€ Export â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         services.AddScoped<IExportService, ExportService>();
 
         return services;

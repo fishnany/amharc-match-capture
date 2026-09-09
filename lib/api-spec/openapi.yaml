@@ -3,7 +3,7 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: AMHARC Match Capture — Local Agent API
+  description: AMHARC Match Capture - Local Agent API
 servers:
   - url: /api
     description: Base API path
@@ -488,6 +488,37 @@ paths:
               schema:
                 $ref: "#/components/schemas/ClockState"
 
+  /matches/{matchId}/readiness:
+    get:
+      operationId: getLiveReadiness
+      summary: Get live readiness for a match
+      description: Returns the canonical read-only live readiness projection for the selected match.
+      tags:
+        - Matches
+      parameters:
+        - in: path
+          name: matchId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Canonical live readiness state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LiveReadinessStateV1'
+        '404':
+          description: Match not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                required:
+                  - error
   /matches/{matchId}/broadcast:
     get:
       operationId: getMatchBroadcastPresentation
@@ -951,6 +982,110 @@ paths:
 
 components:
   schemas:
+    LiveReadinessStatusV1:
+      type: string
+      enum:
+        - Ready
+        - Degraded
+        - Blocked
+
+    LiveReadinessSeverityV1:
+      type: string
+      enum:
+        - Info
+        - Warning
+        - Blocking
+
+    LiveReadinessDimensionV1:
+      type: string
+      enum:
+        - Agent
+        - Database
+        - Match
+        - Clock
+        - Camera
+        - Video
+        - Audio
+        - Ffmpeg
+        - Recording
+        - Storage
+        - StreamDeck
+        - StreamDeckOwnership
+        - Joystick
+        - Streaming
+        - Broadcast
+
+    LiveReadinessCheckV1:
+      type: object
+      required:
+        - dimension
+        - status
+        - required
+        - summary
+      properties:
+        dimension:
+          $ref: '#/components/schemas/LiveReadinessDimensionV1'
+        status:
+          $ref: '#/components/schemas/LiveReadinessStatusV1'
+        required:
+          type: boolean
+        summary:
+          type: string
+        detail:
+          type:
+            - string
+            - 'null'
+
+    LiveReadinessFindingV1:
+      type: object
+      required:
+        - dimension
+        - severity
+        - code
+        - message
+      properties:
+        dimension:
+          $ref: '#/components/schemas/LiveReadinessDimensionV1'
+        severity:
+          $ref: '#/components/schemas/LiveReadinessSeverityV1'
+        code:
+          type: string
+        message:
+          type: string
+
+    LiveReadinessStateV1:
+      type: object
+      required:
+        - contractVersion
+        - status
+        - ready
+        - checks
+        - findings
+        - observedAtUtc
+      properties:
+        contractVersion:
+          type: string
+          enum:
+            - '1.0'
+        matchId:
+          type:
+            - string
+            - 'null'
+        status:
+          $ref: '#/components/schemas/LiveReadinessStatusV1'
+        ready:
+          type: boolean
+        checks:
+          type: array
+          items:
+            $ref: '#/components/schemas/LiveReadinessCheckV1'
+        findings:
+          type: array
+          items:
+            $ref: '#/components/schemas/LiveReadinessFindingV1'
+        observedAtUtc:
+          type: string
+          format: date-time
     HealthStatus:
       type: object
       properties:

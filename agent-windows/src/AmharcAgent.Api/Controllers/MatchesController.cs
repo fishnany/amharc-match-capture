@@ -13,6 +13,7 @@ public class MatchesController(
     IMatchClockService clock,
     ICanonicalClockSnapshotService canonicalClockSnapshotService,
     IBroadcastPresentationStateService broadcastPresentation,
+    ILiveReadinessService liveReadiness,
     IAmharcCommandDispatcher commandDispatcher,
     IOverlayService overlay,
     ILogger<MatchesController> logger) : ControllerBase
@@ -43,6 +44,32 @@ public class MatchesController(
                 error = ex.Message
             });
         }
+    }
+    [HttpGet("{matchId}/readiness")]
+    public async Task<IActionResult> GetLiveReadiness(
+        string matchId,
+        CancellationToken ct)
+    {
+        var state =
+            await liveReadiness.EvaluateAsync(
+                matchId,
+                ct);
+
+        var matchNotFound =
+            state.Findings.Any(
+                finding =>
+                    finding.Code == "match.not-found");
+
+        if (matchNotFound)
+        {
+            return NotFound(new
+            {
+                error =
+                    $"Match '{matchId}' does not exist."
+            });
+        }
+
+        return Ok(state);
     }
 
     [HttpPost]
@@ -234,7 +261,7 @@ public class MatchesController(
     }
 
 
-    // ── Clock ─────────────────────────────────────────────────────────────────
+    // â”€â”€ Clock â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     [HttpGet("{matchId}/clock")]
     public IActionResult GetClock(
@@ -408,7 +435,7 @@ public class MatchesController(
         return Ok(clock.State);
     }
 
-    // ── Score ─────────────────────────────────────────────────────────────────
+    // â”€â”€ Score â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     [HttpGet("{matchId}/score")]
     public async Task<IActionResult> GetScore(
