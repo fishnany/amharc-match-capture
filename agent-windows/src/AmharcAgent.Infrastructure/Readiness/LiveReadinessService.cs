@@ -23,6 +23,7 @@ public sealed class LiveReadinessService(
     IJoystickService joystick,
     ICameraAdapter camera,
     IRecordingService recording,
+    IAudioRuntimeHealthService audioRuntimeHealth,
     AgentSettings settings)
     : ILiveReadinessService
 {
@@ -317,23 +318,76 @@ public sealed class LiveReadinessService(
                         $"Recording pipeline is transitioning through {recordingState}."));
         }
 
+        var audioState =
+            audioRuntimeHealth.Current;
+
+        var audioReadiness =
+            audioState.Status switch
+            {
+                AudioRuntimeHealthStatus.Ready =>
+                    LiveReadinessStatusV1.Ready,
+                AudioRuntimeHealthStatus.Blocked =>
+                    LiveReadinessStatusV1.Blocked,
+                AudioRuntimeHealthStatus.Unknown or
+                AudioRuntimeHealthStatus.Degraded =>
+                    LiveReadinessStatusV1.Degraded,
+                _ =>
+                    LiveReadinessStatusV1.Degraded
+            };
+
+        var audioSummary =
+            audioState.Status switch
+            {
+                AudioRuntimeHealthStatus.Ready =>
+                    "Audio runtime is ready.",
+                AudioRuntimeHealthStatus.Blocked =>
+                    "Audio runtime is blocked.",
+                AudioRuntimeHealthStatus.Degraded =>
+                    "Audio runtime health is degraded.",
+                _ =>
+                    "Audio runtime health has not yet been observed."
+            };
+
         checks.Add(
             new(
                 LiveReadinessDimensionV1.Audio,
-                LiveReadinessStatusV1.Degraded,
+                audioReadiness,
                 Required: true,
-                Summary: "Audio capture has not yet been independently verified.",
-                Detail:
-                    "Current Capture configuration can request audio, but no " +
-                    "authoritative runtime audio-health surface exists."));
+                Summary: audioSummary,
+                Detail: audioState.Detail));
 
-        findings.Add(
-            new(
-                LiveReadinessDimensionV1.Audio,
-                LiveReadinessSeverityV1.Warning,
-                Code: "audio.unverified",
-                Message:
-                    "Audio remains unverified until a real runtime audio authority is implemented."));
+        if (audioState.Status != AudioRuntimeHealthStatus.Ready)
+        {
+            var audioFinding =
+                audioState.Status switch
+                {
+                    AudioRuntimeHealthStatus.Blocked =>
+                        (
+                            LiveReadinessSeverityV1.Blocking,
+                            "audio.blocked",
+                            "Authoritative audio runtime health is blocked."),
+                    AudioRuntimeHealthStatus.Degraded =>
+                        (
+                            LiveReadinessSeverityV1.Warning,
+                            "audio.degraded",
+                            "Authoritative audio runtime health is degraded."),
+                    _ =>
+                        (
+                            LiveReadinessSeverityV1.Warning,
+                            "audio.unknown",
+                            "Authoritative audio runtime health has not yet been observed.")
+                };
+
+            findings.Add(
+                new(
+                    LiveReadinessDimensionV1.Audio,
+                    audioFinding.Item1,
+                    Code: audioFinding.Item2,
+                    Message:
+                        string.IsNullOrWhiteSpace(audioState.Detail)
+                            ? audioFinding.Item3
+                            : audioState.Detail));
+        }
 
         var storageStatus =
             await storage.CheckAsync(ct);

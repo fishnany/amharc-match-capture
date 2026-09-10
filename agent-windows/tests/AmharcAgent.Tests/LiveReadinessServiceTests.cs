@@ -109,17 +109,22 @@ public class LiveReadinessServiceTests
                 joystick.Object,
                 CreateConnectedCamera().Object,
                 CreateReadyRecording().Object,
+                CreateAudioHealth(CreateReadyAudioState()).Object,
                 CreateReadySettings());
 
         var state =
             await service.EvaluateAsync("match-1");
 
-        state.Status.Should().Be(LiveReadinessStatusV1.Degraded);
-        state.Ready.Should().BeFalse();
+        state.Status.Should().Be(LiveReadinessStatusV1.Ready);
+        state.Ready.Should().BeTrue();
         state.MatchId.Should().Be("match-1");
         state.Checks.Should().HaveCount(12);
-        state.Findings.Should().ContainSingle(
-            finding => finding.Code == "audio.unverified");
+        state.Checks.Should().Contain(
+            check =>
+                check.Dimension == LiveReadinessDimensionV1.Audio &&
+                check.Status == LiveReadinessStatusV1.Ready);
+        state.Findings.Should().NotContain(
+            finding => finding.Dimension == LiveReadinessDimensionV1.Audio);
     }
 
     [Fact]
@@ -432,21 +437,80 @@ public class LiveReadinessServiceTests
     }
 
     [Fact]
-    public async Task EvaluateAsync_WhenMediaAuthoritiesAreOtherwiseReady_AudioKeepsStateDegraded()
+    public async Task EvaluateAsync_WhenAudioHealthIsUnknown_KeepsStateDegraded()
     {
-        var fixture =
-            CreateFixture();
-
-        var state =
-            await fixture.Service.EvaluateAsync("match-1");
+        var fixture = CreateFixture();
+        var state = await fixture.Service.EvaluateAsync("match-1");
 
         state.Status.Should().Be(LiveReadinessStatusV1.Degraded);
         state.Ready.Should().BeFalse();
         state.Findings.Should().Contain(
-            finding =>
-                finding.Code == "audio.unverified" &&
-                finding.Severity == LiveReadinessSeverityV1.Warning);
+            finding => finding.Code == "audio.unknown" &&
+                       finding.Severity == LiveReadinessSeverityV1.Warning);
     }
+
+    [Fact]
+    public async Task EvaluateAsync_WhenAudioHealthIsReady_AllowsReady()
+    {
+        var fixture = CreateFixture();
+        fixture.AudioHealth.SetupGet(service => service.Current).Returns(CreateReadyAudioState());
+        var state = await fixture.Service.EvaluateAsync("match-1");
+
+        state.Status.Should().Be(LiveReadinessStatusV1.Ready);
+        state.Ready.Should().BeTrue();
+        state.Findings.Should().NotContain(
+            finding => finding.Dimension == LiveReadinessDimensionV1.Audio);
+    }
+
+    [Fact]
+    public async Task EvaluateAsync_WhenAudioHealthIsDegraded_KeepsStateDegraded()
+    {
+        var fixture = CreateFixture();
+        fixture.AudioHealth.SetupGet(service => service.Current).Returns(
+            new AudioRuntimeHealthState(
+                AudioRuntimeHealthStatus.Degraded, "192.168.1.136", 554,
+                true, true, true, false, "mpeg4-generic", 8000, 1, 97,
+                DateTimeOffset.UtcNow, "Audio media flow has not been observed."));
+        var state = await fixture.Service.EvaluateAsync("match-1");
+
+        state.Status.Should().Be(LiveReadinessStatusV1.Degraded);
+        state.Ready.Should().BeFalse();
+        state.Findings.Should().Contain(
+            finding => finding.Code == "audio.degraded" &&
+                       finding.Severity == LiveReadinessSeverityV1.Warning);
+    }
+
+    [Fact]
+    public async Task EvaluateAsync_WhenAudioHealthIsBlocked_BlocksReadiness()
+    {
+        var fixture = CreateFixture();
+        fixture.AudioHealth.SetupGet(service => service.Current).Returns(
+            new AudioRuntimeHealthState(
+                AudioRuntimeHealthStatus.Blocked, "192.168.1.136", 554,
+                false, false, false, false, null, null, null, null,
+                DateTimeOffset.UtcNow, "Audio endpoint is unreachable."));
+        var state = await fixture.Service.EvaluateAsync("match-1");
+
+        state.Status.Should().Be(LiveReadinessStatusV1.Blocked);
+        state.Ready.Should().BeFalse();
+        state.Findings.Should().Contain(
+            finding => finding.Code == "audio.blocked" &&
+                       finding.Severity == LiveReadinessSeverityV1.Blocking);
+    }
+
+    private static Mock<IAudioRuntimeHealthService> CreateAudioHealth(AudioRuntimeHealthState state)
+    {
+        var audio = new Mock<IAudioRuntimeHealthService>();
+        audio.SetupGet(service => service.Current).Returns(state);
+        return audio;
+    }
+
+    private static AudioRuntimeHealthState CreateReadyAudioState() =>
+        new(
+            AudioRuntimeHealthStatus.Ready, "192.168.1.136", 554,
+            true, true, true, true, "mpeg4-generic", 8000, 1, 97,
+            DateTimeOffset.UtcNow, "Authenticated audio RTP media flow observed.");
+
     private static Fixture CreateFixture()
     {
         var matches =
@@ -536,6 +600,9 @@ public class LiveReadinessServiceTests
         var recording =
             CreateReadyRecording();
 
+        var audioHealth =
+            CreateAudioHealth(AudioRuntimeHealthState.Unknown(DateTimeOffset.MinValue));
+
         var settings =
             CreateReadySettings();
 
@@ -549,6 +616,7 @@ public class LiveReadinessServiceTests
                 joystick.Object,
                 camera.Object,
                 recording.Object,
+                audioHealth.Object,
                 settings);
 
         return new Fixture(
@@ -560,6 +628,7 @@ public class LiveReadinessServiceTests
             joystick,
             camera,
             recording,
+            audioHealth,
             settings);
     }
 
@@ -572,5 +641,6 @@ public class LiveReadinessServiceTests
         Mock<IJoystickService> Joystick,
         Mock<ICameraAdapter> Camera,
         Mock<IRecordingService> Recording,
+        Mock<IAudioRuntimeHealthService> AudioHealth,
         AgentSettings Settings);
 }
