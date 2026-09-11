@@ -1163,6 +1163,65 @@ public class AmharcCommandDispatcherTests
 
 
     [Fact]
+    public async Task RecordingStart_WhenCameraDisconnected_ConnectsBeforeResolvingStream()
+    {
+        var match = ActiveMatch();
+        var matches = new Mock<IMatchRepository>();
+        var events = new Mock<IEventTaggingService>();
+        var clock = new Mock<IMatchClockService>();
+        var recording = new Mock<IRecordingService>();
+        var camera = new Mock<ICameraAdapter>();
+
+        matches.Setup(m => m.GetByIdAsync("m1", It.IsAny<CancellationToken>())).ReturnsAsync(match);
+
+        var sequence = new MockSequence();
+        camera.InSequence(sequence).SetupGet(c => c.ConnectionState).Returns(CameraConnectionState.Disconnected);
+        camera.InSequence(sequence).Setup(c => c.ConnectAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        camera.InSequence(sequence).Setup(c => c.GetStreamUrlAsync(null, It.IsAny<CancellationToken>())).ReturnsAsync("rtsp://camera/live");
+        camera.SetupGet(c => c.CameraId).Returns("CAM-01");
+
+        recording.Setup(r => r.StartRecordingAsync(It.IsAny<RecordingOptions>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        var sut = CreateDispatcher(matches, events, clock, recording: recording, camera: camera);
+
+        await sut.DispatchAsync(new AmharcCommand(
+            AmharcCommandIds.RecordingStart,
+            EventSource.Api,
+            MatchId: "m1"));
+
+        camera.Verify(c => c.ConnectAsync(It.IsAny<CancellationToken>()), Times.Once);
+        camera.Verify(c => c.GetStreamUrlAsync(null, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task RecordingStart_WhenCameraAlreadyConnected_DoesNotReconnect()
+    {
+        var match = ActiveMatch();
+        var matches = new Mock<IMatchRepository>();
+        var events = new Mock<IEventTaggingService>();
+        var clock = new Mock<IMatchClockService>();
+        var recording = new Mock<IRecordingService>();
+        var camera = new Mock<ICameraAdapter>();
+
+        matches.Setup(m => m.GetByIdAsync("m1", It.IsAny<CancellationToken>())).ReturnsAsync(match);
+        camera.SetupGet(c => c.ConnectionState).Returns(CameraConnectionState.Connected);
+        camera.SetupGet(c => c.CameraId).Returns("CAM-01");
+        camera.Setup(c => c.GetStreamUrlAsync(null, It.IsAny<CancellationToken>())).ReturnsAsync("rtsp://camera/live");
+        recording.Setup(r => r.StartRecordingAsync(It.IsAny<RecordingOptions>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        var sut = CreateDispatcher(matches, events, clock, recording: recording, camera: camera);
+
+        await sut.DispatchAsync(new AmharcCommand(
+            AmharcCommandIds.RecordingStart,
+            EventSource.Api,
+            MatchId: "m1"));
+
+        camera.Verify(c => c.ConnectAsync(It.IsAny<CancellationToken>()), Times.Never);
+        camera.Verify(c => c.GetStreamUrlAsync(null, It.IsAny<CancellationToken>()), Times.Once);
+    }
+    [Fact]
     public async Task RecordingStop_StopsRecordingService()
     {
         var matches = new Mock<IMatchRepository>();

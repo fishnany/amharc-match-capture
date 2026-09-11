@@ -610,6 +610,12 @@ public class AmharcCommandDispatcher(
                         matchId,
                         ct);
 
+                    if (camera.ConnectionState !=
+                        CameraConnectionState.Connected)
+                    {
+                        await camera.ConnectAsync(ct);
+                    }
+
                     var rtspUrl =
                         await camera.GetStreamUrlAsync(
                             null,
