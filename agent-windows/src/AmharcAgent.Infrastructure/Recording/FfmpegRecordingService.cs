@@ -16,6 +16,7 @@ public class FfmpegRecordingService : IRecordingService, IAsyncDisposable
     private readonly ILogger<FfmpegRecordingService> _logger;
     private readonly IRecordingSessionStore _sessionStore;
     private readonly ICameraAdapter _camera;
+    private readonly IRecordingAudioSourceResolver _audioSourceResolver;
     private readonly string _ffmpegPath;
 
     private Process? _ffmpegProcess;
@@ -34,11 +35,13 @@ public class FfmpegRecordingService : IRecordingService, IAsyncDisposable
         ILogger<FfmpegRecordingService> logger,
         IRecordingSessionStore sessionStore,
         ICameraAdapter camera,
+        IRecordingAudioSourceResolver audioSourceResolver,
         string ffmpegPath = "ffmpeg.exe")
     {
         _logger = logger;
         _sessionStore = sessionStore;
         _camera = camera;
+        _audioSourceResolver = audioSourceResolver;
         _ffmpegPath = ffmpegPath;
     }
 
@@ -114,20 +117,14 @@ public class FfmpegRecordingService : IRecordingService, IAsyncDisposable
                     null,
                     ct);
 
-            var mapArgs =
-                options.IncludeAudio
-                    ? "-map 0:v:0 -map 0:a?"
-                    : "-map 0:v:0";
-
-            var audioArgs =
-                options.IncludeAudio
-                    ? "-c:a copy"
-                    : "-an";
+            var inputArgs = await BuildRecordingInputArgumentsAsync(runtimeRtspUrl, options.IncludeAudio, ct);
+            var mapArgs = BuildRecordingMapArguments(options.IncludeAudio);
+            var audioArgs = BuildRecordingAudioArguments(options.IncludeAudio);
 
             var args = string.Join(
                 " ",
                 "-rtsp_transport tcp",
-                $"-i \"{runtimeRtspUrl}\"",
+                inputArgs,
                 mapArgs,
                 "-c:v copy",
                 "-bsf:v \"setts=pts='if(eq(PTS,NOPTS),N*3600,PTS)':dts='if(eq(DTS,NOPTS),(N-1)*3600,DTS)'\"",
@@ -243,7 +240,7 @@ public class FfmpegRecordingService : IRecordingService, IAsyncDisposable
             if (!_ffmpegProcess.WaitForExit(10_000))
             {
                 _logger.LogWarning(
-                    "FFmpeg did not exit cleanly — killing process");
+                    "FFmpeg did not exit cleanly ? killing process");
 
                 _ffmpegProcess.Kill();
             }
@@ -460,20 +457,14 @@ public class FfmpegRecordingService : IRecordingService, IAsyncDisposable
                     null,
                     ct);
 
-            var mapArgs =
-                _currentOptions.IncludeAudio
-                    ? "-map 0:v:0 -map 0:a?"
-                    : "-map 0:v:0";
-
-            var audioArgs =
-                _currentOptions.IncludeAudio
-                    ? "-c:a copy"
-                    : "-an";
+            var inputArgs = await BuildRecordingInputArgumentsAsync(runtimeRtspUrl, _currentOptions.IncludeAudio, ct);
+            var mapArgs = BuildRecordingMapArguments(_currentOptions.IncludeAudio);
+            var audioArgs = BuildRecordingAudioArguments(_currentOptions.IncludeAudio);
 
             var args = string.Join(
                 " ",
                 "-rtsp_transport tcp",
-                $"-i \"{runtimeRtspUrl}\"",
+                inputArgs,
                 mapArgs,
                 "-c:v copy",
                 "-bsf:v \"setts=pts='if(eq(PTS,NOPTS),N*3600,PTS)':dts='if(eq(DTS,NOPTS),(N-1)*3600,DTS)'\"",
@@ -669,6 +660,66 @@ public class FfmpegRecordingService : IRecordingService, IAsyncDisposable
             .ToLowerInvariant();
     }
 
+    private async Task<string> BuildRecordingInputArgumentsAsync(
+        string cameraRuntimeRtspUrl,
+        bool includeAudio,
+        CancellationToken ct)
+    {
+        if (!includeAudio)
+        {
+            return $"-rtsp_transport tcp -i \"{cameraRuntimeRtspUrl}\"";
+        }
+
+        var audio = await _audioSourceResolver.ResolveAsync(ct);
+        if (!audio.IsAvailable || audio.Credential is null)
+        {
+            throw new InvalidOperationException(
+                "Authoritative recording audio source is unavailable; recording will not fall back to camera audio.");
+        }
+
+        var audioRuntimeRtspUrl = BuildAuthenticatedRtspUrl(
+            audio.Endpoint,
+            audio.Port,
+            audio.PresentationPath,
+            audio.Credential);
+
+        return string.Join(
+            " ",
+            "-rtsp_transport tcp",
+            $"-i \"{cameraRuntimeRtspUrl}\"",
+            "-rtsp_transport tcp",
+            $"-i \"{audioRuntimeRtspUrl}\"");
+    }
+
+    private static string BuildRecordingMapArguments(bool includeAudio)
+    {
+        return includeAudio
+            ? "-map 0:v:0 -map 1:a:0"
+            : "-map 0:v:0";
+    }
+
+    private static string BuildRecordingAudioArguments(bool includeAudio)
+    {
+        return includeAudio
+            ? "-c:a copy"
+            : "-an";
+    }
+
+    private static string BuildAuthenticatedRtspUrl(
+        string endpoint,
+        int port,
+        string presentationPath,
+        AudioCredential credential)
+    {
+        var path = presentationPath.StartsWith("/", StringComparison.Ordinal)
+            ? presentationPath
+            : "/" + presentationPath;
+
+        var user = Uri.EscapeDataString(credential.Username);
+        var password = Uri.EscapeDataString(credential.Password);
+
+        return $"rtsp://{user}:{password}@{endpoint}:{port}{path}";
+    }
     private Process CreateFfmpegProcess(
         string args)
     {
