@@ -36,6 +36,9 @@ builder.Services.AddSingleton<IClockSnapshotPublicationScheduler>(
     sp => sp.GetRequiredService<ClockSnapshotPublicationHostedService>());
 builder.Services.AddSingleton<IHostedService>(
     sp => sp.GetRequiredService<ClockSnapshotPublicationHostedService>());
+builder.Services.AddSingleton<AudioRuntimeHealthHostedService>();
+builder.Services.AddSingleton<IHostedService>(
+    sp => sp.GetRequiredService<AudioRuntimeHealthHostedService>());
 builder.Services.AddCors(opts =>
     opts.AddDefaultPolicy(policy =>
         policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));

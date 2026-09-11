@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using AmharcAgent.Core.Domain;
 using AmharcAgent.Core.Interfaces;
 using AmharcAgent.Core.Models;
@@ -181,6 +181,11 @@ services.AddSingleton<IAgentSettingsStore>(sp =>
         services.AddSingleton<IFieldNetworkMutationAuthority, FieldNetworkMutationAuthority>();
         services.AddSingleton<IFieldNetworkRemediationOrchestrator, FieldNetworkRemediationOrchestrator>();
         services.AddScoped<ILiveReadinessService, LiveReadinessService>();
+        services.AddSingleton<IAudioCredentialProvider, AmharcAgent.Infrastructure.Audio.WindowsCredentialManagerAudioCredentialProvider>();
+        services.AddSingleton<IAudioRuntimeProbe, AmharcAgent.Infrastructure.Audio.AxisAudioRuntimeProbe>();
+        services.AddSingleton<AmharcAgent.Infrastructure.Audio.AudioRuntimeHealthObserver>();
+        services.AddSingleton<IAudioRuntimeHealthObserver>(
+            sp => sp.GetRequiredService<AmharcAgent.Infrastructure.Audio.AudioRuntimeHealthObserver>());
         services.AddSingleton<AmharcAgent.Infrastructure.Audio.AudioRuntimeHealthService>();
         services.AddSingleton<IAudioRuntimeHealthService>(
             sp => sp.GetRequiredService<AmharcAgent.Infrastructure.Audio.AudioRuntimeHealthService>());
