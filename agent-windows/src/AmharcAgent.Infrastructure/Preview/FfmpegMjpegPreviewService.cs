@@ -1,25 +1,26 @@
-using System.Diagnostics;
-using System.Text.RegularExpressions;
-using AmharcAgent.Core.Domain;
+﻿using System.Diagnostics;
 using AmharcAgent.Core.Interfaces;
 using Microsoft.Extensions.Logging;
 
 namespace AmharcAgent.Infrastructure.Preview;
 
 /// <summary>
-/// Isolated local operator-preview pipeline.
+/// Local operator-preview consumer of canonical media ingress.
 ///
-/// Preview deliberately owns a separate FFmpeg process from recording. A
-/// preview failure or browser disconnect must not stop or mutate the clean
-/// recording or authoritative-audio pipeline.
+/// Preview no longer acquires camera credentials or RTSP directly. It consumes
+/// a credential-free video-only MPEG-TS lease from canonical ingress and owns
+/// only the downstream MJPEG transform required by the browser.
 /// </summary>
 public sealed class FfmpegMjpegPreviewService(
-    ICameraAdapter camera,
+    IStreamReceiverMediaSource mediaSource,
     ILogger<FfmpegMjpegPreviewService> logger,
     string ffmpegPath) : IPreviewService
 {
-    private const string Boundary = "amharcframe";
-    private readonly SemaphoreSlim _sessionGate = new(1, 1);
+    private const string Boundary =
+        "amharcframe";
+
+    private readonly SemaphoreSlim _sessionGate =
+        new(1, 1);
 
     public string ContentType =>
         $"multipart/x-mixed-replace; boundary={Boundary}";
@@ -28,43 +29,52 @@ public sealed class FfmpegMjpegPreviewService(
         Stream destination,
         CancellationToken ct = default)
     {
-        ArgumentNullException.ThrowIfNull(destination);
+        ArgumentNullException.ThrowIfNull(
+            destination);
 
         await _sessionGate.WaitAsync(ct);
 
         Process? process = null;
         Task<string>? stderrTask = null;
+        Task? inputPumpTask = null;
+        IStreamReceiverMediaLease? lease = null;
+
+        using var previewCts =
+            CancellationTokenSource
+                .CreateLinkedTokenSource(ct);
 
         try
         {
-            if (camera.ConnectionState !=
-                CameraConnectionState.Connected)
-            {
-                await camera.ConnectAsync(ct);
-            }
-
-            var runtimeRtspUrl =
-                await camera.GetAuthenticatedStreamUrlAsync(
-                    null,
-                    ct);
+            lease =
+                await mediaSource.AcquireAsync(
+                    previewCts.Token);
 
             var arguments =
-                BuildPreviewArguments(runtimeRtspUrl);
+                BuildPreviewArguments();
 
-            process = new Process
-            {
-                StartInfo = new ProcessStartInfo
+            process =
+                new Process
                 {
-                    FileName = ffmpegPath,
-                    Arguments = arguments,
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    RedirectStandardInput = true
-                },
-                EnableRaisingEvents = true
-            };
+                    StartInfo =
+                        new ProcessStartInfo
+                        {
+                            FileName =
+                                ffmpegPath,
+                            Arguments =
+                                arguments,
+                            UseShellExecute =
+                                false,
+                            CreateNoWindow =
+                                true,
+                            RedirectStandardOutput =
+                                true,
+                            RedirectStandardError =
+                                true,
+                            RedirectStandardInput =
+                                true
+                        },
+                    EnableRaisingEvents = true
+                };
 
             if (!process.Start())
             {
@@ -72,33 +82,44 @@ public sealed class FfmpegMjpegPreviewService(
                     "Unable to start FFmpeg operator preview process.");
             }
 
-            // Never log the complete argument string: it contains the
-            // authenticated runtime camera URI.
             logger.LogInformation(
-                "AMHARC operator preview started using managed FFmpeg.");
+                "AMHARC operator preview started from canonical media ingress using managed FFmpeg.");
 
             stderrTask =
-                process.StandardError.ReadToEndAsync(ct);
+                process.StandardError
+                    .ReadToEndAsync();
+
+            inputPumpTask =
+                PumpCanonicalInputAsync(
+                    lease.Stream,
+                    process.StandardInput
+                        .BaseStream,
+                    previewCts.Token);
 
             try
             {
-                await process.StandardOutput.BaseStream.CopyToAsync(
-                    destination,
-                    64 * 1024,
-                    ct);
+                await process.StandardOutput
+                    .BaseStream
+                    .CopyToAsync(
+                        destination,
+                        64 * 1024,
+                        previewCts.Token);
             }
             catch (OperationCanceledException)
-                when (ct.IsCancellationRequested)
+                when (previewCts
+                    .IsCancellationRequested)
             {
                 // Normal browser disconnect/navigation.
             }
             catch (IOException)
-                when (ct.IsCancellationRequested)
+                when (previewCts
+                    .IsCancellationRequested)
             {
-                // Normal HTTP response-stream closure during cancellation.
+                // Normal HTTP response-stream closure.
             }
 
-            if (!ct.IsCancellationRequested &&
+            if (!previewCts
+                    .IsCancellationRequested &&
                 process.HasExited &&
                 process.ExitCode != 0)
             {
@@ -107,16 +128,14 @@ public sealed class FfmpegMjpegPreviewService(
                         ? string.Empty
                         : await stderrTask;
 
-                var redacted =
-                    RedactRtspCredentials(stderr);
-
-                if (!string.IsNullOrWhiteSpace(redacted))
+                if (!string.IsNullOrWhiteSpace(
+                        stderr))
                 {
                     logger.LogWarning(
                         "Operator preview FFmpeg exited with code {ExitCode}. FFmpeg stderr:{NewLine}{Stderr}",
                         process.ExitCode,
                         Environment.NewLine,
-                        redacted);
+                        stderr);
                 }
 
                 throw new InvalidOperationException(
@@ -125,20 +144,35 @@ public sealed class FfmpegMjpegPreviewService(
         }
         finally
         {
+            previewCts.Cancel();
+
             if (process is not null)
             {
                 try
                 {
+                    process.StandardInput.Close();
+                }
+                catch
+                {
+                    // Best-effort input closure.
+                }
+
+                try
+                {
                     if (!process.HasExited)
                     {
-                        process.Kill(entireProcessTree: true);
-                        await process.WaitForExitAsync(
-                            CancellationToken.None);
+                        process.Kill(
+                            entireProcessTree:
+                                true);
+
+                        await process
+                            .WaitForExitAsync(
+                                CancellationToken.None);
                     }
                 }
                 catch (InvalidOperationException)
                 {
-                    // Process already exited between checks.
+                    // Process already exited.
                 }
                 catch (Exception ex)
                 {
@@ -150,6 +184,27 @@ public sealed class FfmpegMjpegPreviewService(
                 process.Dispose();
             }
 
+            if (inputPumpTask is not null)
+            {
+                try
+                {
+                    await inputPumpTask;
+                }
+                catch (OperationCanceledException)
+                {
+                    // Expected on browser disconnect.
+                }
+                catch (IOException)
+                {
+                    // Expected when FFmpeg stdin closes.
+                }
+            }
+
+            if (lease is not null)
+            {
+                await lease.DisposeAsync();
+            }
+
             _sessionGate.Release();
 
             logger.LogInformation(
@@ -157,26 +212,44 @@ public sealed class FfmpegMjpegPreviewService(
         }
     }
 
-    private static string BuildPreviewArguments(
-        string authenticatedRtspUrl)
+    private static async Task PumpCanonicalInputAsync(
+        Stream canonicalMedia,
+        Stream ffmpegInput,
+        CancellationToken ct)
     {
-        if (string.IsNullOrWhiteSpace(authenticatedRtspUrl))
+        try
         {
-            throw new ArgumentException(
-                "Authenticated RTSP URL is required.",
-                nameof(authenticatedRtspUrl));
-        }
+            await canonicalMedia.CopyToAsync(
+                ffmpegInput,
+                64 * 1024,
+                ct);
 
+            await ffmpegInput.FlushAsync(ct);
+        }
+        catch (OperationCanceledException)
+            when (ct.IsCancellationRequested)
+        {
+            // Normal preview shutdown.
+        }
+        catch (IOException)
+            when (ct.IsCancellationRequested)
+        {
+            // FFmpeg input closed during shutdown.
+        }
+    }
+
+    private static string BuildPreviewArguments()
+    {
         return string.Join(
             " ",
             "-hide_banner",
             "-loglevel warning",
-            "-rtsp_transport tcp",
             "-fflags nobuffer",
             "-flags low_delay",
             "-probesize 32768",
             "-analyzeduration 0",
-            $"-i \"{authenticatedRtspUrl}\"",
+            "-f mpegts",
+            "-i pipe:0",
             "-map 0:v:0",
             "-an",
             "-vf \"scale=1280:-2,fps=15\"",
@@ -184,21 +257,5 @@ public sealed class FfmpegMjpegPreviewService(
             "-f mpjpeg",
             $"-boundary_tag {Boundary}",
             "pipe:1");
-    }
-
-    private static string RedactRtspCredentials(
-        string value)
-    {
-        if (string.IsNullOrEmpty(value))
-        {
-            return value;
-        }
-
-        return Regex.Replace(
-            value,
-            @"rtsp://[^/@\s]+:[^/@\s]+@",
-            "rtsp://***:***@",
-            RegexOptions.IgnoreCase |
-            RegexOptions.CultureInvariant);
     }
 }
