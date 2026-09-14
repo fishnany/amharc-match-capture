@@ -49,6 +49,7 @@ import type {
   RecordingStatus,
   ScoreState,
   ScoreUpdate,
+  StartRecordingRequest,
   StorageStatus,
   StreamDeckProfile,
   StreamDeckProfileInput,
@@ -1339,6 +1340,77 @@ export const useUpdateMatch = <TError = ErrorType<unknown>,
       return useMutation(getUpdateMatchMutationOptions(options));
     }
 
+export const getMarkMatchReadyUrl = (matchId: string,) => {
+
+
+
+
+  return `/api/matches/${matchId}/ready`
+}
+
+/**
+ * @summary Mark a match as ready
+ */
+export const markMatchReady = async (matchId: string, options?: RequestInit): Promise<Match> => {
+
+  return customFetch<Match>(getMarkMatchReadyUrl(matchId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getMarkMatchReadyMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof markMatchReady>>, TError,{matchId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof markMatchReady>>, TError,{matchId: string}, TContext> => {
+
+const mutationKey = ['markMatchReady'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof markMatchReady>>, {matchId: string}> = (props) => {
+          const {matchId} = props ?? {};
+
+          return  markMatchReady(matchId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MarkMatchReadyMutationResult = NonNullable<Awaited<ReturnType<typeof markMatchReady>>>
+
+    export type MarkMatchReadyMutationError = ErrorType<void>
+
+    /**
+ * @summary Mark a match as ready
+ */
+export const useMarkMatchReady = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof markMatchReady>>, TError,{matchId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof markMatchReady>>,
+        TError,
+        {matchId: string},
+        TContext
+      > => {
+      return useMutation(getMarkMatchReadyMutationOptions(options));
+    }
+
 export const getStartMatchUrl = (matchId: string,) => {
 
 
@@ -2515,25 +2587,25 @@ export const useUndoLastEvent = <TError = ErrorType<unknown>,
       return useMutation(getUndoLastEventMutationOptions(options));
     }
 
-export const getStartRecordingUrl = (matchId: string,) => {
+export const getStartRecordingUrl = () => {
 
 
 
 
-  return `/api/matches/${matchId}/recording/start`
+  return `/api/recording/start`
 }
 
 /**
  * @summary Start recording
  */
-export const startRecording = async (matchId: string, options?: RequestInit): Promise<RecordingStatus> => {
+export const startRecording = async (startRecordingRequest: StartRecordingRequest, options?: RequestInit): Promise<RecordingStatus> => {
 
-  return customFetch<RecordingStatus>(getStartRecordingUrl(matchId),
+  return customFetch<RecordingStatus>(getStartRecordingUrl(),
   {
     ...options,
-    method: 'POST'
-
-
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(startRecordingRequest)
   }
 );}
 
@@ -2541,9 +2613,9 @@ export const startRecording = async (matchId: string, options?: RequestInit): Pr
 
 
 
-export const getStartRecordingMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startRecording>>, TError,{matchId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof startRecording>>, TError,{matchId: string}, TContext> => {
+export const getStartRecordingMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startRecording>>, TError,{data: BodyType<StartRecordingRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof startRecording>>, TError,{data: BodyType<StartRecordingRequest>}, TContext> => {
 
 const mutationKey = ['startRecording'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -2555,10 +2627,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof startRecording>>, {matchId: string}> = (props) => {
-          const {matchId} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof startRecording>>, {data: BodyType<StartRecordingRequest>}> = (props) => {
+          const {data} = props ?? {};
 
-          return  startRecording(matchId,requestOptions)
+          return  startRecording(data,requestOptions)
         }
 
 
@@ -2569,37 +2641,37 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type StartRecordingMutationResult = NonNullable<Awaited<ReturnType<typeof startRecording>>>
-
-    export type StartRecordingMutationError = ErrorType<unknown>
+    export type StartRecordingMutationBody = BodyType<StartRecordingRequest>
+    export type StartRecordingMutationError = ErrorType<void>
 
     /**
  * @summary Start recording
  */
-export const useStartRecording = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startRecording>>, TError,{matchId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+export const useStartRecording = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startRecording>>, TError,{data: BodyType<StartRecordingRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof startRecording>>,
         TError,
-        {matchId: string},
+        {data: BodyType<StartRecordingRequest>},
         TContext
       > => {
       return useMutation(getStartRecordingMutationOptions(options));
     }
 
-export const getStopRecordingUrl = (matchId: string,) => {
+export const getStopRecordingUrl = () => {
 
 
 
 
-  return `/api/matches/${matchId}/recording/stop`
+  return `/api/recording/stop`
 }
 
 /**
  * @summary Stop recording
  */
-export const stopRecording = async (matchId: string, options?: RequestInit): Promise<RecordingStatus> => {
+export const stopRecording = async ( options?: RequestInit): Promise<RecordingStatus> => {
 
-  return customFetch<RecordingStatus>(getStopRecordingUrl(matchId),
+  return customFetch<RecordingStatus>(getStopRecordingUrl(),
   {
     ...options,
     method: 'POST'
@@ -2613,8 +2685,8 @@ export const stopRecording = async (matchId: string, options?: RequestInit): Pro
 
 
 export const getStopRecordingMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof stopRecording>>, TError,{matchId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof stopRecording>>, TError,{matchId: string}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof stopRecording>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof stopRecording>>, TError,void, TContext> => {
 
 const mutationKey = ['stopRecording'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -2626,10 +2698,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof stopRecording>>, {matchId: string}> = (props) => {
-          const {matchId} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof stopRecording>>, void> = () => {
 
-          return  stopRecording(matchId,requestOptions)
+
+          return  stopRecording(requestOptions)
         }
 
 
@@ -2647,30 +2719,30 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
  * @summary Stop recording
  */
 export const useStopRecording = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof stopRecording>>, TError,{matchId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof stopRecording>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof stopRecording>>,
         TError,
-        {matchId: string},
+        void,
         TContext
       > => {
       return useMutation(getStopRecordingMutationOptions(options));
     }
 
-export const getGetRecordingStatusUrl = (matchId: string,) => {
+export const getGetRecordingStatusUrl = () => {
 
 
 
 
-  return `/api/matches/${matchId}/recording/status`
+  return `/api/recording/status`
 }
 
 /**
  * @summary Get recording status
  */
-export const getRecordingStatus = async (matchId: string, options?: RequestInit): Promise<RecordingStatus> => {
+export const getRecordingStatus = async ( options?: RequestInit): Promise<RecordingStatus> => {
 
-  return customFetch<RecordingStatus>(getGetRecordingStatusUrl(matchId),
+  return customFetch<RecordingStatus>(getGetRecordingStatusUrl(),
   {
     ...options,
     method: 'GET'
@@ -2683,29 +2755,29 @@ export const getRecordingStatus = async (matchId: string, options?: RequestInit)
 
 
 
-export const getGetRecordingStatusQueryKey = (matchId: string,) => {
+export const getGetRecordingStatusQueryKey = () => {
     return [
-    `/api/matches/${matchId}/recording/status`
+    `/api/recording/status`
     ] as const;
     }
 
 
-export const getGetRecordingStatusQueryOptions = <TData = Awaited<ReturnType<typeof getRecordingStatus>>, TError = ErrorType<unknown>>(matchId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getRecordingStatus>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetRecordingStatusQueryOptions = <TData = Awaited<ReturnType<typeof getRecordingStatus>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getRecordingStatus>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetRecordingStatusQueryKey(matchId);
+  const queryKey =  queryOptions?.queryKey ?? getGetRecordingStatusQueryKey();
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getRecordingStatus>>> = ({ signal }) => getRecordingStatus(matchId, { signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getRecordingStatus>>> = ({ signal }) => getRecordingStatus({ signal, ...requestOptions });
 
 
 
 
 
-   return  { queryKey, queryFn, enabled: matchId !== null && matchId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getRecordingStatus>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getRecordingStatus>>, TError, TData> & { queryKey: QueryKey }
 }
 
 export type GetRecordingStatusQueryResult = NonNullable<Awaited<ReturnType<typeof getRecordingStatus>>>
@@ -2717,11 +2789,11 @@ export type GetRecordingStatusQueryError = ErrorType<unknown>
  */
 
 export function useGetRecordingStatus<TData = Awaited<ReturnType<typeof getRecordingStatus>>, TError = ErrorType<unknown>>(
- matchId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getRecordingStatus>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getRecordingStatus>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
-  const queryOptions = getGetRecordingStatusQueryOptions(matchId,options)
+  const queryOptions = getGetRecordingStatusQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

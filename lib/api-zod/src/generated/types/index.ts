@@ -75,6 +75,7 @@ export * from './scoreStateSport';
 export * from './scoreUpdate';
 export * from './scoreUpdateScoreType';
 export * from './scoreUpdateTeam';
+export * from './startRecordingRequest';
 export * from './storageStatus';
 export * from './storageStatusWarningLevel';
 export * from './streamDeckButton';

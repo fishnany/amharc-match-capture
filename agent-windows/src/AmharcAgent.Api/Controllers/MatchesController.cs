@@ -74,27 +74,59 @@ public class MatchesController(
 
     [HttpPost]
     public async Task<IActionResult> CreateMatch(
-        [FromBody] Match input,
-        CancellationToken ct)
+    [FromBody] CreateMatchRequest input,
+    CancellationToken ct)
     {
-        input.MatchId =
-            Guid.NewGuid().ToString();
+        var sport = input.Sport switch
+        {
+            "gaelic-football" => Sport.GaelicFootball,
+            "hurling" => Sport.Hurling,
+            "camogie" => Sport.Camogie,
+            "ladies-football" => Sport.LadiesFootball,
+            _ => throw new ArgumentException(
+                $"Unsupported sport '{input.Sport}'.")
+        };
 
-        input.CreatedAt =
-            input.UpdatedAt =
-                DateTimeOffset.UtcNow;
+        var periodStructure = input.PeriodStructure switch
+        {
+            null or "halves" => PeriodStructure.TwoPeriods,
+            "quarters" => PeriodStructure.FourQuarters,
+            "custom" => throw new ArgumentException(
+                "Custom period structures are not currently supported by the match domain."),
+            _ => throw new ArgumentException(
+                $"Unsupported period structure '{input.PeriodStructure}'.")
+        };
+
+        var now = DateTimeOffset.UtcNow;
+
+        var match = new Match
+        {
+            MatchId = Guid.NewGuid().ToString(),
+            Sport = sport,
+            Competition = input.Competition,
+            Season = input.Season,
+            Round = input.Round,
+            Date = input.Date,
+            Venue = input.Venue,
+            HomeTeam = input.HomeTeam,
+            AwayTeam = input.AwayTeam,
+            PeriodStructure = periodStructure,
+            Status = MatchStatus.Setup,
+            CurrentPeriod = 0,
+            CreatedAt = now,
+            UpdatedAt = now
+        };
 
         var created =
             await repo.CreateAsync(
-                input,
+                match,
                 ct);
 
         return CreatedAtAction(
             nameof(GetMatch),
             new
             {
-                matchId =
-                    created.MatchId
+                matchId = created.MatchId
             },
             created);
     }
@@ -152,6 +184,47 @@ public class MatchesController(
         return NoContent();
     }
 
+    [HttpPost("{matchId}/ready")]
+    public async Task<IActionResult> MarkReady(
+        string matchId,
+        CancellationToken ct)
+    {
+        var match =
+            await repo.GetByIdAsync(
+                matchId,
+                ct);
+
+        if (match is null)
+            return NotFound();
+
+        if (match.Status != MatchStatus.Setup)
+        {
+            return Conflict(
+                new
+                {
+                    message =
+                        $"Match {matchId} cannot be marked ready from state {match.Status}."
+                });
+        }
+
+        match.Status =
+            MatchStatus.Ready;
+
+        match.UpdatedAt =
+            DateTimeOffset.UtcNow;
+
+        var updated =
+            await repo.UpdateAsync(
+                match,
+                ct);
+
+        logger.LogInformation(
+            "Match {Id} marked ready",
+            matchId);
+
+        return Ok(updated);
+    }
+
     [HttpPost("{matchId}/start")]
     public async Task<IActionResult> StartMatch(
         string matchId,
@@ -164,6 +237,16 @@ public class MatchesController(
 
         if (match is null)
             return NotFound();
+
+        if (match.Status != MatchStatus.Ready)
+        {
+            return Conflict(
+                new
+                {
+                    message =
+                        $"Match {matchId} cannot be started from state {match.Status}."
+                });
+        }
 
         await commandDispatcher.DispatchAsync(
             new AmharcCommand(
@@ -533,6 +616,22 @@ public class MatchesController(
         });
     }
 }
+
+public sealed record CreateMatchRequest(
+    string Sport,
+    string Competition,
+    string Season,
+    string? Round,
+    DateOnly Date,
+    string? Venue,
+    string HomeTeam,
+    string? HomeTeamShort,
+    string? HomeTeamColour,
+    string AwayTeam,
+    string? AwayTeamShort,
+    string? AwayTeamColour,
+    string? PeriodStructure,
+    string? CameraId);
 
 public record ClockCorrectRequest(
     int MatchClockSeconds,

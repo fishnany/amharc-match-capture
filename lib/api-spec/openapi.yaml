@@ -349,6 +349,29 @@ paths:
               schema:
                 $ref: "#/components/schemas/Match"
 
+  /matches/{matchId}/ready:
+    post:
+      operationId: markMatchReady
+      tags: [matches]
+      summary: Mark a match as ready
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Match marked ready
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Match"
+        "404":
+          description: Match not found
+        "409":
+          description: Match cannot be marked ready from its current state
+
   /matches/{matchId}/start:
     post:
       operationId: startMatch
@@ -697,36 +720,32 @@ paths:
               schema:
                 $ref: "#/components/schemas/OperationResult"
 
-  /matches/{matchId}/recording/start:
+  /recording/start:
     post:
       operationId: startRecording
       tags: [recording]
       summary: Start recording
-      parameters:
-        - name: matchId
-          in: path
-          required: true
-          schema:
-            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StartRecordingRequest"
       responses:
         "200":
-          description: Recording started
+          description: Recording start accepted
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/RecordingStatus"
+        "400":
+          description: Recording start rejected
 
-  /matches/{matchId}/recording/stop:
+  /recording/stop:
     post:
       operationId: stopRecording
       tags: [recording]
       summary: Stop recording
-      parameters:
-        - name: matchId
-          in: path
-          required: true
-          schema:
-            type: string
       responses:
         "200":
           description: Recording stopped
@@ -735,17 +754,11 @@ paths:
               schema:
                 $ref: "#/components/schemas/RecordingStatus"
 
-  /matches/{matchId}/recording/status:
+  /recording/status:
     get:
       operationId: getRecordingStatus
       tags: [recording]
       summary: Get recording status
-      parameters:
-        - name: matchId
-          in: path
-          required: true
-          schema:
-            type: string
       responses:
         "200":
           description: Recording status
@@ -1778,30 +1791,32 @@ components:
         matchClockSeconds:
           type: integer
 
+    StartRecordingRequest:
+      type: object
+      required: [matchId]
+      properties:
+        matchId:
+          type: string
+        cameraId:
+          type: ["string", "null"]
+        outputDirectory:
+          type: ["string", "null"]
+
     RecordingStatus:
       type: object
-      required: [isRecording, elapsedSeconds, segmentCount]
+      required: [state]
       properties:
-        isRecording:
-          type: boolean
+        state:
+          type: string
         elapsedSeconds:
           type: integer
         segmentCount:
           type: integer
-        currentSegmentFile:
+        outputDirectory:
           type: ["string", "null"]
-        recordingDirectory:
-          type: ["string", "null"]
-        bitRate:
-          type: ["integer", "null"]
-        droppedFrames:
-          type: ["integer", "null"]
-        startedAt:
-          type: ["string", "null"]
-          format: date-time
-        stoppedAt:
-          type: ["string", "null"]
-          format: date-time
+        segments:
+          type: array
+          items: {}
 
     StreamingStatus:
       type: object

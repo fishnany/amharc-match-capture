@@ -6,11 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface RecordingStatus {
-  state: string;
-  elapsedSeconds?: number;
-  segmentCount?: number;
+export interface StartRecordingRequest {
+  matchId: string;
+  /** @nullable */
+  cameraId?: string | null;
   /** @nullable */
   outputDirectory?: string | null;
-  segments?: unknown[];
 }

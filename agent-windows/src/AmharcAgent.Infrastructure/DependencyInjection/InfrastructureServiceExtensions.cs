@@ -21,6 +21,7 @@ using AmharcAgent.Infrastructure.Settings;
 using AmharcAgent.Infrastructure.Storage;
 using AmharcAgent.Infrastructure.StreamDeck;
 using AmharcAgent.Infrastructure.Streaming;
+using AmharcAgent.Infrastructure.Preview;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -136,6 +137,11 @@ services.AddSingleton<IAgentSettingsStore>(sp =>
                 sp.GetRequiredService<IRecordingAudioSourceResolver>(),
                 settings.FfmpegPath));
 
+        services.AddSingleton<IPreviewService>(sp =>
+            new FfmpegMjpegPreviewService(
+                sp.GetRequiredService<ICameraAdapter>(),
+                sp.GetRequiredService<ILogger<FfmpegMjpegPreviewService>>(),
+                settings.FfmpegPath));
         services.AddSingleton<IStreamingService>(sp =>
             new RtmpStreamingService(
                 sp.GetRequiredService<ILogger<RtmpStreamingService>>(),

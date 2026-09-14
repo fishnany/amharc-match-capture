@@ -1,3 +1,5 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using AmharcAgent.Api.Hubs;
 using AmharcAgent.Api.Publication;
 using AmharcAgent.Core.Domain;
@@ -10,15 +12,22 @@ using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ── Serilog ──────────────────────────────────────────────────────────────────
+// â”€â”€ Serilog â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
     .CreateLogger();
 builder.Host.UseSerilog();
 
-// ── Services ─────────────────────────────────────────────────────────────────
+// â”€â”€ Services â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 builder.Services.AddAmharcInfrastructure(builder.Configuration);
-builder.Services.AddControllers();
+builder.Services
+    .AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(
+            new JsonStringEnumConverter(
+                JsonNamingPolicy.CamelCase));
+    });
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<
     IClockSnapshotPublisher,
@@ -50,7 +59,7 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// ── DB: apply migrations ───────────────────────────────────────────────────────
+// â”€â”€ DB: apply migrations â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AmharcDbContext>();
@@ -58,7 +67,41 @@ using (var scope = app.Services.CreateScope())
     Log.Information("Database ready: {Db}", db.Database.GetConnectionString());
 }
 
-// ── Live match recovery ────────────────────────────────────────────────────────
+await using (var startupScope = app.Services.CreateAsyncScope())
+{
+    var cameraRepository =
+        startupScope.ServiceProvider.GetRequiredService<
+            AmharcAgent.Data.Repositories.ICameraRepository>();
+
+    var primaryCamera =
+        await cameraRepository.GetByIdAsync(
+            "primary");
+
+    if (primaryCamera is null)
+    {
+        var cameraSettings =
+            startupScope.ServiceProvider.GetRequiredService<
+                AmharcAgent.Core.Domain.AgentSettings>();
+
+        await cameraRepository.CreateAsync(
+            new AmharcAgent.Core.Domain.Camera
+            {
+                CameraId = "primary",
+                Name = "Primary Camera",
+                Manufacturer = "AXIS",
+                Model = "Q6128-E",
+                IpAddress = "192.168.1.135",
+                RtspPort = 554,
+                HttpPort = 80,
+                Username = cameraSettings.DefaultCameraUsername,
+                Password = cameraSettings.DefaultCameraPassword,
+                CreatedAt = DateTimeOffset.UtcNow,
+                UpdatedAt = DateTimeOffset.UtcNow
+            });
+    }
+}
+
+// â”€â”€ Live match recovery â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 using (var recoveryScope = app.Services.CreateScope())
 {
     var matchRepository =
@@ -126,7 +169,7 @@ using (var recoveryScope = app.Services.CreateScope())
     }
 }
 
-// ── Recording recovery ────────────────────────────────────────────────────────
+// â”€â”€ Recording recovery â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 try
 {
     using var recordingRecoveryScope =
@@ -190,7 +233,7 @@ catch (Exception ex)
     throw;
 }
 
-// ── Background services: start hardware listeners ────────────────────────────
+// â”€â”€ Background services: start hardware listeners â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 var settings = app.Services.GetRequiredService<AmharcAgent.Core.Domain.AgentSettings>();
 if (settings.StreamDeckEnabled)
 {
@@ -203,56 +246,56 @@ if (settings.StreamDeckEnabled)
 
     if (ownershipState ==
         AmharcAgent.Core.Models.StreamDeckOwnershipState.Controlled)
-{
-    var streamDeck =
-        app.Services.GetRequiredService<IStreamDeckService>();
-
-    if (settings.StreamDeck.RestoreActiveProfileOnStartup &&
-        !string.IsNullOrWhiteSpace(
-            settings.StreamDeck.ActiveProfileId))
     {
-        using var profileScope =
-            app.Services.CreateScope();
+        var streamDeck =
+            app.Services.GetRequiredService<IStreamDeckService>();
 
-        var profileDb =
-            profileScope.ServiceProvider
-                .GetRequiredService<AmharcDbContext>();
-
-        var profile =
-            await profileDb.StreamDeckProfiles.FindAsync(
-                [
-                    settings.StreamDeck.ActiveProfileId
-                ],
-                app.Lifetime.ApplicationStopping);
-
-        if (profile is not null)
+        if (settings.StreamDeck.RestoreActiveProfileOnStartup &&
+            !string.IsNullOrWhiteSpace(
+                settings.StreamDeck.ActiveProfileId))
         {
-            await streamDeck.LoadProfileAsync(
-                profile,
-                app.Lifetime.ApplicationStopping);
+            using var profileScope =
+                app.Services.CreateScope();
 
-            Log.Information(
-                "Restored Stream Deck profile {ProfileName} ({ProfileId})",
-                profile.Name,
-                profile.ProfileId);
+            var profileDb =
+                profileScope.ServiceProvider
+                    .GetRequiredService<AmharcDbContext>();
+
+            var profile =
+                await profileDb.StreamDeckProfiles.FindAsync(
+                    [
+                        settings.StreamDeck.ActiveProfileId
+                    ],
+                    app.Lifetime.ApplicationStopping);
+
+            if (profile is not null)
+            {
+                await streamDeck.LoadProfileAsync(
+                    profile,
+                    app.Lifetime.ApplicationStopping);
+
+                Log.Information(
+                    "Restored Stream Deck profile {ProfileName} ({ProfileId})",
+                    profile.Name,
+                    profile.ProfileId);
+            }
+            else
+            {
+                Log.Warning(
+                    "Configured Stream Deck profile {ProfileId} could not be found",
+                    settings.StreamDeck.ActiveProfileId);
+            }
         }
-        else
-        {
-            Log.Warning(
-                "Configured Stream Deck profile {ProfileId} could not be found",
-                settings.StreamDeck.ActiveProfileId);
-        }
+
+        var streamDeckCommandBridge =
+            app.Services.GetRequiredService<
+                AmharcAgent.Infrastructure.StreamDeck.StreamDeckCommandBridge>();
+
+        streamDeckCommandBridge.Start();
+
+        _ = streamDeck.StartAsync(
+            app.Lifetime.ApplicationStopping);
     }
-
-    var streamDeckCommandBridge =
-        app.Services.GetRequiredService<
-            AmharcAgent.Infrastructure.StreamDeck.StreamDeckCommandBridge>();
-
-    streamDeckCommandBridge.Start();
-
-    _ = streamDeck.StartAsync(
-        app.Lifetime.ApplicationStopping);
-}
     else
     {
         Log.Warning(
@@ -273,7 +316,7 @@ if (settings.JoystickEnabled)
     _ = joystick.StartAsync(app.Lifetime.ApplicationStopping);
 }
 
-// ── Pipeline ─────────────────────────────────────────────────────────────────
+// â”€â”€ Pipeline â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 app.UseSerilogRequestLogging();
 

@@ -508,6 +508,45 @@ export const UpdateMatchResponse = zod.object({
 
 
 /**
+ * @summary Mark a match as ready
+ */
+export const MarkMatchReadyParams = zod.object({
+  "matchId": zod.coerce.string()
+})
+
+export const MarkMatchReadyResponse = zod.object({
+  "matchId": zod.string(),
+  "humanId": zod.string(),
+  "sport": zod.enum(['gaelic-football', 'hurling', 'ladies-football', 'camogie']),
+  "competition": zod.string(),
+  "season": zod.string(),
+  "round": zod.string().nullish(),
+  "date": zod.coerce.date(),
+  "venue": zod.string().nullish(),
+  "homeTeam": zod.string(),
+  "awayTeam": zod.string(),
+  "homeTeamShort": zod.string().nullish(),
+  "awayTeamShort": zod.string().nullish(),
+  "homeTeamColour": zod.string().nullish(),
+  "awayTeamColour": zod.string().nullish(),
+  "operator": zod.string().nullish(),
+  "scheduledStart": zod.coerce.date().nullish(),
+  "periodStructure": zod.enum(['halves', 'quarters', 'custom']).optional(),
+  "expectedDurationMinutes": zod.number().nullish(),
+  "recordingDirectory": zod.string().nullish(),
+  "cameraId": zod.string().nullish(),
+  "streamProfile": zod.string().nullish(),
+  "overlayTemplate": zod.string().nullish(),
+  "streamDestination": zod.string().nullish(),
+  "notes": zod.string().nullish(),
+  "status": zod.enum(['setup', 'ready', 'active', 'halftime', 'complete', 'cancelled']),
+  "currentPeriod": zod.number().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date().nullish()
+})
+
+
+/**
  * @summary Start a match
  */
 export const StartMatchParams = zod.object({
@@ -922,60 +961,42 @@ export const UndoLastEventResponse = zod.object({
 /**
  * @summary Start recording
  */
-export const StartRecordingParams = zod.object({
-  "matchId": zod.coerce.string()
+export const StartRecordingBody = zod.object({
+  "matchId": zod.string(),
+  "cameraId": zod.string().nullish(),
+  "outputDirectory": zod.string().nullish()
 })
 
 export const StartRecordingResponse = zod.object({
-  "isRecording": zod.boolean(),
-  "elapsedSeconds": zod.number(),
-  "segmentCount": zod.number(),
-  "currentSegmentFile": zod.string().nullish(),
-  "recordingDirectory": zod.string().nullish(),
-  "bitRate": zod.number().nullish(),
-  "droppedFrames": zod.number().nullish(),
-  "startedAt": zod.coerce.date().nullish(),
-  "stoppedAt": zod.coerce.date().nullish()
+  "state": zod.string(),
+  "elapsedSeconds": zod.number().optional(),
+  "segmentCount": zod.number().optional(),
+  "outputDirectory": zod.string().nullish(),
+  "segments": zod.array(zod.unknown()).optional()
 })
 
 
 /**
  * @summary Stop recording
  */
-export const StopRecordingParams = zod.object({
-  "matchId": zod.coerce.string()
-})
-
 export const StopRecordingResponse = zod.object({
-  "isRecording": zod.boolean(),
-  "elapsedSeconds": zod.number(),
-  "segmentCount": zod.number(),
-  "currentSegmentFile": zod.string().nullish(),
-  "recordingDirectory": zod.string().nullish(),
-  "bitRate": zod.number().nullish(),
-  "droppedFrames": zod.number().nullish(),
-  "startedAt": zod.coerce.date().nullish(),
-  "stoppedAt": zod.coerce.date().nullish()
+  "state": zod.string(),
+  "elapsedSeconds": zod.number().optional(),
+  "segmentCount": zod.number().optional(),
+  "outputDirectory": zod.string().nullish(),
+  "segments": zod.array(zod.unknown()).optional()
 })
 
 
 /**
  * @summary Get recording status
  */
-export const GetRecordingStatusParams = zod.object({
-  "matchId": zod.coerce.string()
-})
-
 export const GetRecordingStatusResponse = zod.object({
-  "isRecording": zod.boolean(),
-  "elapsedSeconds": zod.number(),
-  "segmentCount": zod.number(),
-  "currentSegmentFile": zod.string().nullish(),
-  "recordingDirectory": zod.string().nullish(),
-  "bitRate": zod.number().nullish(),
-  "droppedFrames": zod.number().nullish(),
-  "startedAt": zod.coerce.date().nullish(),
-  "stoppedAt": zod.coerce.date().nullish()
+  "state": zod.string(),
+  "elapsedSeconds": zod.number().optional(),
+  "segmentCount": zod.number().optional(),
+  "outputDirectory": zod.string().nullish(),
+  "segments": zod.array(zod.unknown()).optional()
 })
 
 

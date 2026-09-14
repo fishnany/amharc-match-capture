@@ -802,22 +802,21 @@ export interface MatchEventUpdate {
   matchClockSeconds?: number;
 }
 
+export interface StartRecordingRequest {
+  matchId: string;
+  /** @nullable */
+  cameraId?: string | null;
+  /** @nullable */
+  outputDirectory?: string | null;
+}
+
 export interface RecordingStatus {
-  isRecording: boolean;
-  elapsedSeconds: number;
-  segmentCount: number;
+  state: string;
+  elapsedSeconds?: number;
+  segmentCount?: number;
   /** @nullable */
-  currentSegmentFile?: string | null;
-  /** @nullable */
-  recordingDirectory?: string | null;
-  /** @nullable */
-  bitRate?: number | null;
-  /** @nullable */
-  droppedFrames?: number | null;
-  /** @nullable */
-  startedAt?: string | null;
-  /** @nullable */
-  stoppedAt?: string | null;
+  outputDirectory?: string | null;
+  segments?: unknown[];
 }
 
 export interface StreamingStatus {

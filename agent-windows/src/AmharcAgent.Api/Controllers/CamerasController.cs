@@ -11,6 +11,7 @@ public class CamerasController(
     ICameraRepository repo,
     ICameraAdapter cameraAdapter,
     IPtzController ptz,
+    IPreviewService preview,
     ICameraDiscoveryService discovery,
     ILogger<CamerasController> logger) : ControllerBase
 {
@@ -119,6 +120,31 @@ public class CamerasController(
         catch (Exception ex) { return Ok(new { success = false, error = ex.Message }); }
     }
 
+    /// <summary>
+    /// Streams the local operator preview as browser-compatible MJPEG.
+    /// Camera credentials and the authenticated RTSP URL never leave the Agent.
+    /// </summary>
+    [HttpGet("active/preview")]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    public async Task Preview(CancellationToken ct)
+    {
+        Response.StatusCode = StatusCodes.Status200OK;
+        Response.ContentType = preview.ContentType;
+        Response.Headers.CacheControl =
+            "no-store, no-cache, must-revalidate";
+
+        try
+        {
+            await preview.StreamMjpegAsync(
+                Response.Body,
+                HttpContext.RequestAborted);
+        }
+        catch (OperationCanceledException)
+            when (HttpContext.RequestAborted.IsCancellationRequested)
+        {
+            // Normal browser disconnect/navigation.
+        }
+    }
     [HttpGet("{cameraId}/presets")]
     public async Task<IActionResult> GetPresets(string cameraId, CancellationToken ct) =>
         Ok(await ptz.GetPresetsAsync(ct));
