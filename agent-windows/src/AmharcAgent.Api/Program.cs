@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using AmharcAgent.Api.Hubs;
 using AmharcAgent.Api.Publication;
+using AmharcAgent.Api.Runtime;
 using AmharcAgent.Core.Domain;
 using AmharcAgent.Core.Exceptions;
 using AmharcAgent.Core.Interfaces;
@@ -20,6 +21,7 @@ builder.Host.UseSerilog();
 
 // â”€â”€ Services â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 builder.Services.AddAmharcInfrastructure(builder.Configuration);
+builder.Services.AddHostedService<StreamReceiverLifecycleHostedService>();
 builder.Services
     .AddControllers()
     .AddJsonOptions(options =>
