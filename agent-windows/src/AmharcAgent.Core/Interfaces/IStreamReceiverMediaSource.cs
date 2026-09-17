@@ -1,4 +1,4 @@
-﻿namespace AmharcAgent.Core.Interfaces;
+namespace AmharcAgent.Core.Interfaces;
 
 /// <summary>
 /// Consumer-facing media boundary for canonical live-video ingress.
@@ -8,5 +8,6 @@
 public interface IStreamReceiverMediaSource
 {
     Task<IStreamReceiverMediaLease> AcquireAsync(
-        CancellationToken ct = default);
+        CancellationToken ct = default,
+        bool lossIntolerant = false);
 }

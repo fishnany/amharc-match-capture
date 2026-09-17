@@ -15,12 +15,18 @@ public class FfmpegRecordingService : IRecordingService, IAsyncDisposable
 {
     private readonly ILogger<FfmpegRecordingService> _logger;
     private readonly IRecordingSessionStore _sessionStore;
-    private readonly ICameraAdapter _camera;
+    private readonly IStreamReceiverMediaSource _mediaSource;
     private readonly IRecordingAudioSourceResolver _audioSourceResolver;
     private readonly string _ffmpegPath;
+    private readonly IRecordingProcessControl _processControl;
 
     private Process? _ffmpegProcess;
     private Task<string>? _ffmpegStderrTask;
+    private Stream? _ffmpegStandardInput;
+    private StreamReader? _ffmpegStandardError;
+    private IStreamReceiverMediaLease? _mediaLease;
+    private CancellationTokenSource? _mediaPumpCts;
+    private Task? _mediaPumpTask;
     private readonly Stopwatch _elapsedStopwatch = new();
 
     private RecordingState _state = RecordingState.Idle;
@@ -34,15 +40,17 @@ public class FfmpegRecordingService : IRecordingService, IAsyncDisposable
     public FfmpegRecordingService(
         ILogger<FfmpegRecordingService> logger,
         IRecordingSessionStore sessionStore,
-        ICameraAdapter camera,
+        IStreamReceiverMediaSource mediaSource,
         IRecordingAudioSourceResolver audioSourceResolver,
-        string ffmpegPath = "ffmpeg.exe")
+        string ffmpegPath = "ffmpeg.exe",
+        IRecordingProcessControl? processControl = null)
     {
         _logger = logger;
         _sessionStore = sessionStore;
-        _camera = camera;
+        _mediaSource = mediaSource;
         _audioSourceResolver = audioSourceResolver;
         _ffmpegPath = ffmpegPath;
+        _processControl = processControl ?? new WindowsRecordingProcessControl();
     }
 
     public RecordingState State => _state;
@@ -104,26 +112,18 @@ public class FfmpegRecordingService : IRecordingService, IAsyncDisposable
                 options.OutputDirectory,
                 $"{options.MatchId}_%03d.mkv");
 
-            if (_camera.ConnectionState !=
-                CameraConnectionState.Connected)
-            {
-                await _camera.ConnectAsync(ct);
-            }
+            _mediaLease =
+                await _mediaSource.AcquireAsync(ct, lossIntolerant: true);
 
-            // Runtime-only authenticated endpoint.
-            // This value must not be persisted or logged.
-            var runtimeRtspUrl =
-                await _camera.GetAuthenticatedStreamUrlAsync(
-                    null,
+            var inputArgs =
+                await BuildRecordingInputArgumentsAsync(
+                    options.IncludeAudio,
                     ct);
-
-            var inputArgs = await BuildRecordingInputArgumentsAsync(runtimeRtspUrl, options.IncludeAudio, ct);
             var mapArgs = BuildRecordingMapArguments(options.IncludeAudio);
             var audioArgs = BuildRecordingAudioArguments(options.IncludeAudio);
 
             var args = string.Join(
                 " ",
-                "-rtsp_transport tcp",
                 inputArgs,
                 mapArgs,
                 "-c:v copy",
@@ -145,16 +145,23 @@ public class FfmpegRecordingService : IRecordingService, IAsyncDisposable
                 options.OutputDirectory,
                 options.SegmentDurationSeconds);
 
-            _ffmpegProcess = CreateFfmpegProcess(args);
+            var launchedProcess =
+                _processControl.Start(
+                    _ffmpegPath,
+                    args,
+                    OnFfmpegExited);
 
-            _ffmpegProcess.Start();
+            _ffmpegProcess = launchedProcess.Process;
+            _ffmpegStandardInput = launchedProcess.StandardInput;
+            _ffmpegStandardError = launchedProcess.StandardError;
 
-            // Capture the complete stderr stream so that short-lived FFmpeg
-            // failures cannot disappear between asynchronous line callbacks.
+            StartMediaPump(
+                _ffmpegStandardInput,
+                _mediaLease,
+                ct);
+
             _ffmpegStderrTask =
-                _ffmpegProcess.StandardError.ReadToEndAsync();
-
-            _ffmpegProcess.EnableRaisingEvents = true;
+                _ffmpegStandardError.ReadToEndAsync();
 
             _elapsedStopwatch.Restart();
 
@@ -181,6 +188,8 @@ public class FfmpegRecordingService : IRecordingService, IAsyncDisposable
         catch
         {
             _elapsedStopwatch.Stop();
+            await StopMediaPumpAsync();
+            await ReleaseMediaLeaseAsync();
 
             SetState(RecordingState.Error);
 
@@ -228,33 +237,93 @@ public class FfmpegRecordingService : IRecordingService, IAsyncDisposable
                 ct);
         }
 
+        var process = _ffmpegProcess;
+        Exception? shutdownError = null;
+
         try
         {
-            // Send 'q' to FFmpeg stdin for a clean segment-boundary shutdown.
-            await _ffmpegProcess.StandardInput
-                .WriteAsync('q');
+            // FFmpeg stdin is the canonical MPEG-TS video input in MR-16D.
+            // Pump shutdown closes stdin and therefore signals clean EOF.
+            // A pump-shutdown fault must never bypass FFmpeg termination.
+            try
+            {
+                await StopMediaPumpAsync();
+            }
+            catch (Exception ex)
+            {
+                shutdownError = ex;
 
-            await _ffmpegProcess.StandardInput
-                .FlushAsync(ct);
+                _logger.LogError(
+                    ex,
+                    "Error stopping canonical recording media pump");
+            }
 
-            if (!_ffmpegProcess.WaitForExit(10_000))
+            if (!process.HasExited)
+            {
+                _logger.LogInformation(
+                    "Canonical recording media EOF delivered; requesting graceful FFmpeg process-group termination");
+
+                try
+                {
+                    _processControl.RequestGracefulTermination(process.Id);
+                }
+                catch (Exception ex)
+                {
+                    shutdownError ??= ex;
+
+                    _logger.LogError(
+                        ex,
+                        "Unable to request graceful FFmpeg process-group termination");
+                }
+            }
+
+            var gracefulExitConfirmed =
+                process.HasExited ||
+                process.WaitForExit(5_000);
+
+            if (!gracefulExitConfirmed)
+            {
+                shutdownError ??= new TimeoutException(
+                    "FFmpeg did not exit within the bounded graceful termination window.");
+            }
+
+            if (shutdownError is not null &&
+                !process.HasExited)
             {
                 _logger.LogWarning(
-                    "FFmpeg did not exit cleanly ? killing process");
+                    "Graceful FFmpeg shutdown failed; killing process tree and classifying Recording as Error");
 
-                _ffmpegProcess.Kill();
+                process.Kill(entireProcessTree: true);
+                await process.WaitForExitAsync(CancellationToken.None);
             }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(
-                ex,
-                "Error stopping FFmpeg");
-        }
-        finally
-        {
+
+            if (!process.HasExited)
+            {
+                throw new InvalidOperationException(
+                    "FFmpeg recording process termination could not be confirmed.");
+            }
+
+            if (_ffmpegStderrTask is not null)
+            {
+                await _ffmpegStderrTask;
+            }
+
+            if (shutdownError is not null)
+            {
+                throw new InvalidOperationException(
+                    "Canonical recording media pump failed during shutdown.",
+                    shutdownError);
+            }
+
             _elapsedStopwatch.Stop();
 
+            await ReleaseMediaLeaseAsync();
+
+            _ffmpegStandardInput?.Dispose();
+            _ffmpegStandardInput = null;
+            _ffmpegStandardError?.Dispose();
+            _ffmpegStandardError = null;
+            process.Dispose();
             _ffmpegProcess = null;
             _ffmpegStderrTask = null;
 
@@ -280,8 +349,49 @@ public class FfmpegRecordingService : IRecordingService, IAsyncDisposable
             }
 
             _logger.LogInformation(
-                "Recording stopped. Elapsed: {Seconds:F1}s",
+                "Recording stopped after FFmpeg termination was confirmed. Elapsed: {Seconds:F1}s",
                 ElapsedSeconds);
+        }
+        catch (Exception ex)
+        {
+            _elapsedStopwatch.Stop();
+
+            await ReleaseMediaLeaseAsync();
+
+            if (process.HasExited)
+            {
+                _ffmpegStandardInput?.Dispose();
+                _ffmpegStandardInput = null;
+                _ffmpegStandardError?.Dispose();
+                _ffmpegStandardError = null;
+                process.Dispose();
+                _ffmpegProcess = null;
+                _ffmpegStderrTask = null;
+            }
+
+            SetState(RecordingState.Error);
+
+            if (_currentSession is not null)
+            {
+                _currentSession.State =
+                    RecordingState.Error;
+
+                _currentSession.SegmentCount =
+                    GetSegments().Count;
+
+                _currentSession.UpdatedAt =
+                    DateTimeOffset.UtcNow;
+
+                await _sessionStore.SaveAsync(
+                    _currentSession,
+                    CancellationToken.None);
+            }
+
+            _logger.LogError(
+                ex,
+                "Recording stop failed; recording was not marked Complete");
+
+            throw;
         }
     }
 
@@ -444,26 +554,18 @@ public class FfmpegRecordingService : IRecordingService, IAsyncDisposable
                 _currentOptions.OutputDirectory,
                 $"{_currentOptions.MatchId}_%03d.mkv");
 
-            if (_camera.ConnectionState !=
-                CameraConnectionState.Connected)
-            {
-                await _camera.ConnectAsync(ct);
-            }
+            _mediaLease =
+                await _mediaSource.AcquireAsync(ct, lossIntolerant: true);
 
-            // Resolve fresh credentials at runtime.
-            // Never reuse/persist credentials from the session.
-            var runtimeRtspUrl =
-                await _camera.GetAuthenticatedStreamUrlAsync(
-                    null,
+            var inputArgs =
+                await BuildRecordingInputArgumentsAsync(
+                    _currentOptions.IncludeAudio,
                     ct);
-
-            var inputArgs = await BuildRecordingInputArgumentsAsync(runtimeRtspUrl, _currentOptions.IncludeAudio, ct);
             var mapArgs = BuildRecordingMapArguments(_currentOptions.IncludeAudio);
             var audioArgs = BuildRecordingAudioArguments(_currentOptions.IncludeAudio);
 
             var args = string.Join(
                 " ",
-                "-rtsp_transport tcp",
                 inputArgs,
                 mapArgs,
                 "-c:v copy",
@@ -482,14 +584,23 @@ public class FfmpegRecordingService : IRecordingService, IAsyncDisposable
                 session.RecordingId,
                 session.CameraId);
 
-            _ffmpegProcess = CreateFfmpegProcess(args);
+            var launchedProcess =
+                _processControl.Start(
+                    _ffmpegPath,
+                    args,
+                    OnFfmpegExited);
 
-            _ffmpegProcess.Start();
+            _ffmpegProcess = launchedProcess.Process;
+            _ffmpegStandardInput = launchedProcess.StandardInput;
+            _ffmpegStandardError = launchedProcess.StandardError;
+
+            StartMediaPump(
+                _ffmpegStandardInput,
+                _mediaLease,
+                ct);
 
             _ffmpegStderrTask =
-                _ffmpegProcess.StandardError.ReadToEndAsync();
-
-            _ffmpegProcess.EnableRaisingEvents = true;
+                _ffmpegStandardError.ReadToEndAsync();
 
             _elapsedStopwatch.Restart();
 
@@ -517,6 +628,8 @@ public class FfmpegRecordingService : IRecordingService, IAsyncDisposable
         catch (Exception ex)
         {
             _elapsedStopwatch.Stop();
+            await StopMediaPumpAsync();
+            await ReleaseMediaLeaseAsync();
 
             SetState(RecordingState.Error);
 
@@ -661,13 +774,15 @@ public class FfmpegRecordingService : IRecordingService, IAsyncDisposable
     }
 
     private async Task<string> BuildRecordingInputArgumentsAsync(
-        string cameraRuntimeRtspUrl,
         bool includeAudio,
         CancellationToken ct)
     {
+        const string canonicalVideoInput =
+            "-f mpegts -i pipe:0";
+
         if (!includeAudio)
         {
-            return $"-rtsp_transport tcp -i \"{cameraRuntimeRtspUrl}\"";
+            return canonicalVideoInput;
         }
 
         var audio = await _audioSourceResolver.ResolveAsync(ct);
@@ -685,8 +800,7 @@ public class FfmpegRecordingService : IRecordingService, IAsyncDisposable
 
         return string.Join(
             " ",
-            "-rtsp_transport tcp",
-            $"-i \"{cameraRuntimeRtspUrl}\"",
+            canonicalVideoInput,
             "-rtsp_transport tcp",
             $"-i \"{audioRuntimeRtspUrl}\"");
     }
@@ -720,29 +834,105 @@ public class FfmpegRecordingService : IRecordingService, IAsyncDisposable
 
         return $"rtsp://{user}:{password}@{endpoint}:{port}{path}";
     }
-    private Process CreateFfmpegProcess(
-        string args)
+    private void StartMediaPump(
+        Stream destination,
+        IStreamReceiverMediaLease? lease,
+        CancellationToken ct)
     {
-        var process = new Process
+        if (lease is null)
         {
-            StartInfo = new ProcessStartInfo
-            {
-                FileName = _ffmpegPath,
-                Arguments = args,
-                UseShellExecute = false,
-                RedirectStandardInput = true,
-                RedirectStandardError = true,
-                CreateNoWindow = true
-            },
-            EnableRaisingEvents = false
-        };
+            throw new InvalidOperationException(
+                "Canonical recording media lease was not acquired.");
+        }
 
-        process.Exited +=
-            OnFfmpegExited;
+        _mediaPumpCts =
+            CancellationTokenSource.CreateLinkedTokenSource(ct);
 
-        return process;
+        _mediaPumpTask =
+            PumpCanonicalMediaAsync(
+                lease.Stream,
+                destination,
+                _mediaPumpCts.Token);
     }
 
+    private async Task PumpCanonicalMediaAsync(
+        Stream source,
+        Stream destination,
+        CancellationToken ct)
+    {
+        try
+        {
+            await source.CopyToAsync(
+                destination,
+                64 * 1024,
+                ct);
+
+            await destination.FlushAsync(ct);
+        }
+        catch (OperationCanceledException)
+            when (ct.IsCancellationRequested)
+        {
+        }
+        catch (IOException)
+            when (_ffmpegProcess is null ||
+                  _ffmpegProcess.HasExited)
+        {
+        }
+        finally
+        {
+            try
+            {
+                destination.Close();
+            }
+            catch
+            {
+            }
+        }
+    }
+
+    private async Task StopMediaPumpAsync()
+    {
+        var cts = _mediaPumpCts;
+        var task = _mediaPumpTask;
+
+        _mediaPumpCts = null;
+        _mediaPumpTask = null;
+
+        if (cts is not null)
+        {
+            try
+            {
+                cts.Cancel();
+            }
+            catch (ObjectDisposedException)
+            {
+            }
+        }
+
+        if (task is not null)
+        {
+            try
+            {
+                await task;
+            }
+            catch (OperationCanceledException)
+            {
+            }
+        }
+
+        cts?.Dispose();
+    }
+
+    private async Task ReleaseMediaLeaseAsync()
+    {
+        var lease = _mediaLease;
+        _mediaLease = null;
+
+        if (lease is not null)
+        {
+            await lease.DisposeAsync();
+        }
+    }
     private void OnFfmpegExited(
         object? sender,
         EventArgs e)
@@ -758,6 +948,8 @@ public class FfmpegRecordingService : IRecordingService, IAsyncDisposable
         }
 
         _elapsedStopwatch.Stop();
+        await StopMediaPumpAsync();
+        await ReleaseMediaLeaseAsync();
 
         int? exitCode = null;
         string stderr = string.Empty;

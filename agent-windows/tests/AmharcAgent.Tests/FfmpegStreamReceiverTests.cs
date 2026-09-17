@@ -555,4 +555,162 @@ public sealed class FfmpegStreamReceiverTests
             init;
         }
     }
-}
+
+    [Fact]
+    public void MediaSourceContract_ExposesLossIntolerantAcquisitionWithoutEndpoint()
+    {
+        var acquire =
+            typeof(IStreamReceiverMediaSource)
+                .GetMethod("AcquireAsync");
+
+        acquire.Should()
+            .NotBeNull();
+
+        var parameters =
+            acquire!
+                .GetParameters();
+
+        parameters.Should()
+            .HaveCount(2);
+
+        parameters[0]
+            .ParameterType.Should()
+            .Be(typeof(CancellationToken));
+
+        parameters[1]
+            .ParameterType.Should()
+            .Be(typeof(bool));
+
+        parameters[1]
+            .Name.Should()
+            .Be("lossIntolerant");
+
+        parameters[1]
+            .HasDefaultValue.Should()
+            .BeTrue();
+
+        parameters[1]
+            .DefaultValue.Should()
+            .Be(false);
+
+        typeof(IStreamReceiverMediaSource)
+            .GetMembers(
+                BindingFlags.Public |
+                BindingFlags.Instance)
+            .Select(member =>
+                member.Name)
+            .Should()
+            .NotContain(
+                name =>
+                    name.Contains(
+                        "Uri",
+                        StringComparison.OrdinalIgnoreCase) ||
+                    name.Contains(
+                        "Endpoint",
+                        StringComparison.OrdinalIgnoreCase) ||
+                    name.Contains(
+                        "Credential",
+                        StringComparison.OrdinalIgnoreCase));
+    }
+    [Fact]
+    public void BootstrapAppend_PreservesAlignmentAcrossObserved56And132ByteSplit()
+    {
+        var type = typeof(FfmpegStreamReceiver).GetNestedType(
+            "MpegTsBootstrapBuffer",
+            System.Reflection.BindingFlags.NonPublic);
+        Assert.NotNull(type);
+
+        var instance = Activator.CreateInstance(type!, nonPublic: true);
+        Assert.NotNull(instance);
+
+        var append = type!.GetMethod("Append");
+        Assert.NotNull(append);
+        Assert.Equal(typeof(byte[]), append!.ReturnType);
+
+        var source = Enumerable.Range(0, 5)
+            .Select(index => CreateAlignedSyntheticTsPacket((byte)(0x20 + index)))
+            .SelectMany(packet => packet)
+            .ToArray();
+
+        var split = (188 * 3) + 56;
+        var first = Assert.IsType<byte[]>(
+            append.Invoke(instance, new object[] { source[..split] }));
+        var second = Assert.IsType<byte[]>(
+            append.Invoke(instance, new object[] { source[split..] }));
+
+        Assert.Equal(188 * 3, first.Length);
+        Assert.Equal(188 * 2, second.Length);
+
+        var emitted = first.Concat(second).ToArray();
+        Assert.Equal(source, emitted);
+        Assert.Equal(0, emitted.Length % 188);
+
+        for (var offset = 0; offset < emitted.Length; offset += 188)
+        {
+            Assert.Equal((byte)0x47, emitted[offset]);
+        }
+    }
+
+    [Fact]
+    public void BootstrapAppend_EmitsOnlyWholeTransportPacketsForArbitraryReads()
+    {
+        var type = typeof(FfmpegStreamReceiver).GetNestedType(
+            "MpegTsBootstrapBuffer",
+            System.Reflection.BindingFlags.NonPublic);
+        Assert.NotNull(type);
+
+        var instance = Activator.CreateInstance(type!, nonPublic: true);
+        Assert.NotNull(instance);
+        var append = type!.GetMethod("Append");
+        Assert.NotNull(append);
+
+        var source = Enumerable.Range(0, 12)
+            .Select(index => CreateAlignedSyntheticTsPacket((byte)(0x40 + index)))
+            .SelectMany(packet => packet)
+            .ToArray();
+
+        var sizes = new[] { 56, 132, 301, 17, 419, 9, 570, 211, 999 };
+        var sourceOffset = 0;
+        var emitted = new List<byte>();
+
+        foreach (var requested in sizes)
+        {
+            if (sourceOffset >= source.Length) { break; }
+            var count = Math.Min(requested, source.Length - sourceOffset);
+            var chunk = source.AsSpan(sourceOffset, count).ToArray();
+            sourceOffset += count;
+
+            var aligned = Assert.IsType<byte[]>(
+                append!.Invoke(instance, new object[] { chunk }));
+
+            Assert.Equal(0, aligned.Length % 188);
+            for (var offset = 0; offset < aligned.Length; offset += 188)
+            {
+                Assert.Equal((byte)0x47, aligned[offset]);
+            }
+            emitted.AddRange(aligned);
+        }
+
+        if (sourceOffset < source.Length)
+        {
+            var aligned = Assert.IsType<byte[]>(
+                append!.Invoke(instance, new object[] { source[sourceOffset..] }));
+            Assert.Equal(0, aligned.Length % 188);
+            emitted.AddRange(aligned);
+        }
+
+        Assert.Equal(source, emitted.ToArray());
+    }
+
+    private static byte[] CreateAlignedSyntheticTsPacket(byte fill)
+    {
+        var packet = Enumerable.Repeat(fill, 188)
+            .Select(value => (byte)value)
+            .ToArray();
+
+        packet[0] = 0x47;
+        packet[1] = 0x01;
+        packet[2] = 0x00;
+        packet[3] = 0x10;
+        return packet;
+    }}

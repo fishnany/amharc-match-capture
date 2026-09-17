@@ -1,4 +1,4 @@
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Globalization;
 using System.Text.RegularExpressions;
@@ -32,11 +32,12 @@ public sealed class FfmpegStreamReceiver :
     private readonly string _ffmpegPath;
     private readonly SemaphoreSlim _lifecycleGate = new(1, 1);
     private readonly object _stateLock = new();
-    private readonly ConcurrentDictionary<Guid, Channel<byte[]>> _consumers = new();
+    private readonly ConcurrentDictionary<Guid, MediaConsumer> _consumers = new();
 
 
     private readonly object _mediaDispatchLock = new();
-    private readonly MpegTsBootstrapBuffer _bootstrap = new();private Process? _process;
+    private readonly MpegTsBootstrapBuffer _bootstrap = new();
+    private Process? _process;
     private CancellationTokenSource? _lifetimeCts;
     private Task? _mediaTask;
     private Task? _diagnosticsTask;
@@ -94,7 +95,8 @@ public sealed class FfmpegStreamReceiver :
     public event Action<StreamReceiverHealth>? HealthChanged;
 
     public async Task<IStreamReceiverMediaLease> AcquireAsync(
-        CancellationToken ct = default)
+        CancellationToken ct = default,
+        bool lossIntolerant = false)
     {
         var consumerId = Guid.NewGuid();
 
@@ -105,7 +107,9 @@ public sealed class FfmpegStreamReceiver :
                 {
                     SingleReader = true,
                     SingleWriter = true,
-                    FullMode = BoundedChannelFullMode.DropOldest
+                    FullMode = lossIntolerant
+                        ? BoundedChannelFullMode.Wait
+                        : BoundedChannelFullMode.DropOldest
                 });
 
         await StartAsync(ct);
@@ -133,7 +137,7 @@ public sealed class FfmpegStreamReceiver :
 
                     if (!_consumers.TryAdd(
                             consumerId,
-                            channel))
+                            new MediaConsumer(channel, lossIntolerant)))
                     {
                         channel.Writer.TryComplete();
 
@@ -443,16 +447,46 @@ public sealed class FfmpegStreamReceiver :
                             0,
                             read)
                         .ToArray();
+                byte[] alignedMedia;
+                KeyValuePair<Guid, MediaConsumer>[] consumers;
+
                 lock (_mediaDispatchLock)
                 {
-                    _bootstrap.Append(
-                        chunk);
-
-                    foreach (var consumer
-                        in _consumers.Values)
-                    {
-                        consumer.Writer.TryWrite(
+                    alignedMedia =
+                        _bootstrap.Append(
                             chunk);
+
+                    if (alignedMedia.Length == 0)
+                    {
+                        continue;
+                    }
+
+                    consumers =
+                        _consumers.ToArray();
+                }
+
+                foreach (var entry in consumers)
+                {
+                    var consumer = entry.Value;
+
+                    if (consumer.LossIntolerant)
+                    {
+                        try
+                        {
+                            await consumer.Channel.Writer.WriteAsync(
+                                alignedMedia,
+                                ct);
+                        }
+                        catch (ChannelClosedException)
+                            when (!_consumers.ContainsKey(entry.Key))
+                        {
+                            // The lease was detached after the dispatch snapshot.
+                        }
+                    }
+                    else
+                    {
+                        consumer.Channel.Writer.TryWrite(
+                            alignedMedia);
                     }
                 }
             }
@@ -777,9 +811,9 @@ public sealed class FfmpegStreamReceiver :
     {
         if (_consumers.TryRemove(
                 consumerId,
-                out var channel))
+                out var consumer))
         {
-            channel.Writer.TryComplete();
+            consumer.Channel.Writer.TryComplete();
         }
     }
 
@@ -790,9 +824,9 @@ public sealed class FfmpegStreamReceiver :
         {
             if (_consumers.TryRemove(
                     consumer.Key,
-                    out var channel))
+                    out var registeredConsumer))
             {
-                channel.Writer
+                registeredConsumer.Channel.Writer
                     .TryComplete();
             }
         }
@@ -900,43 +934,61 @@ public sealed class FfmpegStreamReceiver :
 
         private readonly List<PacketEntry> _packets = new();
         private byte[] _pending = Array.Empty<byte>();
+        private bool _isSynchronized;
         private int? _pmtPid;
         private int? _videoPid;
 
-        public void Append(byte[] bytes)
+        public byte[] Append(byte[] bytes)
         {
             if (bytes.Length == 0)
             {
-                return;
+                return Array.Empty<byte>();
             }
 
             var combined = new byte[_pending.Length + bytes.Length];
             Buffer.BlockCopy(_pending, 0, combined, 0, _pending.Length);
             Buffer.BlockCopy(bytes, 0, combined, _pending.Length, bytes.Length);
 
-            var offset = FindPacketAlignment(combined);
+            var offset = 0;
 
-            if (offset < 0)
+            if (!_isSynchronized)
             {
-                _pending = combined.Length > PacketSize * 3
-                    ? combined[^(PacketSize * 3)..]
-                    : combined;
-                return;
+                offset = FindPacketAlignment(combined);
+
+                if (offset < 0)
+                {
+                    _pending = combined.Length > PacketSize * 3
+                        ? combined[^(PacketSize * 3)..]
+                        : combined;
+                    return Array.Empty<byte>();
+                }
+
+                _isSynchronized = true;
             }
+
+            var alignedPackets = new List<byte[]>();
 
             while (offset + PacketSize <= combined.Length)
             {
                 if (combined[offset] != 0x47)
                 {
+                    _isSynchronized = false;
+
                     var next = FindPacketAlignment(combined, offset + 1);
-                    if (next < 0) { break; }
+                    if (next < 0)
+                    {
+                        break;
+                    }
+
                     offset = next;
+                    _isSynchronized = true;
                     continue;
                 }
 
                 var packet = new byte[PacketSize];
                 Buffer.BlockCopy(combined, offset, packet, 0, PacketSize);
                 AppendPacket(packet);
+                alignedPackets.Add(packet);
                 offset += PacketSize;
             }
 
@@ -950,6 +1002,21 @@ public sealed class FfmpegStreamReceiver :
             {
                 _pending = Array.Empty<byte>();
             }
+
+            if (alignedPackets.Count == 0)
+            {
+                return Array.Empty<byte>();
+            }
+
+            var aligned = new byte[alignedPackets.Count * PacketSize];
+            var destinationOffset = 0;
+            foreach (var packet in alignedPackets)
+            {
+                Buffer.BlockCopy(packet, 0, aligned, destinationOffset, PacketSize);
+                destinationOffset += PacketSize;
+            }
+
+            return aligned;
         }
 
         public byte[] Snapshot()
@@ -1011,6 +1078,7 @@ public sealed class FfmpegStreamReceiver :
         {
             _packets.Clear();
             _pending = Array.Empty<byte>();
+            _isSynchronized = false;
             _pmtPid = null;
             _videoPid = null;
         }
@@ -1158,6 +1226,10 @@ public sealed class FfmpegStreamReceiver :
             bool IsPmt,
             bool HasIdr);
     }
+    private sealed record MediaConsumer(
+        Channel<byte[]> Channel,
+        bool LossIntolerant);
+
     private sealed class StreamReceiverMediaLease :
         IStreamReceiverMediaLease
     {
