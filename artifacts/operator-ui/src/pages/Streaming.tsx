@@ -22,8 +22,8 @@ export default function Streaming() {
   const { data: matches } = useGetMatches();
   const activeMatch = matches?.find(m => m.status === "active" || m.status === "ready");
 
-  const { data: status } = useGetStreamingStatus(activeMatch?.matchId || "", {
-    query: { enabled: !!activeMatch?.matchId, refetchInterval: 2000 }
+  const { data: status } = useGetStreamingStatus({
+    query: { refetchInterval: 2000 }
   });
 
   const startStream = useStartStreaming();
@@ -31,6 +31,7 @@ export default function Streaming() {
   const createDest = useCreateStreamingDestination();
 
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [selectedDestinationId, setSelectedDestinationId] = useState<string | null>(null);
 
   const formatUptime = (seconds: number) => {
     const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
@@ -66,11 +67,20 @@ export default function Streaming() {
     }
     
     if (status?.isStreaming) {
-      stopStream.mutate({ matchId: activeMatch.matchId }, {
+      stopStream.mutate(undefined, {
         onSuccess: () => toast.success("Stream stopped")
       });
     } else {
-      startStream.mutate({ matchId: activeMatch.matchId }, {
+      const destinationId = selectedDestinationId
+        ?? destinations?.find(destination => destination.isDefault)?.destinationId
+        ?? destinations?.[0]?.destinationId;
+
+      if (!destinationId) {
+        toast.error("No streaming destination configured");
+        return;
+      }
+
+      startStream.mutate({ data: { destinationId } }, {
         onSuccess: () => toast.success("Stream started")
       });
     }
@@ -182,7 +192,14 @@ export default function Streaming() {
                       {status?.isStreaming && status.destination === dest.destinationId ? (
                         <Badge className="bg-amharc-green text-white uppercase text-xs tracking-widest px-3 py-1">Active Output</Badge>
                       ) : (
-                        <Button variant="outline" size="sm" className="bg-black border-white/10">Edit</Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="bg-black border-white/10"
+                          onClick={() => setSelectedDestinationId(dest.destinationId)}
+                        >
+                          {selectedDestinationId === dest.destinationId ? "Selected" : "Select"}
+                        </Button>
                       )}
                     </div>
                   </div>

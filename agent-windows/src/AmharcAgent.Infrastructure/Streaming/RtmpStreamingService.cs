@@ -18,12 +18,17 @@ public class RtmpStreamingService : IStreamingService, IAsyncDisposable
     private readonly Stopwatch _uptime = new();
     private StreamingDestinationConfig? _activeDestination;
     private int _reconnectCount;
+    private DateTimeOffset? _startedAt;
+    private string? _lastError;
     private const int MaxReconnects = 3;
 
     public StreamingState State => _state;
-    public StreamingStats? Stats => _state == StreamingState.Streaming
+    public StreamingStats? Stats => _state is StreamingState.Connecting or StreamingState.Streaming or StreamingState.Reconnecting or StreamingState.Stopping
         ? new StreamingStats(_uptime.Elapsed.TotalSeconds, 0, 0, _reconnectCount)
         : null;
+    public string? ActiveDestinationId => _activeDestination?.DestinationId;
+    public DateTimeOffset? StartedAt => _startedAt;
+    public string? LastError => _lastError;
 
     public event Action<StreamingState>? StateChanged;
     public event Action<Exception>? ErrorOccurred;
@@ -38,6 +43,8 @@ public class RtmpStreamingService : IStreamingService, IAsyncDisposable
     {
         _activeDestination = destination;
         _reconnectCount = 0;
+        _lastError = null;
+        _startedAt = DateTimeOffset.UtcNow;
         await StartFfmpegAsync(destination, ct);
     }
 
@@ -53,10 +60,12 @@ public class RtmpStreamingService : IStreamingService, IAsyncDisposable
                 if (!_ffmpegProcess.WaitForExit(5000))
                     _ffmpegProcess.Kill();
             }
-            catch (Exception ex) { _logger.LogError(ex, "Error stopping streaming"); }
+            catch (Exception ex) { _lastError = ex.Message; _logger.LogError(ex, "Error stopping streaming"); }
         }
         _ffmpegProcess = null;
         _uptime.Stop();
+        _activeDestination = null;
+        _startedAt = null;
         SetState(StreamingState.Idle);
     }
 
@@ -109,14 +118,16 @@ public class RtmpStreamingService : IStreamingService, IAsyncDisposable
         if (_reconnectCount < MaxReconnects && _activeDestination is not null)
         {
             _reconnectCount++;
+            SetState(StreamingState.Reconnecting);
             _logger.LogInformation("Attempting streaming reconnect {Attempt}/{Max}", _reconnectCount, MaxReconnects);
             await Task.Delay(5000, ct);
             await StartFfmpegAsync(_activeDestination, ct);
         }
         else
         {
+            _lastError = "Max streaming reconnects exceeded";
             SetState(StreamingState.Error);
-            ErrorOccurred?.Invoke(new Exception("Max streaming reconnects exceeded"));
+            ErrorOccurred?.Invoke(new Exception(_lastError));
         }
     }
 

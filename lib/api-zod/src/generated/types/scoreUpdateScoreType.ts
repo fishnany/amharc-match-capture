@@ -12,5 +12,6 @@ export type ScoreUpdateScoreType = typeof ScoreUpdateScoreType[keyof typeof Scor
 export const ScoreUpdateScoreType = {
   goal: 'goal',
   point: 'point',
+  'one-point': 'one-point',
   'two-point': 'two-point',
 } as const;

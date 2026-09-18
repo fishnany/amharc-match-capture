@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { customFetch } from "@workspace/api-client-react";
 import {
   Card,
   CardContent,
@@ -42,15 +43,10 @@ export default function Settings() {
   useEffect(() => {
     const loadJoystickSettings = async () => {
       try {
-        const response = await fetch("/api/settings/joystick");
-
-        if (!response.ok) {
-          throw new Error(
-            `Failed to load joystick settings: ${response.status}`,
-          );
-        }
-
-        const data = (await response.json()) as JoystickConfig;
+        const data = await customFetch<JoystickConfig>(
+          "/api/settings/joystick",
+          { responseType: "json" },
+        );
         setJoystickConfig(data);
       } catch (error) {
         console.error(error);
@@ -81,22 +77,17 @@ export default function Settings() {
     setIsSaving(true);
 
     try {
-      const response = await fetch("/api/settings/joystick", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
+      const validatedConfig = await customFetch<JoystickConfig>(
+        "/api/settings/joystick",
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(joystickConfig),
+          responseType: "json",
         },
-        body: JSON.stringify(joystickConfig),
-      });
-
-      if (!response.ok) {
-        throw new Error(
-          `Failed to save joystick settings: ${response.status}`,
-        );
-      }
-
-      const validatedConfig =
-        (await response.json()) as JoystickConfig;
+      );
 
       setJoystickConfig(validatedConfig);
       toast({

@@ -5,18 +5,26 @@
  * AMHARC Match Capture - Local Agent API
  * OpenAPI spec version: 0.1.0
  */
+import type { StreamingStatusState } from './streamingStatusState';
 
 export interface StreamingStatus {
+  state: StreamingStatusState;
   isStreaming: boolean;
   /** @nullable */
-  destination: string | null;
+  destination?: string | null;
   /** @nullable */
   uptimeSeconds?: number | null;
-  /** @nullable */
+  /**
+     * Runtime-reported outgoing bitrate; zero until measured telemetry is implemented.
+     * @nullable
+     */
   outgoingBitRate?: number | null;
-  /** @nullable */
+  /**
+     * Runtime-reported dropped frames; zero until measured telemetry is implemented.
+     * @nullable
+     */
   droppedFrames?: number | null;
-  reconnectCount?: number;
+  reconnectCount: number;
   /** @nullable */
   error?: string | null;
   /** @nullable */

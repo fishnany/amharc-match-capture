@@ -326,6 +326,29 @@ export const SaveCameraPresetResponse = zod.object({
 
 
 /**
+ * @summary Stream the active camera operator preview as MJPEG
+ */
+export const GetActiveCameraPreviewResponse = zod.unknown()
+
+
+/**
+ * @summary Discover cameras on the local subnet
+ */
+export const DiscoverCamerasBody = zod.object({
+  "subnet": zod.string().nullish()
+})
+
+export const DiscoverCamerasResponseItem = zod.object({
+  "ipAddress": zod.string(),
+  "macAddress": zod.string().nullish(),
+  "model": zod.string().nullish(),
+  "serialNumber": zod.string().nullish(),
+  "firmwareVersion": zod.string().nullish()
+})
+export const DiscoverCamerasResponse = zod.array(DiscoverCamerasResponseItem)
+
+
+/**
  * @summary List all matches
  */
 export const GetMatchesResponseItem = zod.object({
@@ -508,6 +531,16 @@ export const UpdateMatchResponse = zod.object({
 
 
 /**
+ * @summary Delete a match
+ */
+export const DeleteMatchParams = zod.object({
+  "matchId": zod.coerce.string()
+})
+
+export const DeleteMatchResponse = zod.void()
+
+
+/**
  * @summary Mark a match as ready
  */
 export const MarkMatchReadyParams = zod.object({
@@ -575,6 +608,70 @@ export const StopMatchResponse = zod.object({
 
 
 /**
+ * @summary Abandon a match
+ */
+export const AbandonMatchParams = zod.object({
+  "matchId": zod.coerce.string()
+})
+
+export const AbandonMatchResponse = zod.object({
+  "matchId": zod.string(),
+  "humanId": zod.string(),
+  "sport": zod.enum(['gaelic-football', 'hurling', 'ladies-football', 'camogie']),
+  "competition": zod.string(),
+  "season": zod.string(),
+  "round": zod.string().nullish(),
+  "date": zod.coerce.date(),
+  "venue": zod.string().nullish(),
+  "homeTeam": zod.string(),
+  "awayTeam": zod.string(),
+  "homeTeamShort": zod.string().nullish(),
+  "awayTeamShort": zod.string().nullish(),
+  "homeTeamColour": zod.string().nullish(),
+  "awayTeamColour": zod.string().nullish(),
+  "operator": zod.string().nullish(),
+  "scheduledStart": zod.coerce.date().nullish(),
+  "periodStructure": zod.enum(['halves', 'quarters', 'custom']).optional(),
+  "expectedDurationMinutes": zod.number().nullish(),
+  "recordingDirectory": zod.string().nullish(),
+  "cameraId": zod.string().nullish(),
+  "streamProfile": zod.string().nullish(),
+  "overlayTemplate": zod.string().nullish(),
+  "streamDestination": zod.string().nullish(),
+  "notes": zod.string().nullish(),
+  "status": zod.enum(['setup', 'ready', 'active', 'halftime', 'complete', 'cancelled']),
+  "currentPeriod": zod.number().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date().nullish()
+})
+
+
+/**
+ * @summary Get canonical ClockSnapshot v1
+ */
+export const GetClockSnapshotParams = zod.object({
+  "matchId": zod.coerce.string()
+})
+
+export const GetClockSnapshotResponse = zod.object({
+  "contractVersion": zod.enum(['1.0']),
+  "matchId": zod.string(),
+  "period": zod.number(),
+  "periodClockSeconds": zod.number(),
+  "totalMatchElapsedSeconds": zod.number(),
+  "isRunning": zod.boolean(),
+  "recordingElapsedSeconds": zod.number().nullish(),
+  "observedAtUtc": zod.coerce.date(),
+  "authority": zod.object({
+  "sourceApplication": zod.string(),
+  "instanceId": zod.string()
+}),
+  "authorityEpoch": zod.number(),
+  "sequence": zod.number()
+})
+
+
+/**
  * @summary Start match clock
  */
 export const StartMatchClockParams = zod.object({
@@ -618,6 +715,114 @@ export const ResumeMatchClockParams = zod.object({
 })
 
 export const ResumeMatchClockResponse = zod.object({
+  "matchId": zod.string(),
+  "matchClockSeconds": zod.number(),
+  "recordingElapsedSeconds": zod.number(),
+  "isRunning": zod.boolean(),
+  "currentPeriod": zod.number(),
+  "clockMode": zod.enum(['count-up', 'count-down']),
+  "updatedAt": zod.coerce.date().optional()
+})
+
+
+/**
+ * @summary Start half-time
+ */
+export const StartHalfTimeParams = zod.object({
+  "matchId": zod.coerce.string()
+})
+
+export const StartHalfTimeResponse = zod.object({
+  "matchId": zod.string(),
+  "matchClockSeconds": zod.number(),
+  "recordingElapsedSeconds": zod.number(),
+  "isRunning": zod.boolean(),
+  "currentPeriod": zod.number(),
+  "clockMode": zod.enum(['count-up', 'count-down']),
+  "updatedAt": zod.coerce.date().optional()
+})
+
+
+/**
+ * @summary End half-time
+ */
+export const EndHalfTimeParams = zod.object({
+  "matchId": zod.coerce.string()
+})
+
+export const EndHalfTimeResponse = zod.object({
+  "matchId": zod.string(),
+  "matchClockSeconds": zod.number(),
+  "recordingElapsedSeconds": zod.number(),
+  "isRunning": zod.boolean(),
+  "currentPeriod": zod.number(),
+  "clockMode": zod.enum(['count-up', 'count-down']),
+  "updatedAt": zod.coerce.date().optional()
+})
+
+
+/**
+ * @summary Enter extra-time mode
+ */
+export const EnterExtraTimeParams = zod.object({
+  "matchId": zod.coerce.string()
+})
+
+export const EnterExtraTimeResponse = zod.object({
+  "matchId": zod.string(),
+  "matchClockSeconds": zod.number(),
+  "recordingElapsedSeconds": zod.number(),
+  "isRunning": zod.boolean(),
+  "currentPeriod": zod.number(),
+  "clockMode": zod.enum(['count-up', 'count-down']),
+  "updatedAt": zod.coerce.date().optional()
+})
+
+
+/**
+ * @summary Start extra time
+ */
+export const StartExtraTimeParams = zod.object({
+  "matchId": zod.coerce.string()
+})
+
+export const StartExtraTimeResponse = zod.object({
+  "matchId": zod.string(),
+  "matchClockSeconds": zod.number(),
+  "recordingElapsedSeconds": zod.number(),
+  "isRunning": zod.boolean(),
+  "currentPeriod": zod.number(),
+  "clockMode": zod.enum(['count-up', 'count-down']),
+  "updatedAt": zod.coerce.date().optional()
+})
+
+
+/**
+ * @summary Start extra-time half-time
+ */
+export const StartExtraTimeHalfTimeParams = zod.object({
+  "matchId": zod.coerce.string()
+})
+
+export const StartExtraTimeHalfTimeResponse = zod.object({
+  "matchId": zod.string(),
+  "matchClockSeconds": zod.number(),
+  "recordingElapsedSeconds": zod.number(),
+  "isRunning": zod.boolean(),
+  "currentPeriod": zod.number(),
+  "clockMode": zod.enum(['count-up', 'count-down']),
+  "updatedAt": zod.coerce.date().optional()
+})
+
+
+/**
+ * @summary End extra-time half-time
+ */
+export const EndExtraTimeHalfTimeParams = zod.object({
+  "matchId": zod.coerce.string()
+})
+
+export const EndExtraTimeHalfTimeResponse = zod.object({
   "matchId": zod.string(),
   "matchClockSeconds": zod.number(),
   "recordingElapsedSeconds": zod.number(),
@@ -795,9 +1000,7 @@ export const UpdateMatchScoreParams = zod.object({
 
 export const UpdateMatchScoreBody = zod.object({
   "team": zod.enum(['home', 'away']),
-  "scoreType": zod.enum(['goal', 'point', 'two-point']),
-  "delta": zod.number(),
-  "reason": zod.string().nullish()
+  "scoreType": zod.enum(['goal', 'point', 'one-point', 'two-point'])
 })
 
 export const UpdateMatchScoreResponse = zod.object({
@@ -1001,19 +1204,20 @@ export const GetRecordingStatusResponse = zod.object({
 
 
 /**
- * @summary Start live stream
+ * @summary Start live stream to a configured destination
  */
-export const StartStreamingParams = zod.object({
-  "matchId": zod.coerce.string()
+export const StartStreamingBody = zod.object({
+  "destinationId": zod.string()
 })
 
 export const StartStreamingResponse = zod.object({
+  "state": zod.enum(['idle', 'connecting', 'streaming', 'reconnecting', 'stopping', 'error']),
   "isStreaming": zod.boolean(),
-  "destination": zod.string().nullable(),
+  "destination": zod.string().nullish(),
   "uptimeSeconds": zod.number().nullish(),
-  "outgoingBitRate": zod.number().nullish(),
-  "droppedFrames": zod.number().nullish(),
-  "reconnectCount": zod.number().optional(),
+  "outgoingBitRate": zod.number().nullish().describe('Runtime-reported outgoing bitrate; zero until measured telemetry is implemented.'),
+  "droppedFrames": zod.number().nullish().describe('Runtime-reported dropped frames; zero until measured telemetry is implemented.'),
+  "reconnectCount": zod.number(),
   "error": zod.string().nullish(),
   "startedAt": zod.coerce.date().nullish()
 })
@@ -1022,17 +1226,14 @@ export const StartStreamingResponse = zod.object({
 /**
  * @summary Stop live stream
  */
-export const StopStreamingParams = zod.object({
-  "matchId": zod.coerce.string()
-})
-
 export const StopStreamingResponse = zod.object({
+  "state": zod.enum(['idle', 'connecting', 'streaming', 'reconnecting', 'stopping', 'error']),
   "isStreaming": zod.boolean(),
-  "destination": zod.string().nullable(),
+  "destination": zod.string().nullish(),
   "uptimeSeconds": zod.number().nullish(),
-  "outgoingBitRate": zod.number().nullish(),
-  "droppedFrames": zod.number().nullish(),
-  "reconnectCount": zod.number().optional(),
+  "outgoingBitRate": zod.number().nullish().describe('Runtime-reported outgoing bitrate; zero until measured telemetry is implemented.'),
+  "droppedFrames": zod.number().nullish().describe('Runtime-reported dropped frames; zero until measured telemetry is implemented.'),
+  "reconnectCount": zod.number(),
   "error": zod.string().nullish(),
   "startedAt": zod.coerce.date().nullish()
 })
@@ -1041,17 +1242,14 @@ export const StopStreamingResponse = zod.object({
 /**
  * @summary Get streaming status
  */
-export const GetStreamingStatusParams = zod.object({
-  "matchId": zod.coerce.string()
-})
-
 export const GetStreamingStatusResponse = zod.object({
+  "state": zod.enum(['idle', 'connecting', 'streaming', 'reconnecting', 'stopping', 'error']),
   "isStreaming": zod.boolean(),
-  "destination": zod.string().nullable(),
+  "destination": zod.string().nullish(),
   "uptimeSeconds": zod.number().nullish(),
-  "outgoingBitRate": zod.number().nullish(),
-  "droppedFrames": zod.number().nullish(),
-  "reconnectCount": zod.number().optional(),
+  "outgoingBitRate": zod.number().nullish().describe('Runtime-reported outgoing bitrate; zero until measured telemetry is implemented.'),
+  "droppedFrames": zod.number().nullish().describe('Runtime-reported dropped frames; zero until measured telemetry is implemented.'),
+  "reconnectCount": zod.number(),
   "error": zod.string().nullish(),
   "startedAt": zod.coerce.date().nullish()
 })
@@ -1093,28 +1291,6 @@ export const GetStorageStatusResponse = zod.object({
 
 
 /**
- * @summary List all connected devices
- */
-export const GetDevicesResponse = zod.object({
-  "streamDeck": zod.object({
-  "connected": zod.boolean(),
-  "deviceName": zod.string().nullable(),
-  "buttonCount": zod.number(),
-  "activeProfileId": zod.string().nullish(),
-  "firmwareVersion": zod.string().nullish()
-}),
-  "joystick": zod.object({
-  "connected": zod.boolean(),
-  "deviceName": zod.string().nullish(),
-  "axisCount": zod.number(),
-  "buttonCount": zod.number(),
-  "vendorId": zod.string().nullish(),
-  "productId": zod.string().nullish()
-})
-})
-
-
-/**
  * @summary Get Stream Deck status
  */
 export const GetStreamDeckStatusResponse = zod.object({
@@ -1146,9 +1322,9 @@ export const GetStreamDeckProfilesResponseItem = zod.object({
   "profileId": zod.string(),
   "name": zod.string(),
   "sport": zod.enum(['gaelic-football', 'hurling', 'ladies-football', 'camogie', 'custom']),
-  "isDefault": zod.boolean().optional(),
   "buttons": zod.array(zod.object({
   "buttonNumber": zod.number(),
+  "commandId": zod.string().nullish(),
   "label": zod.string(),
   "icon": zod.string().nullish(),
   "colour": zod.string().nullish(),
@@ -1159,7 +1335,8 @@ export const GetStreamDeckProfilesResponseItem = zod.object({
   "clipRequest": zod.boolean().optional(),
   "enabled": zod.boolean().optional()
 })),
-  "createdAt": zod.coerce.date()
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
 })
 export const GetStreamDeckProfilesResponse = zod.array(GetStreamDeckProfilesResponseItem)
 
@@ -1170,9 +1347,9 @@ export const GetStreamDeckProfilesResponse = zod.array(GetStreamDeckProfilesResp
 export const CreateStreamDeckProfileBody = zod.object({
   "name": zod.string(),
   "sport": zod.enum(['gaelic-football', 'hurling', 'ladies-football', 'camogie', 'custom']),
-  "isDefault": zod.boolean().optional(),
   "buttons": zod.array(zod.object({
   "buttonNumber": zod.number(),
+  "commandId": zod.string().nullish(),
   "label": zod.string(),
   "icon": zod.string().nullish(),
   "colour": zod.string().nullish(),
@@ -1189,9 +1366,9 @@ export const CreateStreamDeckProfileResponse = zod.object({
   "profileId": zod.string(),
   "name": zod.string(),
   "sport": zod.enum(['gaelic-football', 'hurling', 'ladies-football', 'camogie', 'custom']),
-  "isDefault": zod.boolean().optional(),
   "buttons": zod.array(zod.object({
   "buttonNumber": zod.number(),
+  "commandId": zod.string().nullish(),
   "label": zod.string(),
   "icon": zod.string().nullish(),
   "colour": zod.string().nullish(),
@@ -1202,8 +1379,151 @@ export const CreateStreamDeckProfileResponse = zod.object({
   "clipRequest": zod.boolean().optional(),
   "enabled": zod.boolean().optional()
 })),
-  "createdAt": zod.coerce.date()
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
 })
+
+
+/**
+ * @summary Get a Stream Deck profile
+ */
+export const GetStreamDeckProfileParams = zod.object({
+  "profileId": zod.coerce.string()
+})
+
+export const GetStreamDeckProfileResponse = zod.object({
+  "profileId": zod.string(),
+  "name": zod.string(),
+  "sport": zod.enum(['gaelic-football', 'hurling', 'ladies-football', 'camogie', 'custom']),
+  "buttons": zod.array(zod.object({
+  "buttonNumber": zod.number(),
+  "commandId": zod.string().nullish(),
+  "label": zod.string(),
+  "icon": zod.string().nullish(),
+  "colour": zod.string().nullish(),
+  "eventType": zod.string(),
+  "team": zod.union([zod.literal('home'),zod.literal('away'),zod.literal(null)]).nullish(),
+  "scoreEffect": zod.string().nullish(),
+  "overlayEffect": zod.string().nullish(),
+  "clipRequest": zod.boolean().optional(),
+  "enabled": zod.boolean().optional()
+})),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Update a Stream Deck profile
+ */
+export const UpdateStreamDeckProfileParams = zod.object({
+  "profileId": zod.coerce.string()
+})
+
+export const UpdateStreamDeckProfileBody = zod.object({
+  "name": zod.string(),
+  "sport": zod.enum(['gaelic-football', 'hurling', 'ladies-football', 'camogie', 'custom']),
+  "buttons": zod.array(zod.object({
+  "buttonNumber": zod.number(),
+  "commandId": zod.string().nullish(),
+  "label": zod.string(),
+  "icon": zod.string().nullish(),
+  "colour": zod.string().nullish(),
+  "eventType": zod.string(),
+  "team": zod.union([zod.literal('home'),zod.literal('away'),zod.literal(null)]).nullish(),
+  "scoreEffect": zod.string().nullish(),
+  "overlayEffect": zod.string().nullish(),
+  "clipRequest": zod.boolean().optional(),
+  "enabled": zod.boolean().optional()
+}))
+})
+
+export const UpdateStreamDeckProfileResponse = zod.object({
+  "profileId": zod.string(),
+  "name": zod.string(),
+  "sport": zod.enum(['gaelic-football', 'hurling', 'ladies-football', 'camogie', 'custom']),
+  "buttons": zod.array(zod.object({
+  "buttonNumber": zod.number(),
+  "commandId": zod.string().nullish(),
+  "label": zod.string(),
+  "icon": zod.string().nullish(),
+  "colour": zod.string().nullish(),
+  "eventType": zod.string(),
+  "team": zod.union([zod.literal('home'),zod.literal('away'),zod.literal(null)]).nullish(),
+  "scoreEffect": zod.string().nullish(),
+  "overlayEffect": zod.string().nullish(),
+  "clipRequest": zod.boolean().optional(),
+  "enabled": zod.boolean().optional()
+})),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Activate a Stream Deck profile
+ */
+export const ActivateStreamDeckProfileParams = zod.object({
+  "profileId": zod.coerce.string()
+})
+
+export const ActivateStreamDeckProfileResponse = zod.object({
+  "activeProfileId": zod.string()
+})
+
+
+/**
+ * @summary Get joystick configuration
+ */
+export const GetJoystickSettingsResponse = zod.object({
+  "deadZone": zod.number(),
+  "panSensitivity": zod.number(),
+  "tiltSensitivity": zod.number(),
+  "zoomSensitivity": zod.number(),
+  "invertPan": zod.boolean(),
+  "invertTilt": zod.boolean(),
+  "invertZoom": zod.boolean(),
+  "ptzUpdateIntervalMs": zod.number(),
+  "responseCurveStrength": zod.number()
+})
+
+
+/**
+ * @summary Update joystick configuration
+ */
+export const UpdateJoystickSettingsBody = zod.object({
+  "deadZone": zod.number(),
+  "panSensitivity": zod.number(),
+  "tiltSensitivity": zod.number(),
+  "zoomSensitivity": zod.number(),
+  "invertPan": zod.boolean(),
+  "invertTilt": zod.boolean(),
+  "invertZoom": zod.boolean(),
+  "ptzUpdateIntervalMs": zod.number(),
+  "responseCurveStrength": zod.number()
+})
+
+export const UpdateJoystickSettingsResponse = zod.object({
+  "deadZone": zod.number(),
+  "panSensitivity": zod.number(),
+  "tiltSensitivity": zod.number(),
+  "zoomSensitivity": zod.number(),
+  "invertPan": zod.boolean(),
+  "invertTilt": zod.boolean(),
+  "invertZoom": zod.boolean(),
+  "ptzUpdateIntervalMs": zod.number(),
+  "responseCurveStrength": zod.number()
+})
+
+
+/**
+ * @summary Delete a streaming destination
+ */
+export const DeleteStreamingDestinationParams = zod.object({
+  "destinationId": zod.coerce.string()
+})
+
+export const DeleteStreamingDestinationResponse = zod.void()
 
 
 /**
@@ -1223,6 +1543,46 @@ export const GetOverlayTemplatesResponse = zod.array(GetOverlayTemplatesResponse
  * @summary Get current overlay state
  */
 export const GetOverlayStateResponse = zod.object({
+  "activeTemplateId": zod.string().nullable(),
+  "isVisible": zod.boolean(),
+  "outputMode": zod.enum(['clean', 'programme', 'overlay-only', 'operator-preview']),
+  "currentGraphic": zod.string().nullish(),
+  "graphicVisible": zod.boolean().optional()
+})
+
+
+/**
+ * @summary Show the scoreboard overlay
+ */
+export const ShowOverlaysResponse = zod.object({
+  "activeTemplateId": zod.string().nullable(),
+  "isVisible": zod.boolean(),
+  "outputMode": zod.enum(['clean', 'programme', 'overlay-only', 'operator-preview']),
+  "currentGraphic": zod.string().nullish(),
+  "graphicVisible": zod.boolean().optional()
+})
+
+
+/**
+ * @summary Hide the scoreboard overlay
+ */
+export const HideOverlaysResponse = zod.object({
+  "activeTemplateId": zod.string().nullable(),
+  "isVisible": zod.boolean(),
+  "outputMode": zod.enum(['clean', 'programme', 'overlay-only', 'operator-preview']),
+  "currentGraphic": zod.string().nullish(),
+  "graphicVisible": zod.boolean().optional()
+})
+
+
+/**
+ * @summary Set the overlay output mode
+ */
+export const SetOverlayModeBody = zod.object({
+  "mode": zod.enum(['clean', 'programme', 'overlay-only', 'operator-preview'])
+})
+
+export const SetOverlayModeResponse = zod.object({
   "activeTemplateId": zod.string().nullable(),
   "isVisible": zod.boolean(),
   "outputMode": zod.enum(['clean', 'programme', 'overlay-only', 'operator-preview']),

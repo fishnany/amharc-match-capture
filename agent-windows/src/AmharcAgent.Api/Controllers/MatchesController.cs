@@ -525,34 +525,12 @@ public class MatchesController(
         string matchId,
         CancellationToken ct)
     {
-        var match =
-            await repo.GetByIdAsync(
-                matchId,
-                ct);
+        var match = await repo.GetByIdAsync(matchId, ct);
 
         if (match is null)
             return NotFound();
 
-        return Ok(new
-        {
-            homeGoals =
-                match.HomeGoals,
-
-            homePoints =
-                match.HomePoints,
-
-            homeTotal =
-                match.HomeTotal,
-
-            awayGoals =
-                match.AwayGoals,
-
-            awayPoints =
-                match.AwayPoints,
-
-            awayTotal =
-                match.AwayTotal
-        });
+        return Ok(CreateScoreState(match));
     }
 
     [HttpPost("{matchId}/score")]
@@ -561,60 +539,73 @@ public class MatchesController(
         [FromBody] ScoreUpdateRequest req,
         CancellationToken ct)
     {
-        var match =
-            await repo.GetByIdAsync(
-                matchId,
-                ct);
+        var match = await repo.GetByIdAsync(matchId, ct);
 
         if (match is null)
             return NotFound();
 
-        if (req.Team == "home")
+        var team = req.Team.Trim().ToLowerInvariant();
+        var scoreType = req.ScoreType.Trim().ToLowerInvariant();
+
+        if (team is not ("home" or "away"))
         {
-            if (req.ScoreType == "goal")
-                match.HomeGoals++;
-            else if (req.ScoreType == "point")
-                match.HomePoints++;
-        }
-        else if (req.Team == "away")
-        {
-            if (req.ScoreType == "goal")
-                match.AwayGoals++;
-            else if (req.ScoreType == "point")
-                match.AwayPoints++;
+            return BadRequest(new { error = "Team must be 'home' or 'away'." });
         }
 
-        await repo.UpdateAsync(
-            match,
+        if (scoreType == "one-point")
+            scoreType = "point";
+
+        if (scoreType is not ("goal" or "point" or "two-point"))
+        {
+            return BadRequest(new { error = "ScoreType must be 'goal', 'point', 'one-point' or 'two-point'." });
+        }
+
+        if (scoreType == "two-point" && !ScoringRules.SupportsTwoPointScore(match.Sport))
+        {
+            return BadRequest(new
+            {
+                error = $"Two-point scores are not valid for {match.Sport}."
+            });
+        }
+
+        var commandId = (team, scoreType) switch
+        {
+            ("home", "goal") => AmharcCommandIds.ScoreHomeGoal,
+            ("home", "two-point") => AmharcCommandIds.ScoreHomeTwoPoint,
+            ("home", "point") => AmharcCommandIds.ScoreHomePoint,
+            ("away", "goal") => AmharcCommandIds.ScoreAwayGoal,
+            ("away", "two-point") => AmharcCommandIds.ScoreAwayTwoPoint,
+            ("away", "point") => AmharcCommandIds.ScoreAwayPoint,
+            _ => throw new InvalidOperationException("Unsupported score command.")
+        };
+
+        await commandDispatcher.DispatchAsync(
+            new AmharcCommand(
+                commandId,
+                EventSource.Api,
+                MatchId: matchId),
             ct);
 
-        overlay.UpdateScore(
-            match.HomeGoals,
-            match.HomePoints,
-            match.AwayGoals,
-            match.AwayPoints);
+        var updated = await repo.GetByIdAsync(matchId, ct);
 
-        return Ok(new
-        {
-            homeGoals =
-                match.HomeGoals,
+        if (updated is null)
+            return NotFound();
 
-            homePoints =
-                match.HomePoints,
-
-            homeTotal =
-                match.HomeTotal,
-
-            awayGoals =
-                match.AwayGoals,
-
-            awayPoints =
-                match.AwayPoints,
-
-            awayTotal =
-                match.AwayTotal
-        });
+        return Ok(CreateScoreState(updated));
     }
+
+    private static ScoreState CreateScoreState(Match match) => new(
+        match.MatchId,
+        match.Sport,
+        ScoringRules.GetModel(match.Sport),
+        match.HomeGoals,
+        match.HomeTwoPointScores,
+        match.HomePoints,
+        match.AwayGoals,
+        match.AwayTwoPointScores,
+        match.AwayPoints,
+        match.UpdatedAt);
+
 }
 
 public sealed record CreateMatchRequest(

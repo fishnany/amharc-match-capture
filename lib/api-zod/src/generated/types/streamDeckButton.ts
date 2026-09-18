@@ -9,6 +9,8 @@ import type { StreamDeckButtonTeam } from './streamDeckButtonTeam';
 
 export interface StreamDeckButton {
   buttonNumber: number;
+  /** @nullable */
+  commandId?: string | null;
   label: string;
   /** @nullable */
   icon?: string | null;

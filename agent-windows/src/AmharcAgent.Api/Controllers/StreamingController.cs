@@ -14,7 +14,8 @@ public class StreamingController(
     AmharcDbContext db) : ControllerBase
 {
     [HttpPost("start")]
-    public async Task<IActionResult> StartStreaming([FromBody] StartStreamingRequest req, CancellationToken ct)
+    [ProducesResponseType<StreamingStatusResponse>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<StreamingStatusResponse>> StartStreaming([FromBody] StartStreamingRequest req, CancellationToken ct)
     {
         var dest = await db.StreamingDestinations.FindAsync([req.DestinationId], ct);
         if (dest is null) return NotFound(new { error = $"Destination {req.DestinationId} not found" });
@@ -24,22 +25,20 @@ public class StreamingController(
             dest.Resolution, dest.FrameRate, dest.BitRate);
 
         await streaming.StartAsync(config, ct);
-        return Ok(new { state = streaming.State.ToString().ToLower() });
+        return Ok(BuildStatus());
     }
 
     [HttpPost("stop")]
-    public async Task<IActionResult> StopStreaming(CancellationToken ct)
+    [ProducesResponseType<StreamingStatusResponse>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<StreamingStatusResponse>> StopStreaming(CancellationToken ct)
     {
         await streaming.StopAsync(ct);
-        return Ok(new { state = streaming.State.ToString().ToLower() });
+        return Ok(BuildStatus());
     }
 
     [HttpGet("status")]
-    public IActionResult GetStatus() => Ok(new
-    {
-        state = streaming.State.ToString().ToLower(),
-        stats = streaming.Stats
-    });
+    [ProducesResponseType<StreamingStatusResponse>(StatusCodes.Status200OK)]
+    public ActionResult<StreamingStatusResponse> GetStatus() => Ok(BuildStatus());
 
     [HttpGet("destinations")]
     public async Task<IActionResult> GetDestinations(CancellationToken ct) =>
@@ -64,6 +63,34 @@ public class StreamingController(
         await db.SaveChangesAsync(ct);
         return NoContent();
     }
+
+    private StreamingStatusResponse BuildStatus()
+    {
+        var stats = streaming.Stats;
+        var state = streaming.State.ToString().ToLowerInvariant();
+        var isStreaming = streaming.State is StreamingState.Connecting or StreamingState.Streaming or StreamingState.Reconnecting;
+
+        return new StreamingStatusResponse(
+            state,
+            isStreaming,
+            streaming.ActiveDestinationId,
+            stats?.UptimeSeconds,
+            stats?.OutgoingBitRate,
+            stats?.DroppedFrames,
+            stats?.ReconnectCount ?? 0,
+            streaming.LastError,
+            streaming.StartedAt);
+    }
 }
 
 public record StartStreamingRequest(string DestinationId);
+public record StreamingStatusResponse(
+    string State,
+    bool IsStreaming,
+    string? Destination,
+    double? UptimeSeconds,
+    double? OutgoingBitRate,
+    int? DroppedFrames,
+    int ReconnectCount,
+    string? Error,
+    DateTimeOffset? StartedAt);

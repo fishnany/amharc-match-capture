@@ -20,18 +20,22 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  ActivateStreamDeckProfile200,
   BroadcastPresentationStateV1,
   Camera,
   CameraConnectionResult,
+  CameraDiscoveryRequest,
   CameraInput,
   CameraTestResult,
   ClockCorrection,
+  ClockSnapshotV1,
   ClockState,
-  DeviceStatus,
+  DiscoveredCamera,
   ExportRequest,
   ExportResult,
   GetLiveReadiness404,
   HealthStatus,
+  JoystickConfig,
   JoystickStatus,
   LiveReadinessStateV1,
   Match,
@@ -49,7 +53,9 @@ import type {
   RecordingStatus,
   ScoreState,
   ScoreUpdate,
+  SetOverlayModeRequest,
   StartRecordingRequest,
+  StartStreamingRequest,
   StorageStatus,
   StreamDeckProfile,
   StreamDeckProfileInput,
@@ -1043,6 +1049,154 @@ export const useSaveCameraPreset = <TError = ErrorType<unknown>,
       return useMutation(getSaveCameraPresetMutationOptions(options));
     }
 
+export const getGetActiveCameraPreviewUrl = () => {
+
+
+
+
+  return `/api/cameras/active/preview`
+}
+
+/**
+ * @summary Stream the active camera operator preview as MJPEG
+ */
+export const getActiveCameraPreview = async ( options?: RequestInit): Promise<Blob> => {
+
+  return customFetch<Blob>(getGetActiveCameraPreviewUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetActiveCameraPreviewQueryKey = () => {
+    return [
+    `/api/cameras/active/preview`
+    ] as const;
+    }
+
+
+export const getGetActiveCameraPreviewQueryOptions = <TData = Awaited<ReturnType<typeof getActiveCameraPreview>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getActiveCameraPreview>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetActiveCameraPreviewQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getActiveCameraPreview>>> = ({ signal }) => getActiveCameraPreview({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getActiveCameraPreview>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetActiveCameraPreviewQueryResult = NonNullable<Awaited<ReturnType<typeof getActiveCameraPreview>>>
+export type GetActiveCameraPreviewQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Stream the active camera operator preview as MJPEG
+ */
+
+export function useGetActiveCameraPreview<TData = Awaited<ReturnType<typeof getActiveCameraPreview>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getActiveCameraPreview>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetActiveCameraPreviewQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getDiscoverCamerasUrl = () => {
+
+
+
+
+  return `/api/cameras/discover`
+}
+
+/**
+ * @summary Discover cameras on the local subnet
+ */
+export const discoverCameras = async (cameraDiscoveryRequest?: CameraDiscoveryRequest, options?: RequestInit): Promise<DiscoveredCamera[]> => {
+
+  return customFetch<DiscoveredCamera[]>(getDiscoverCamerasUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(cameraDiscoveryRequest)
+  }
+);}
+
+
+
+
+
+export const getDiscoverCamerasMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof discoverCameras>>, TError,{data?: BodyType<CameraDiscoveryRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof discoverCameras>>, TError,{data?: BodyType<CameraDiscoveryRequest>}, TContext> => {
+
+const mutationKey = ['discoverCameras'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof discoverCameras>>, {data?: BodyType<CameraDiscoveryRequest>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  discoverCameras(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DiscoverCamerasMutationResult = NonNullable<Awaited<ReturnType<typeof discoverCameras>>>
+    export type DiscoverCamerasMutationBody = BodyType<CameraDiscoveryRequest> | undefined
+    export type DiscoverCamerasMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Discover cameras on the local subnet
+ */
+export const useDiscoverCameras = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof discoverCameras>>, TError,{data?: BodyType<CameraDiscoveryRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof discoverCameras>>,
+        TError,
+        {data?: BodyType<CameraDiscoveryRequest>},
+        TContext
+      > => {
+      return useMutation(getDiscoverCamerasMutationOptions(options));
+    }
+
 export const getGetMatchesUrl = () => {
 
 
@@ -1340,6 +1494,77 @@ export const useUpdateMatch = <TError = ErrorType<unknown>,
       return useMutation(getUpdateMatchMutationOptions(options));
     }
 
+export const getDeleteMatchUrl = (matchId: string,) => {
+
+
+
+
+  return `/api/matches/${matchId}`
+}
+
+/**
+ * @summary Delete a match
+ */
+export const deleteMatch = async (matchId: string, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteMatchUrl(matchId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteMatchMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMatch>>, TError,{matchId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteMatch>>, TError,{matchId: string}, TContext> => {
+
+const mutationKey = ['deleteMatch'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteMatch>>, {matchId: string}> = (props) => {
+          const {matchId} = props ?? {};
+
+          return  deleteMatch(matchId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteMatchMutationResult = NonNullable<Awaited<ReturnType<typeof deleteMatch>>>
+
+    export type DeleteMatchMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete a match
+ */
+export const useDeleteMatch = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMatch>>, TError,{matchId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteMatch>>,
+        TError,
+        {matchId: string},
+        TContext
+      > => {
+      return useMutation(getDeleteMatchMutationOptions(options));
+    }
+
 export const getMarkMatchReadyUrl = (matchId: string,) => {
 
 
@@ -1553,6 +1778,154 @@ export const useStopMatch = <TError = ErrorType<unknown>,
       return useMutation(getStopMatchMutationOptions(options));
     }
 
+export const getAbandonMatchUrl = (matchId: string,) => {
+
+
+
+
+  return `/api/matches/${matchId}/abandon`
+}
+
+/**
+ * @summary Abandon a match
+ */
+export const abandonMatch = async (matchId: string, options?: RequestInit): Promise<Match> => {
+
+  return customFetch<Match>(getAbandonMatchUrl(matchId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getAbandonMatchMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof abandonMatch>>, TError,{matchId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof abandonMatch>>, TError,{matchId: string}, TContext> => {
+
+const mutationKey = ['abandonMatch'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof abandonMatch>>, {matchId: string}> = (props) => {
+          const {matchId} = props ?? {};
+
+          return  abandonMatch(matchId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AbandonMatchMutationResult = NonNullable<Awaited<ReturnType<typeof abandonMatch>>>
+
+    export type AbandonMatchMutationError = ErrorType<void>
+
+    /**
+ * @summary Abandon a match
+ */
+export const useAbandonMatch = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof abandonMatch>>, TError,{matchId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof abandonMatch>>,
+        TError,
+        {matchId: string},
+        TContext
+      > => {
+      return useMutation(getAbandonMatchMutationOptions(options));
+    }
+
+export const getGetClockSnapshotUrl = (matchId: string,) => {
+
+
+
+
+  return `/api/matches/${matchId}/clock/snapshot`
+}
+
+/**
+ * @summary Get canonical ClockSnapshot v1
+ */
+export const getClockSnapshot = async (matchId: string, options?: RequestInit): Promise<ClockSnapshotV1> => {
+
+  return customFetch<ClockSnapshotV1>(getGetClockSnapshotUrl(matchId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetClockSnapshotQueryKey = (matchId: string,) => {
+    return [
+    `/api/matches/${matchId}/clock/snapshot`
+    ] as const;
+    }
+
+
+export const getGetClockSnapshotQueryOptions = <TData = Awaited<ReturnType<typeof getClockSnapshot>>, TError = ErrorType<unknown>>(matchId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getClockSnapshot>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetClockSnapshotQueryKey(matchId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getClockSnapshot>>> = ({ signal }) => getClockSnapshot(matchId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: matchId !== null && matchId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getClockSnapshot>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetClockSnapshotQueryResult = NonNullable<Awaited<ReturnType<typeof getClockSnapshot>>>
+export type GetClockSnapshotQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get canonical ClockSnapshot v1
+ */
+
+export function useGetClockSnapshot<TData = Awaited<ReturnType<typeof getClockSnapshot>>, TError = ErrorType<unknown>>(
+ matchId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getClockSnapshot>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetClockSnapshotQueryOptions(matchId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export const getStartMatchClockUrl = (matchId: string,) => {
 
 
@@ -1764,6 +2137,432 @@ export const useResumeMatchClock = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getResumeMatchClockMutationOptions(options));
+    }
+
+export const getStartHalfTimeUrl = (matchId: string,) => {
+
+
+
+
+  return `/api/matches/${matchId}/clock/half-time/start`
+}
+
+/**
+ * @summary Start half-time
+ */
+export const startHalfTime = async (matchId: string, options?: RequestInit): Promise<ClockState> => {
+
+  return customFetch<ClockState>(getStartHalfTimeUrl(matchId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getStartHalfTimeMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startHalfTime>>, TError,{matchId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof startHalfTime>>, TError,{matchId: string}, TContext> => {
+
+const mutationKey = ['startHalfTime'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof startHalfTime>>, {matchId: string}> = (props) => {
+          const {matchId} = props ?? {};
+
+          return  startHalfTime(matchId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type StartHalfTimeMutationResult = NonNullable<Awaited<ReturnType<typeof startHalfTime>>>
+
+    export type StartHalfTimeMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Start half-time
+ */
+export const useStartHalfTime = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startHalfTime>>, TError,{matchId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof startHalfTime>>,
+        TError,
+        {matchId: string},
+        TContext
+      > => {
+      return useMutation(getStartHalfTimeMutationOptions(options));
+    }
+
+export const getEndHalfTimeUrl = (matchId: string,) => {
+
+
+
+
+  return `/api/matches/${matchId}/clock/half-time/end`
+}
+
+/**
+ * @summary End half-time
+ */
+export const endHalfTime = async (matchId: string, options?: RequestInit): Promise<ClockState> => {
+
+  return customFetch<ClockState>(getEndHalfTimeUrl(matchId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getEndHalfTimeMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof endHalfTime>>, TError,{matchId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof endHalfTime>>, TError,{matchId: string}, TContext> => {
+
+const mutationKey = ['endHalfTime'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof endHalfTime>>, {matchId: string}> = (props) => {
+          const {matchId} = props ?? {};
+
+          return  endHalfTime(matchId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type EndHalfTimeMutationResult = NonNullable<Awaited<ReturnType<typeof endHalfTime>>>
+
+    export type EndHalfTimeMutationError = ErrorType<unknown>
+
+    /**
+ * @summary End half-time
+ */
+export const useEndHalfTime = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof endHalfTime>>, TError,{matchId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof endHalfTime>>,
+        TError,
+        {matchId: string},
+        TContext
+      > => {
+      return useMutation(getEndHalfTimeMutationOptions(options));
+    }
+
+export const getEnterExtraTimeUrl = (matchId: string,) => {
+
+
+
+
+  return `/api/matches/${matchId}/clock/extra-time/enter`
+}
+
+/**
+ * @summary Enter extra-time mode
+ */
+export const enterExtraTime = async (matchId: string, options?: RequestInit): Promise<ClockState> => {
+
+  return customFetch<ClockState>(getEnterExtraTimeUrl(matchId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getEnterExtraTimeMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof enterExtraTime>>, TError,{matchId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof enterExtraTime>>, TError,{matchId: string}, TContext> => {
+
+const mutationKey = ['enterExtraTime'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof enterExtraTime>>, {matchId: string}> = (props) => {
+          const {matchId} = props ?? {};
+
+          return  enterExtraTime(matchId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type EnterExtraTimeMutationResult = NonNullable<Awaited<ReturnType<typeof enterExtraTime>>>
+
+    export type EnterExtraTimeMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Enter extra-time mode
+ */
+export const useEnterExtraTime = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof enterExtraTime>>, TError,{matchId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof enterExtraTime>>,
+        TError,
+        {matchId: string},
+        TContext
+      > => {
+      return useMutation(getEnterExtraTimeMutationOptions(options));
+    }
+
+export const getStartExtraTimeUrl = (matchId: string,) => {
+
+
+
+
+  return `/api/matches/${matchId}/clock/extra-time/start`
+}
+
+/**
+ * @summary Start extra time
+ */
+export const startExtraTime = async (matchId: string, options?: RequestInit): Promise<ClockState> => {
+
+  return customFetch<ClockState>(getStartExtraTimeUrl(matchId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getStartExtraTimeMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startExtraTime>>, TError,{matchId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof startExtraTime>>, TError,{matchId: string}, TContext> => {
+
+const mutationKey = ['startExtraTime'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof startExtraTime>>, {matchId: string}> = (props) => {
+          const {matchId} = props ?? {};
+
+          return  startExtraTime(matchId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type StartExtraTimeMutationResult = NonNullable<Awaited<ReturnType<typeof startExtraTime>>>
+
+    export type StartExtraTimeMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Start extra time
+ */
+export const useStartExtraTime = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startExtraTime>>, TError,{matchId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof startExtraTime>>,
+        TError,
+        {matchId: string},
+        TContext
+      > => {
+      return useMutation(getStartExtraTimeMutationOptions(options));
+    }
+
+export const getStartExtraTimeHalfTimeUrl = (matchId: string,) => {
+
+
+
+
+  return `/api/matches/${matchId}/clock/extra-time/half-time/start`
+}
+
+/**
+ * @summary Start extra-time half-time
+ */
+export const startExtraTimeHalfTime = async (matchId: string, options?: RequestInit): Promise<ClockState> => {
+
+  return customFetch<ClockState>(getStartExtraTimeHalfTimeUrl(matchId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getStartExtraTimeHalfTimeMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startExtraTimeHalfTime>>, TError,{matchId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof startExtraTimeHalfTime>>, TError,{matchId: string}, TContext> => {
+
+const mutationKey = ['startExtraTimeHalfTime'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof startExtraTimeHalfTime>>, {matchId: string}> = (props) => {
+          const {matchId} = props ?? {};
+
+          return  startExtraTimeHalfTime(matchId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type StartExtraTimeHalfTimeMutationResult = NonNullable<Awaited<ReturnType<typeof startExtraTimeHalfTime>>>
+
+    export type StartExtraTimeHalfTimeMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Start extra-time half-time
+ */
+export const useStartExtraTimeHalfTime = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startExtraTimeHalfTime>>, TError,{matchId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof startExtraTimeHalfTime>>,
+        TError,
+        {matchId: string},
+        TContext
+      > => {
+      return useMutation(getStartExtraTimeHalfTimeMutationOptions(options));
+    }
+
+export const getEndExtraTimeHalfTimeUrl = (matchId: string,) => {
+
+
+
+
+  return `/api/matches/${matchId}/clock/extra-time/half-time/end`
+}
+
+/**
+ * @summary End extra-time half-time
+ */
+export const endExtraTimeHalfTime = async (matchId: string, options?: RequestInit): Promise<ClockState> => {
+
+  return customFetch<ClockState>(getEndExtraTimeHalfTimeUrl(matchId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getEndExtraTimeHalfTimeMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof endExtraTimeHalfTime>>, TError,{matchId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof endExtraTimeHalfTime>>, TError,{matchId: string}, TContext> => {
+
+const mutationKey = ['endExtraTimeHalfTime'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof endExtraTimeHalfTime>>, {matchId: string}> = (props) => {
+          const {matchId} = props ?? {};
+
+          return  endExtraTimeHalfTime(matchId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type EndExtraTimeHalfTimeMutationResult = NonNullable<Awaited<ReturnType<typeof endExtraTimeHalfTime>>>
+
+    export type EndExtraTimeHalfTimeMutationError = ErrorType<unknown>
+
+    /**
+ * @summary End extra-time half-time
+ */
+export const useEndExtraTimeHalfTime = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof endExtraTimeHalfTime>>, TError,{matchId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof endExtraTimeHalfTime>>,
+        TError,
+        {matchId: string},
+        TContext
+      > => {
+      return useMutation(getEndExtraTimeHalfTimeMutationOptions(options));
     }
 
 export const getCorrectMatchClockUrl = (matchId: string,) => {
@@ -2165,7 +2964,7 @@ export const updateMatchScore = async (matchId: string,
   return customFetch<ScoreState>(getUpdateMatchScoreUrl(matchId),
   {
     ...options,
-    method: 'PUT',
+    method: 'POST',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(scoreUpdate)
   }
@@ -2806,25 +3605,25 @@ export function useGetRecordingStatus<TData = Awaited<ReturnType<typeof getRecor
 
 
 
-export const getStartStreamingUrl = (matchId: string,) => {
+export const getStartStreamingUrl = () => {
 
 
 
 
-  return `/api/matches/${matchId}/streaming/start`
+  return `/api/streaming/start`
 }
 
 /**
- * @summary Start live stream
+ * @summary Start live stream to a configured destination
  */
-export const startStreaming = async (matchId: string, options?: RequestInit): Promise<StreamingStatus> => {
+export const startStreaming = async (startStreamingRequest: StartStreamingRequest, options?: RequestInit): Promise<StreamingStatus> => {
 
-  return customFetch<StreamingStatus>(getStartStreamingUrl(matchId),
+  return customFetch<StreamingStatus>(getStartStreamingUrl(),
   {
     ...options,
-    method: 'POST'
-
-
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(startStreamingRequest)
   }
 );}
 
@@ -2833,8 +3632,8 @@ export const startStreaming = async (matchId: string, options?: RequestInit): Pr
 
 
 export const getStartStreamingMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startStreaming>>, TError,{matchId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof startStreaming>>, TError,{matchId: string}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startStreaming>>, TError,{data: BodyType<StartStreamingRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof startStreaming>>, TError,{data: BodyType<StartStreamingRequest>}, TContext> => {
 
 const mutationKey = ['startStreaming'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -2846,10 +3645,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof startStreaming>>, {matchId: string}> = (props) => {
-          const {matchId} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof startStreaming>>, {data: BodyType<StartStreamingRequest>}> = (props) => {
+          const {data} = props ?? {};
 
-          return  startStreaming(matchId,requestOptions)
+          return  startStreaming(data,requestOptions)
         }
 
 
@@ -2860,37 +3659,37 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type StartStreamingMutationResult = NonNullable<Awaited<ReturnType<typeof startStreaming>>>
-
+    export type StartStreamingMutationBody = BodyType<StartStreamingRequest>
     export type StartStreamingMutationError = ErrorType<unknown>
 
     /**
- * @summary Start live stream
+ * @summary Start live stream to a configured destination
  */
 export const useStartStreaming = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startStreaming>>, TError,{matchId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startStreaming>>, TError,{data: BodyType<StartStreamingRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof startStreaming>>,
         TError,
-        {matchId: string},
+        {data: BodyType<StartStreamingRequest>},
         TContext
       > => {
       return useMutation(getStartStreamingMutationOptions(options));
     }
 
-export const getStopStreamingUrl = (matchId: string,) => {
+export const getStopStreamingUrl = () => {
 
 
 
 
-  return `/api/matches/${matchId}/streaming/stop`
+  return `/api/streaming/stop`
 }
 
 /**
  * @summary Stop live stream
  */
-export const stopStreaming = async (matchId: string, options?: RequestInit): Promise<StreamingStatus> => {
+export const stopStreaming = async ( options?: RequestInit): Promise<StreamingStatus> => {
 
-  return customFetch<StreamingStatus>(getStopStreamingUrl(matchId),
+  return customFetch<StreamingStatus>(getStopStreamingUrl(),
   {
     ...options,
     method: 'POST'
@@ -2904,8 +3703,8 @@ export const stopStreaming = async (matchId: string, options?: RequestInit): Pro
 
 
 export const getStopStreamingMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof stopStreaming>>, TError,{matchId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof stopStreaming>>, TError,{matchId: string}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof stopStreaming>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof stopStreaming>>, TError,void, TContext> => {
 
 const mutationKey = ['stopStreaming'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -2917,10 +3716,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof stopStreaming>>, {matchId: string}> = (props) => {
-          const {matchId} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof stopStreaming>>, void> = () => {
 
-          return  stopStreaming(matchId,requestOptions)
+
+          return  stopStreaming(requestOptions)
         }
 
 
@@ -2938,30 +3737,30 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
  * @summary Stop live stream
  */
 export const useStopStreaming = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof stopStreaming>>, TError,{matchId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof stopStreaming>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof stopStreaming>>,
         TError,
-        {matchId: string},
+        void,
         TContext
       > => {
       return useMutation(getStopStreamingMutationOptions(options));
     }
 
-export const getGetStreamingStatusUrl = (matchId: string,) => {
+export const getGetStreamingStatusUrl = () => {
 
 
 
 
-  return `/api/matches/${matchId}/streaming/status`
+  return `/api/streaming/status`
 }
 
 /**
  * @summary Get streaming status
  */
-export const getStreamingStatus = async (matchId: string, options?: RequestInit): Promise<StreamingStatus> => {
+export const getStreamingStatus = async ( options?: RequestInit): Promise<StreamingStatus> => {
 
-  return customFetch<StreamingStatus>(getGetStreamingStatusUrl(matchId),
+  return customFetch<StreamingStatus>(getGetStreamingStatusUrl(),
   {
     ...options,
     method: 'GET'
@@ -2974,29 +3773,29 @@ export const getStreamingStatus = async (matchId: string, options?: RequestInit)
 
 
 
-export const getGetStreamingStatusQueryKey = (matchId: string,) => {
+export const getGetStreamingStatusQueryKey = () => {
     return [
-    `/api/matches/${matchId}/streaming/status`
+    `/api/streaming/status`
     ] as const;
     }
 
 
-export const getGetStreamingStatusQueryOptions = <TData = Awaited<ReturnType<typeof getStreamingStatus>>, TError = ErrorType<unknown>>(matchId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getStreamingStatus>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetStreamingStatusQueryOptions = <TData = Awaited<ReturnType<typeof getStreamingStatus>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getStreamingStatus>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetStreamingStatusQueryKey(matchId);
+  const queryKey =  queryOptions?.queryKey ?? getGetStreamingStatusQueryKey();
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getStreamingStatus>>> = ({ signal }) => getStreamingStatus(matchId, { signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getStreamingStatus>>> = ({ signal }) => getStreamingStatus({ signal, ...requestOptions });
 
 
 
 
 
-   return  { queryKey, queryFn, enabled: matchId !== null && matchId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getStreamingStatus>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getStreamingStatus>>, TError, TData> & { queryKey: QueryKey }
 }
 
 export type GetStreamingStatusQueryResult = NonNullable<Awaited<ReturnType<typeof getStreamingStatus>>>
@@ -3008,11 +3807,11 @@ export type GetStreamingStatusQueryError = ErrorType<unknown>
  */
 
 export function useGetStreamingStatus<TData = Awaited<ReturnType<typeof getStreamingStatus>>, TError = ErrorType<unknown>>(
- matchId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getStreamingStatus>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getStreamingStatus>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
-  const queryOptions = getGetStreamingStatusQueryOptions(matchId,options)
+  const queryOptions = getGetStreamingStatusQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
@@ -3162,83 +3961,6 @@ export function useGetStorageStatus<TData = Awaited<ReturnType<typeof getStorage
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetStorageStatusQueryOptions(options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-export const getGetDevicesUrl = () => {
-
-
-
-
-  return `/api/devices`
-}
-
-/**
- * @summary List all connected devices
- */
-export const getDevices = async ( options?: RequestInit): Promise<DeviceStatus> => {
-
-  return customFetch<DeviceStatus>(getGetDevicesUrl(),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getGetDevicesQueryKey = () => {
-    return [
-    `/api/devices`
-    ] as const;
-    }
-
-
-export const getGetDevicesQueryOptions = <TData = Awaited<ReturnType<typeof getDevices>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDevices>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getGetDevicesQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getDevices>>> = ({ signal }) => getDevices({ signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getDevices>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type GetDevicesQueryResult = NonNullable<Awaited<ReturnType<typeof getDevices>>>
-export type GetDevicesQueryError = ErrorType<unknown>
-
-
-/**
- * @summary List all connected devices
- */
-
-export function useGetDevices<TData = Awaited<ReturnType<typeof getDevices>>, TError = ErrorType<unknown>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDevices>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-
-  const queryOptions = getGetDevicesQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
@@ -3410,7 +4132,7 @@ export const getGetStreamDeckProfilesUrl = () => {
 
 
 
-  return `/api/stream-deck/profiles`
+  return `/api/devices/stream-deck/profiles`
 }
 
 /**
@@ -3433,7 +4155,7 @@ export const getStreamDeckProfiles = async ( options?: RequestInit): Promise<Str
 
 export const getGetStreamDeckProfilesQueryKey = () => {
     return [
-    `/api/stream-deck/profiles`
+    `/api/devices/stream-deck/profiles`
     ] as const;
     }
 
@@ -3487,7 +4209,7 @@ export const getCreateStreamDeckProfileUrl = () => {
 
 
 
-  return `/api/stream-deck/profiles`
+  return `/api/devices/stream-deck/profiles`
 }
 
 /**
@@ -3551,6 +4273,445 @@ export const useCreateStreamDeckProfile = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getCreateStreamDeckProfileMutationOptions(options));
+    }
+
+export const getGetStreamDeckProfileUrl = (profileId: string,) => {
+
+
+
+
+  return `/api/devices/stream-deck/profiles/${profileId}`
+}
+
+/**
+ * @summary Get a Stream Deck profile
+ */
+export const getStreamDeckProfile = async (profileId: string, options?: RequestInit): Promise<StreamDeckProfile> => {
+
+  return customFetch<StreamDeckProfile>(getGetStreamDeckProfileUrl(profileId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetStreamDeckProfileQueryKey = (profileId: string,) => {
+    return [
+    `/api/devices/stream-deck/profiles/${profileId}`
+    ] as const;
+    }
+
+
+export const getGetStreamDeckProfileQueryOptions = <TData = Awaited<ReturnType<typeof getStreamDeckProfile>>, TError = ErrorType<void>>(profileId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getStreamDeckProfile>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetStreamDeckProfileQueryKey(profileId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getStreamDeckProfile>>> = ({ signal }) => getStreamDeckProfile(profileId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: profileId !== null && profileId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getStreamDeckProfile>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetStreamDeckProfileQueryResult = NonNullable<Awaited<ReturnType<typeof getStreamDeckProfile>>>
+export type GetStreamDeckProfileQueryError = ErrorType<void>
+
+
+/**
+ * @summary Get a Stream Deck profile
+ */
+
+export function useGetStreamDeckProfile<TData = Awaited<ReturnType<typeof getStreamDeckProfile>>, TError = ErrorType<void>>(
+ profileId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getStreamDeckProfile>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetStreamDeckProfileQueryOptions(profileId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateStreamDeckProfileUrl = (profileId: string,) => {
+
+
+
+
+  return `/api/devices/stream-deck/profiles/${profileId}`
+}
+
+/**
+ * @summary Update a Stream Deck profile
+ */
+export const updateStreamDeckProfile = async (profileId: string,
+    streamDeckProfileInput: StreamDeckProfileInput, options?: RequestInit): Promise<StreamDeckProfile> => {
+
+  return customFetch<StreamDeckProfile>(getUpdateStreamDeckProfileUrl(profileId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(streamDeckProfileInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateStreamDeckProfileMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateStreamDeckProfile>>, TError,{profileId: string;data: BodyType<StreamDeckProfileInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateStreamDeckProfile>>, TError,{profileId: string;data: BodyType<StreamDeckProfileInput>}, TContext> => {
+
+const mutationKey = ['updateStreamDeckProfile'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateStreamDeckProfile>>, {profileId: string;data: BodyType<StreamDeckProfileInput>}> = (props) => {
+          const {profileId,data} = props ?? {};
+
+          return  updateStreamDeckProfile(profileId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateStreamDeckProfileMutationResult = NonNullable<Awaited<ReturnType<typeof updateStreamDeckProfile>>>
+    export type UpdateStreamDeckProfileMutationBody = BodyType<StreamDeckProfileInput>
+    export type UpdateStreamDeckProfileMutationError = ErrorType<void>
+
+    /**
+ * @summary Update a Stream Deck profile
+ */
+export const useUpdateStreamDeckProfile = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateStreamDeckProfile>>, TError,{profileId: string;data: BodyType<StreamDeckProfileInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateStreamDeckProfile>>,
+        TError,
+        {profileId: string;data: BodyType<StreamDeckProfileInput>},
+        TContext
+      > => {
+      return useMutation(getUpdateStreamDeckProfileMutationOptions(options));
+    }
+
+export const getActivateStreamDeckProfileUrl = (profileId: string,) => {
+
+
+
+
+  return `/api/devices/stream-deck/profiles/${profileId}/activate`
+}
+
+/**
+ * @summary Activate a Stream Deck profile
+ */
+export const activateStreamDeckProfile = async (profileId: string, options?: RequestInit): Promise<ActivateStreamDeckProfile200> => {
+
+  return customFetch<ActivateStreamDeckProfile200>(getActivateStreamDeckProfileUrl(profileId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getActivateStreamDeckProfileMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof activateStreamDeckProfile>>, TError,{profileId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof activateStreamDeckProfile>>, TError,{profileId: string}, TContext> => {
+
+const mutationKey = ['activateStreamDeckProfile'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof activateStreamDeckProfile>>, {profileId: string}> = (props) => {
+          const {profileId} = props ?? {};
+
+          return  activateStreamDeckProfile(profileId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ActivateStreamDeckProfileMutationResult = NonNullable<Awaited<ReturnType<typeof activateStreamDeckProfile>>>
+
+    export type ActivateStreamDeckProfileMutationError = ErrorType<void>
+
+    /**
+ * @summary Activate a Stream Deck profile
+ */
+export const useActivateStreamDeckProfile = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof activateStreamDeckProfile>>, TError,{profileId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof activateStreamDeckProfile>>,
+        TError,
+        {profileId: string},
+        TContext
+      > => {
+      return useMutation(getActivateStreamDeckProfileMutationOptions(options));
+    }
+
+export const getGetJoystickSettingsUrl = () => {
+
+
+
+
+  return `/api/settings/joystick`
+}
+
+/**
+ * @summary Get joystick configuration
+ */
+export const getJoystickSettings = async ( options?: RequestInit): Promise<JoystickConfig> => {
+
+  return customFetch<JoystickConfig>(getGetJoystickSettingsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetJoystickSettingsQueryKey = () => {
+    return [
+    `/api/settings/joystick`
+    ] as const;
+    }
+
+
+export const getGetJoystickSettingsQueryOptions = <TData = Awaited<ReturnType<typeof getJoystickSettings>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getJoystickSettings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetJoystickSettingsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getJoystickSettings>>> = ({ signal }) => getJoystickSettings({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getJoystickSettings>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetJoystickSettingsQueryResult = NonNullable<Awaited<ReturnType<typeof getJoystickSettings>>>
+export type GetJoystickSettingsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get joystick configuration
+ */
+
+export function useGetJoystickSettings<TData = Awaited<ReturnType<typeof getJoystickSettings>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getJoystickSettings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetJoystickSettingsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateJoystickSettingsUrl = () => {
+
+
+
+
+  return `/api/settings/joystick`
+}
+
+/**
+ * @summary Update joystick configuration
+ */
+export const updateJoystickSettings = async (joystickConfig: JoystickConfig, options?: RequestInit): Promise<JoystickConfig> => {
+
+  return customFetch<JoystickConfig>(getUpdateJoystickSettingsUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(joystickConfig)
+  }
+);}
+
+
+
+
+
+export const getUpdateJoystickSettingsMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateJoystickSettings>>, TError,{data: BodyType<JoystickConfig>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateJoystickSettings>>, TError,{data: BodyType<JoystickConfig>}, TContext> => {
+
+const mutationKey = ['updateJoystickSettings'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateJoystickSettings>>, {data: BodyType<JoystickConfig>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  updateJoystickSettings(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateJoystickSettingsMutationResult = NonNullable<Awaited<ReturnType<typeof updateJoystickSettings>>>
+    export type UpdateJoystickSettingsMutationBody = BodyType<JoystickConfig>
+    export type UpdateJoystickSettingsMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update joystick configuration
+ */
+export const useUpdateJoystickSettings = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateJoystickSettings>>, TError,{data: BodyType<JoystickConfig>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateJoystickSettings>>,
+        TError,
+        {data: BodyType<JoystickConfig>},
+        TContext
+      > => {
+      return useMutation(getUpdateJoystickSettingsMutationOptions(options));
+    }
+
+export const getDeleteStreamingDestinationUrl = (destinationId: string,) => {
+
+
+
+
+  return `/api/streaming/destinations/${destinationId}`
+}
+
+/**
+ * @summary Delete a streaming destination
+ */
+export const deleteStreamingDestination = async (destinationId: string, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteStreamingDestinationUrl(destinationId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteStreamingDestinationMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteStreamingDestination>>, TError,{destinationId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteStreamingDestination>>, TError,{destinationId: string}, TContext> => {
+
+const mutationKey = ['deleteStreamingDestination'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteStreamingDestination>>, {destinationId: string}> = (props) => {
+          const {destinationId} = props ?? {};
+
+          return  deleteStreamingDestination(destinationId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteStreamingDestinationMutationResult = NonNullable<Awaited<ReturnType<typeof deleteStreamingDestination>>>
+
+    export type DeleteStreamingDestinationMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete a streaming destination
+ */
+export const useDeleteStreamingDestination = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteStreamingDestination>>, TError,{destinationId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteStreamingDestination>>,
+        TError,
+        {destinationId: string},
+        TContext
+      > => {
+      return useMutation(getDeleteStreamingDestinationMutationOptions(options));
     }
 
 export const getGetOverlayTemplatesUrl = () => {
@@ -3706,6 +4867,219 @@ export function useGetOverlayState<TData = Awaited<ReturnType<typeof getOverlayS
 
 
 
+
+export const getShowOverlaysUrl = () => {
+
+
+
+
+  return `/api/overlays/show`
+}
+
+/**
+ * @summary Show the scoreboard overlay
+ */
+export const showOverlays = async ( options?: RequestInit): Promise<OverlayState> => {
+
+  return customFetch<OverlayState>(getShowOverlaysUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getShowOverlaysMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof showOverlays>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof showOverlays>>, TError,void, TContext> => {
+
+const mutationKey = ['showOverlays'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof showOverlays>>, void> = () => {
+
+
+          return  showOverlays(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ShowOverlaysMutationResult = NonNullable<Awaited<ReturnType<typeof showOverlays>>>
+
+    export type ShowOverlaysMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Show the scoreboard overlay
+ */
+export const useShowOverlays = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof showOverlays>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof showOverlays>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getShowOverlaysMutationOptions(options));
+    }
+
+export const getHideOverlaysUrl = () => {
+
+
+
+
+  return `/api/overlays/hide`
+}
+
+/**
+ * @summary Hide the scoreboard overlay
+ */
+export const hideOverlays = async ( options?: RequestInit): Promise<OverlayState> => {
+
+  return customFetch<OverlayState>(getHideOverlaysUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getHideOverlaysMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof hideOverlays>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof hideOverlays>>, TError,void, TContext> => {
+
+const mutationKey = ['hideOverlays'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof hideOverlays>>, void> = () => {
+
+
+          return  hideOverlays(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type HideOverlaysMutationResult = NonNullable<Awaited<ReturnType<typeof hideOverlays>>>
+
+    export type HideOverlaysMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Hide the scoreboard overlay
+ */
+export const useHideOverlays = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof hideOverlays>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof hideOverlays>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getHideOverlaysMutationOptions(options));
+    }
+
+export const getSetOverlayModeUrl = () => {
+
+
+
+
+  return `/api/overlays/mode`
+}
+
+/**
+ * @summary Set the overlay output mode
+ */
+export const setOverlayMode = async (setOverlayModeRequest: SetOverlayModeRequest, options?: RequestInit): Promise<OverlayState> => {
+
+  return customFetch<OverlayState>(getSetOverlayModeUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(setOverlayModeRequest)
+  }
+);}
+
+
+
+
+
+export const getSetOverlayModeMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setOverlayMode>>, TError,{data: BodyType<SetOverlayModeRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof setOverlayMode>>, TError,{data: BodyType<SetOverlayModeRequest>}, TContext> => {
+
+const mutationKey = ['setOverlayMode'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setOverlayMode>>, {data: BodyType<SetOverlayModeRequest>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  setOverlayMode(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetOverlayModeMutationResult = NonNullable<Awaited<ReturnType<typeof setOverlayMode>>>
+    export type SetOverlayModeMutationBody = BodyType<SetOverlayModeRequest>
+    export type SetOverlayModeMutationError = ErrorType<void>
+
+    /**
+ * @summary Set the overlay output mode
+ */
+export const useSetOverlayMode = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setOverlayMode>>, TError,{data: BodyType<SetOverlayModeRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof setOverlayMode>>,
+        TError,
+        {data: BodyType<SetOverlayModeRequest>},
+        TContext
+      > => {
+      return useMutation(getSetOverlayModeMutationOptions(options));
+    }
 
 export const getGetStreamingDestinationsUrl = () => {
 

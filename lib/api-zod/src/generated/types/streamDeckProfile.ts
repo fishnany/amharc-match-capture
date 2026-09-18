@@ -12,7 +12,7 @@ export interface StreamDeckProfile {
   profileId: string;
   name: string;
   sport: StreamDeckProfileSport;
-  isDefault?: boolean;
   buttons: StreamDeckButton[];
   createdAt: Date;
+  updatedAt: Date;
 }

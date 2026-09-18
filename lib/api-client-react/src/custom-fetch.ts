@@ -29,6 +29,12 @@ export function setBaseUrl(url: string | null): void {
   _baseUrl = url ? url.replace(/\/+$/, "") : null;
 }
 
+/** Resolve an Agent-relative API/resource path using the configured base URL. */
+export function resolveApiUrl(path: string): string {
+  if (!path.startsWith("/")) return path;
+  return _baseUrl ? `${_baseUrl}${path}` : path;
+}
+
 /**
  * Register a getter that supplies a bearer auth token.  Before every fetch
  * the getter is invoked; when it returns a non-null string, an
@@ -66,7 +72,7 @@ function applyBaseUrl(input: RequestInfo | URL): RequestInfo | URL {
   // Only prepend to relative paths (starting with /)
   if (!url.startsWith("/")) return input;
 
-  const absolute = `${_baseUrl}${url}`;
+  const absolute = resolveApiUrl(url);
   if (typeof input === "string") return absolute;
   if (isUrl(input)) return new URL(absolute);
   return new Request(absolute, input as Request);

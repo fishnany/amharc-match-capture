@@ -11,7 +11,4 @@ import type { ScoreUpdateTeam } from './scoreUpdateTeam';
 export interface ScoreUpdate {
   team: ScoreUpdateTeam;
   scoreType: ScoreUpdateScoreType;
-  delta: number;
-  /** @nullable */
-  reason?: string | null;
 }

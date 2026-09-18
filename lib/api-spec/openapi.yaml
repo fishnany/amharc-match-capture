@@ -273,6 +273,41 @@ paths:
               schema:
                 $ref: "#/components/schemas/PtzPreset"
 
+  /cameras/active/preview:
+    get:
+      operationId: getActiveCameraPreview
+      tags: [cameras]
+      summary: Stream the active camera operator preview as MJPEG
+      responses:
+        "200":
+          description: Multipart MJPEG preview stream
+          content:
+            multipart/x-mixed-replace:
+              schema:
+                type: string
+                format: binary
+
+  /cameras/discover:
+    post:
+      operationId: discoverCameras
+      tags: [cameras]
+      summary: Discover cameras on the local subnet
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CameraDiscoveryRequest"
+      responses:
+        "200":
+          description: Discovered cameras
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DiscoveredCamera"
+
   /matches:
     get:
       operationId: getMatches
@@ -349,6 +384,16 @@ paths:
               schema:
                 $ref: "#/components/schemas/Match"
 
+    delete:
+      operationId: deleteMatch
+      tags: [matches]
+      summary: Delete a match
+      parameters:
+        - $ref: "#/components/parameters/MatchId"
+      responses:
+        "204":
+          description: Deleted
+
   /matches/{matchId}/ready:
     post:
       operationId: markMatchReady
@@ -410,6 +455,38 @@ paths:
               schema:
                 $ref: "#/components/schemas/OperationResult"
 
+  /matches/{matchId}/abandon:
+    post:
+      operationId: abandonMatch
+      tags: [matches]
+      summary: Abandon a match
+      parameters:
+        - $ref: "#/components/parameters/MatchId"
+      responses:
+        "200":
+          description: Abandoned match
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Match"
+        "404":
+          description: Not found
+
+  /matches/{matchId}/clock/snapshot:
+    get:
+      operationId: getClockSnapshot
+      tags: [matches]
+      summary: Get canonical ClockSnapshot v1
+      parameters:
+        - $ref: "#/components/parameters/MatchId"
+      responses:
+        "200":
+          description: Canonical clock snapshot
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClockSnapshotV1"
+
   /matches/{matchId}/clock/start:
     post:
       operationId: startMatchClock
@@ -462,6 +539,96 @@ paths:
       responses:
         "200":
           description: Clock resumed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClockState"
+
+  /matches/{matchId}/clock/half-time/start:
+    post:
+      operationId: startHalfTime
+      tags: [matches]
+      summary: Start half-time
+      parameters:
+        - $ref: "#/components/parameters/MatchId"
+      responses:
+        "200":
+          description: Updated clock state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClockState"
+
+  /matches/{matchId}/clock/half-time/end:
+    post:
+      operationId: endHalfTime
+      tags: [matches]
+      summary: End half-time
+      parameters:
+        - $ref: "#/components/parameters/MatchId"
+      responses:
+        "200":
+          description: Updated clock state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClockState"
+
+  /matches/{matchId}/clock/extra-time/enter:
+    post:
+      operationId: enterExtraTime
+      tags: [matches]
+      summary: Enter extra-time mode
+      parameters:
+        - $ref: "#/components/parameters/MatchId"
+      responses:
+        "200":
+          description: Updated clock state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClockState"
+
+  /matches/{matchId}/clock/extra-time/start:
+    post:
+      operationId: startExtraTime
+      tags: [matches]
+      summary: Start extra time
+      parameters:
+        - $ref: "#/components/parameters/MatchId"
+      responses:
+        "200":
+          description: Updated clock state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClockState"
+
+  /matches/{matchId}/clock/extra-time/half-time/start:
+    post:
+      operationId: startExtraTimeHalfTime
+      tags: [matches]
+      summary: Start extra-time half-time
+      parameters:
+        - $ref: "#/components/parameters/MatchId"
+      responses:
+        "200":
+          description: Updated clock state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClockState"
+
+  /matches/{matchId}/clock/extra-time/half-time/end:
+    post:
+      operationId: endExtraTimeHalfTime
+      tags: [matches]
+      summary: End extra-time half-time
+      parameters:
+        - $ref: "#/components/parameters/MatchId"
+      responses:
+        "200":
+          description: Updated clock state
           content:
             application/json:
               schema:
@@ -585,7 +752,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ScoreState"
-    put:
+    post:
       operationId: updateMatchScore
       tags: [matches]
       summary: Update match score
@@ -767,55 +934,43 @@ paths:
               schema:
                 $ref: "#/components/schemas/RecordingStatus"
 
-  /matches/{matchId}/streaming/start:
+  /streaming/start:
     post:
       operationId: startStreaming
       tags: [streaming]
-      summary: Start live stream
-      parameters:
-        - name: matchId
-          in: path
-          required: true
-          schema:
-            type: string
+      summary: Start live stream to a configured destination
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StartStreamingRequest"
       responses:
         "200":
-          description: Stream started
+          description: Streaming status after start request
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/StreamingStatus"
 
-  /matches/{matchId}/streaming/stop:
+  /streaming/stop:
     post:
       operationId: stopStreaming
       tags: [streaming]
       summary: Stop live stream
-      parameters:
-        - name: matchId
-          in: path
-          required: true
-          schema:
-            type: string
       responses:
         "200":
-          description: Stream stopped
+          description: Streaming status after stop request
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/StreamingStatus"
 
-  /matches/{matchId}/streaming/status:
+  /streaming/status:
     get:
       operationId: getStreamingStatus
       tags: [streaming]
       summary: Get streaming status
-      parameters:
-        - name: matchId
-          in: path
-          required: true
-          schema:
-            type: string
       responses:
         "200":
           description: Streaming status
@@ -862,19 +1017,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/StorageStatus"
 
-  /devices:
-    get:
-      operationId: getDevices
-      tags: [devices]
-      summary: List all connected devices
-      responses:
-        "200":
-          description: Device list
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/DeviceStatus"
-
   /devices/stream-deck:
     get:
       operationId: getStreamDeckStatus
@@ -901,7 +1043,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/JoystickStatus"
 
-  /stream-deck/profiles:
+  /devices/stream-deck/profiles:
     get:
       operationId: getStreamDeckProfiles
       tags: [devices]
@@ -933,6 +1075,110 @@ paths:
               schema:
                 $ref: "#/components/schemas/StreamDeckProfile"
 
+  /devices/stream-deck/profiles/{profileId}:
+    get:
+      operationId: getStreamDeckProfile
+      tags: [devices]
+      summary: Get a Stream Deck profile
+      parameters:
+        - $ref: "#/components/parameters/ProfileId"
+      responses:
+        "200":
+          description: Profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StreamDeckProfile"
+        "404":
+          description: Not found
+    put:
+      operationId: updateStreamDeckProfile
+      tags: [devices]
+      summary: Update a Stream Deck profile
+      parameters:
+        - $ref: "#/components/parameters/ProfileId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StreamDeckProfileInput"
+      responses:
+        "200":
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StreamDeckProfile"
+        "404":
+          description: Not found
+
+  /devices/stream-deck/profiles/{profileId}/activate:
+    post:
+      operationId: activateStreamDeckProfile
+      tags: [devices]
+      summary: Activate a Stream Deck profile
+      parameters:
+        - $ref: "#/components/parameters/ProfileId"
+      responses:
+        "200":
+          description: Profile activated
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [activeProfileId]
+                properties:
+                  activeProfileId:
+                    type: string
+        "404":
+          description: Not found
+
+  /settings/joystick:
+    get:
+      operationId: getJoystickSettings
+      tags: [devices]
+      summary: Get joystick configuration
+      responses:
+        "200":
+          description: Joystick configuration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JoystickConfig"
+    put:
+      operationId: updateJoystickSettings
+      tags: [devices]
+      summary: Update joystick configuration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JoystickConfig"
+      responses:
+        "200":
+          description: Updated joystick configuration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JoystickConfig"
+
+  /streaming/destinations/{destinationId}:
+    delete:
+      operationId: deleteStreamingDestination
+      tags: [streaming]
+      summary: Delete a streaming destination
+      parameters:
+        - name: destinationId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+
   /overlays/templates:
     get:
       operationId: getOverlayTemplates
@@ -960,6 +1206,53 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/OverlayState"
+
+  /overlays/show:
+    post:
+      operationId: showOverlays
+      tags: [overlays]
+      summary: Show the scoreboard overlay
+      responses:
+        "200":
+          description: Updated overlay state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OverlayState"
+
+  /overlays/hide:
+    post:
+      operationId: hideOverlays
+      tags: [overlays]
+      summary: Hide the scoreboard overlay
+      responses:
+        "200":
+          description: Updated overlay state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OverlayState"
+
+  /overlays/mode:
+    post:
+      operationId: setOverlayMode
+      tags: [overlays]
+      summary: Set the overlay output mode
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetOverlayModeRequest"
+      responses:
+        "200":
+          description: Updated overlay state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OverlayState"
+        "400":
+          description: Unsupported overlay output mode
 
   /streaming/destinations:
     get:
@@ -994,6 +1287,20 @@ paths:
                 $ref: "#/components/schemas/StreamingDestination"
 
 components:
+  parameters:
+    MatchId:
+      name: matchId
+      in: path
+      required: true
+      schema:
+        type: string
+
+    ProfileId:
+      name: profileId
+      in: path
+      required: true
+      schema:
+        type: string
   schemas:
     LiveReadinessStatusV1:
       type: string
@@ -1230,6 +1537,90 @@ components:
           properties:
             state:
               type: string
+
+    CameraDiscoveryRequest:
+      type: object
+      properties:
+        subnet:
+          type: [string, "null"]
+
+    DiscoveredCamera:
+      type: object
+      required: [ipAddress]
+      properties:
+        ipAddress:
+          type: string
+        macAddress:
+          type: [string, "null"]
+        model:
+          type: [string, "null"]
+        serialNumber:
+          type: [string, "null"]
+        firmwareVersion:
+          type: [string, "null"]
+
+    JoystickConfig:
+      type: object
+      required: [deadZone, panSensitivity, tiltSensitivity, zoomSensitivity, invertPan, invertTilt, invertZoom, ptzUpdateIntervalMs, responseCurveStrength]
+      properties:
+        deadZone:
+          type: number
+        panSensitivity:
+          type: number
+        tiltSensitivity:
+          type: number
+        zoomSensitivity:
+          type: number
+        invertPan:
+          type: boolean
+        invertTilt:
+          type: boolean
+        invertZoom:
+          type: boolean
+        ptzUpdateIntervalMs:
+          type: integer
+        responseCurveStrength:
+          type: number
+
+    ClockAuthorityV1:
+      type: object
+      required: [sourceApplication, instanceId]
+      properties:
+        sourceApplication:
+          type: string
+        instanceId:
+          type: string
+
+    ClockSnapshotV1:
+      type: object
+      required: [contractVersion, matchId, period, periodClockSeconds, totalMatchElapsedSeconds, isRunning, observedAtUtc, authority, authorityEpoch, sequence]
+      properties:
+        contractVersion:
+          type: string
+          enum: ["1.0"]
+        matchId:
+          type: string
+        period:
+          type: integer
+        periodClockSeconds:
+          type: integer
+        totalMatchElapsedSeconds:
+          type: integer
+        isRunning:
+          type: boolean
+        recordingElapsedSeconds:
+          type: [integer, "null"]
+        observedAtUtc:
+          type: string
+          format: date-time
+        authority:
+          $ref: "#/components/schemas/ClockAuthorityV1"
+        authorityEpoch:
+          type: integer
+          format: int64
+        sequence:
+          type: integer
+          format: int64
 
     Camera:
       type: object
@@ -1550,45 +1941,6 @@ components:
         reason:
           type: string
 
-    ClockAuthorityV1:
-      type: object
-      required: [sourceApplication, instanceId]
-      properties:
-        sourceApplication:
-          type: string
-        instanceId:
-          type: string
-
-    ClockSnapshotV1:
-      type: object
-      required: [contractVersion, matchId, period, periodClockSeconds, totalMatchElapsedSeconds, isRunning, observedAtUtc, authority, authorityEpoch, sequence]
-      properties:
-        contractVersion:
-          type: string
-          enum: ["1.0"]
-        matchId:
-          type: string
-        period:
-          type: integer
-        periodClockSeconds:
-          type: integer
-        totalMatchElapsedSeconds:
-          type: integer
-        isRunning:
-          type: boolean
-        recordingElapsedSeconds:
-          type: ["integer", "null"]
-        observedAtUtc:
-          type: string
-          format: date-time
-        authority:
-          $ref: "#/components/schemas/ClockAuthorityV1"
-        authorityEpoch:
-          type: integer
-          format: int64
-        sequence:
-          type: integer
-          format: int64
 
     BroadcastPresentationControlV1:
       type: object
@@ -1680,18 +2032,14 @@ components:
 
     ScoreUpdate:
       type: object
-      required: [team, scoreType, delta]
+      required: [team, scoreType]
       properties:
         team:
           type: string
           enum: [home, away]
         scoreType:
           type: string
-          enum: [goal, point, two-point]
-        delta:
-          type: integer
-        reason:
-          type: ["string", "null"]
+          enum: [goal, point, one-point, two-point]
 
     MatchEvent:
       type: object
@@ -1818,20 +2166,32 @@ components:
           type: array
           items: {}
 
+    StartStreamingRequest:
+      type: object
+      required: [destinationId]
+      properties:
+        destinationId:
+          type: string
+
     StreamingStatus:
       type: object
-      required: [isStreaming, destination]
+      required: [state, isStreaming, reconnectCount]
       properties:
+        state:
+          type: string
+          enum: [idle, connecting, streaming, reconnecting, stopping, error]
         isStreaming:
           type: boolean
         destination:
           type: ["string", "null"]
         uptimeSeconds:
-          type: ["integer", "null"]
+          type: ["number", "null"]
         outgoingBitRate:
-          type: ["integer", "null"]
+          type: ["number", "null"]
+          description: Runtime-reported outgoing bitrate; zero until measured telemetry is implemented.
         droppedFrames:
           type: ["integer", "null"]
+          description: Runtime-reported dropped frames; zero until measured telemetry is implemented.
         reconnectCount:
           type: integer
         error:
@@ -1903,7 +2263,7 @@ components:
 
     StreamDeckProfile:
       type: object
-      required: [profileId, name, sport, buttons, createdAt]
+      required: [profileId, name, sport, buttons, createdAt, updatedAt]
       properties:
         profileId:
           type: string
@@ -1912,13 +2272,14 @@ components:
         sport:
           type: string
           enum: [gaelic-football, hurling, ladies-football, camogie, custom]
-        isDefault:
-          type: boolean
         buttons:
           type: array
           items:
             $ref: "#/components/schemas/StreamDeckButton"
         createdAt:
+          type: string
+          format: date-time
+        updatedAt:
           type: string
           format: date-time
 
@@ -1931,8 +2292,6 @@ components:
         sport:
           type: string
           enum: [gaelic-football, hurling, ladies-football, camogie, custom]
-        isDefault:
-          type: boolean
         buttons:
           type: array
           items:
@@ -1944,6 +2303,8 @@ components:
       properties:
         buttonNumber:
           type: integer
+        commandId:
+          type: [string, "null"]
         label:
           type: string
         icon:
@@ -1979,6 +2340,14 @@ components:
           type: boolean
         description:
           type: ["string", "null"]
+
+    SetOverlayModeRequest:
+      type: object
+      required: [mode]
+      properties:
+        mode:
+          type: string
+          enum: [clean, programme, overlay-only, operator-preview]
 
     OverlayState:
       type: object

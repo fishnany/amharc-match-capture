@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  customFetch,
   useGetStreamDeckStatus,
 } from "@workspace/api-client-react";
 import {
@@ -111,18 +112,10 @@ const [profilesLoading, setProfilesLoading] = useState(true);
 
 const loadProfiles = async () => {
   try {
-    const response = await fetch(
+    const data = await customFetch<StreamDeckProfile[]>(
       "/api/devices/stream-deck/profiles",
+      { responseType: "json" },
     );
-
-    if (!response.ok) {
-      throw new Error(
-        `Failed to load Stream Deck profiles: ${response.status}`,
-      );
-    }
-
-    const data =
-      (await response.json()) as StreamDeckProfile[];
 
     setProfiles(data);
   } catch (error) {
@@ -222,7 +215,7 @@ useEffect(() => {
     setIsActivating(true);
 
     try {
-      const response = await fetch(
+      await customFetch(
         `/api/devices/stream-deck/profiles/${encodeURIComponent(
           profileId,
         )}/activate`,
@@ -230,12 +223,6 @@ useEffect(() => {
           method: "POST",
         },
       );
-
-      if (!response.ok) {
-        throw new Error(
-          `Failed to activate Stream Deck profile: ${response.status}`,
-        );
-      }
 
       await Promise.all([
         refetchStatus(),
@@ -317,7 +304,7 @@ const handleSaveButton = async (
       updatedAt: new Date().toISOString(),
     };
 
-    const response = await fetch(
+    const savedProfile = await customFetch<StreamDeckProfile>(
       `/api/devices/stream-deck/profiles/${encodeURIComponent(
         selectedProfile.profileId,
       )}`,
@@ -327,17 +314,9 @@ const handleSaveButton = async (
           "Content-Type": "application/json",
         },
         body: JSON.stringify(updatedProfile),
+        responseType: "json",
       },
     );
-
-    if (!response.ok) {
-      throw new Error(
-        `Failed to update Stream Deck profile: ${response.status}`,
-      );
-    }
-
-    const savedProfile =
-      (await response.json()) as StreamDeckProfile;
 
     setProfiles((current) =>
       current.map((profile) =>

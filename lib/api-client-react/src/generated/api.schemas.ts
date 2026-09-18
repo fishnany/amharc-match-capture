@@ -150,6 +150,62 @@ export interface SystemStatus {
   audio: SystemStatusAudio;
 }
 
+export interface CameraDiscoveryRequest {
+  /** @nullable */
+  subnet?: string | null;
+}
+
+export interface DiscoveredCamera {
+  ipAddress: string;
+  /** @nullable */
+  macAddress?: string | null;
+  /** @nullable */
+  model?: string | null;
+  /** @nullable */
+  serialNumber?: string | null;
+  /** @nullable */
+  firmwareVersion?: string | null;
+}
+
+export interface JoystickConfig {
+  deadZone: number;
+  panSensitivity: number;
+  tiltSensitivity: number;
+  zoomSensitivity: number;
+  invertPan: boolean;
+  invertTilt: boolean;
+  invertZoom: boolean;
+  ptzUpdateIntervalMs: number;
+  responseCurveStrength: number;
+}
+
+export interface ClockAuthorityV1 {
+  sourceApplication: string;
+  instanceId: string;
+}
+
+export type ClockSnapshotV1ContractVersion = typeof ClockSnapshotV1ContractVersion[keyof typeof ClockSnapshotV1ContractVersion];
+
+
+export const ClockSnapshotV1ContractVersion = {
+  '10': '1.0',
+} as const;
+
+export interface ClockSnapshotV1 {
+  contractVersion: ClockSnapshotV1ContractVersion;
+  matchId: string;
+  period: number;
+  periodClockSeconds: number;
+  totalMatchElapsedSeconds: number;
+  isRunning: boolean;
+  /** @nullable */
+  recordingElapsedSeconds?: number | null;
+  observedAtUtc: string;
+  authority: ClockAuthorityV1;
+  authorityEpoch: number;
+  sequence: number;
+}
+
 export type CameraManufacturer = typeof CameraManufacturer[keyof typeof CameraManufacturer];
 
 
@@ -476,33 +532,6 @@ export interface ClockCorrection {
   reason?: string;
 }
 
-export interface ClockAuthorityV1 {
-  sourceApplication: string;
-  instanceId: string;
-}
-
-export type ClockSnapshotV1ContractVersion = typeof ClockSnapshotV1ContractVersion[keyof typeof ClockSnapshotV1ContractVersion];
-
-
-export const ClockSnapshotV1ContractVersion = {
-  '10': '1.0',
-} as const;
-
-export interface ClockSnapshotV1 {
-  contractVersion: ClockSnapshotV1ContractVersion;
-  matchId: string;
-  period: number;
-  periodClockSeconds: number;
-  totalMatchElapsedSeconds: number;
-  isRunning: boolean;
-  /** @nullable */
-  recordingElapsedSeconds?: number | null;
-  observedAtUtc: string;
-  authority: ClockAuthorityV1;
-  authorityEpoch: number;
-  sequence: number;
-}
-
 export type BroadcastPresentationControlV1OutputMode = typeof BroadcastPresentationControlV1OutputMode[keyof typeof BroadcastPresentationControlV1OutputMode];
 
 
@@ -600,15 +629,13 @@ export type ScoreUpdateScoreType = typeof ScoreUpdateScoreType[keyof typeof Scor
 export const ScoreUpdateScoreType = {
   goal: 'goal',
   point: 'point',
+  'one-point': 'one-point',
   'two-point': 'two-point',
 } as const;
 
 export interface ScoreUpdate {
   team: ScoreUpdateTeam;
   scoreType: ScoreUpdateScoreType;
-  delta: number;
-  /** @nullable */
-  reason?: string | null;
 }
 
 export type MatchEventEventType = typeof MatchEventEventType[keyof typeof MatchEventEventType];
@@ -819,17 +846,40 @@ export interface RecordingStatus {
   segments?: unknown[];
 }
 
+export interface StartStreamingRequest {
+  destinationId: string;
+}
+
+export type StreamingStatusState = typeof StreamingStatusState[keyof typeof StreamingStatusState];
+
+
+export const StreamingStatusState = {
+  idle: 'idle',
+  connecting: 'connecting',
+  streaming: 'streaming',
+  reconnecting: 'reconnecting',
+  stopping: 'stopping',
+  error: 'error',
+} as const;
+
 export interface StreamingStatus {
+  state: StreamingStatusState;
   isStreaming: boolean;
   /** @nullable */
-  destination: string | null;
+  destination?: string | null;
   /** @nullable */
   uptimeSeconds?: number | null;
-  /** @nullable */
+  /**
+     * Runtime-reported outgoing bitrate; zero until measured telemetry is implemented.
+     * @nullable
+     */
   outgoingBitRate?: number | null;
-  /** @nullable */
+  /**
+     * Runtime-reported dropped frames; zero until measured telemetry is implemented.
+     * @nullable
+     */
   droppedFrames?: number | null;
-  reconnectCount?: number;
+  reconnectCount: number;
   /** @nullable */
   error?: string | null;
   /** @nullable */
@@ -907,6 +957,8 @@ export const StreamDeckButtonTeam = {
 
 export interface StreamDeckButton {
   buttonNumber: number;
+  /** @nullable */
+  commandId?: string | null;
   label: string;
   /** @nullable */
   icon?: string | null;
@@ -927,9 +979,9 @@ export interface StreamDeckProfile {
   profileId: string;
   name: string;
   sport: StreamDeckProfileSport;
-  isDefault?: boolean;
   buttons: StreamDeckButton[];
   createdAt: string;
+  updatedAt: string;
 }
 
 export type StreamDeckProfileInputSport = typeof StreamDeckProfileInputSport[keyof typeof StreamDeckProfileInputSport];
@@ -946,7 +998,6 @@ export const StreamDeckProfileInputSport = {
 export interface StreamDeckProfileInput {
   name: string;
   sport: StreamDeckProfileInputSport;
-  isDefault?: boolean;
   buttons: StreamDeckButton[];
 }
 
@@ -975,6 +1026,20 @@ export interface OverlayTemplate {
   isDefault?: boolean;
   /** @nullable */
   description?: string | null;
+}
+
+export type SetOverlayModeRequestMode = typeof SetOverlayModeRequestMode[keyof typeof SetOverlayModeRequestMode];
+
+
+export const SetOverlayModeRequestMode = {
+  clean: 'clean',
+  programme: 'programme',
+  'overlay-only': 'overlay-only',
+  'operator-preview': 'operator-preview',
+} as const;
+
+export interface SetOverlayModeRequest {
+  mode: SetOverlayModeRequestMode;
 }
 
 export type OverlayStateOutputMode = typeof OverlayStateOutputMode[keyof typeof OverlayStateOutputMode];
@@ -1077,5 +1142,9 @@ export interface OperationResult {
 
 export type GetLiveReadiness404 = {
   error: string;
+};
+
+export type ActivateStreamDeckProfile200 = {
+  activeProfileId: string;
 };
 

@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './activateStreamDeckProfile200';
 export * from './broadcastMatchIdentityV1';
 export * from './broadcastPresentationControlV1';
 export * from './broadcastPresentationControlV1OutputMode';
@@ -14,6 +15,7 @@ export * from './broadcastPresentationStateV1ContractVersion';
 export * from './camera';
 export * from './cameraConnectionResult';
 export * from './cameraConnectionState';
+export * from './cameraDiscoveryRequest';
 export * from './cameraInput';
 export * from './cameraInputManufacturer';
 export * from './cameraManufacturer';
@@ -25,11 +27,13 @@ export * from './clockSnapshotV1ContractVersion';
 export * from './clockState';
 export * from './clockStateClockMode';
 export * from './deviceStatus';
+export * from './discoveredCamera';
 export * from './exportRequest';
 export * from './exportRequestFormatsItem';
 export * from './exportResult';
 export * from './getLiveReadiness404';
 export * from './healthStatus';
+export * from './joystickConfig';
 export * from './joystickStatus';
 export * from './liveReadinessCheckV1';
 export * from './liveReadinessDimensionV1';
@@ -75,7 +79,10 @@ export * from './scoreStateSport';
 export * from './scoreUpdate';
 export * from './scoreUpdateScoreType';
 export * from './scoreUpdateTeam';
+export * from './setOverlayModeRequest';
+export * from './setOverlayModeRequestMode';
 export * from './startRecordingRequest';
+export * from './startStreamingRequest';
 export * from './storageStatus';
 export * from './storageStatusWarningLevel';
 export * from './streamDeckButton';
@@ -90,6 +97,7 @@ export * from './streamingDestinationInput';
 export * from './streamingDestinationInputPlatform';
 export * from './streamingDestinationPlatform';
 export * from './streamingStatus';
+export * from './streamingStatusState';
 export * from './systemStatus';
 export * from './systemStatusAudio';
 export * from './systemStatusCamera';

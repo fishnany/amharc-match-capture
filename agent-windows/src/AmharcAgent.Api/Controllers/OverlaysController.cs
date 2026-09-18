@@ -19,8 +19,19 @@ public class OverlaysController(IOverlayService overlay) : ControllerBase
     [HttpPost("mode")]
     public IActionResult SetMode([FromBody] SetModeRequest req)
     {
-        if (Enum.TryParse<OverlayOutputMode>(req.Mode, true, out var mode))
-            overlay.SetOutputMode(mode);
+        var mode = req.Mode.Trim().ToLowerInvariant() switch
+        {
+            "clean" => OverlayOutputMode.Clean,
+            "programme" => OverlayOutputMode.Programme,
+            "overlay-only" => OverlayOutputMode.OverlayOnly,
+            "operator-preview" => OverlayOutputMode.OperatorPreview,
+            _ => (OverlayOutputMode?)null
+        };
+
+        if (mode is null)
+            return BadRequest(new { error = $"Unsupported overlay output mode '{req.Mode}'." });
+
+        overlay.SetOutputMode(mode.Value);
         return Ok(overlay.State);
     }
 

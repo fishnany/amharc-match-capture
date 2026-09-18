@@ -9,6 +9,9 @@ public interface IStreamingService
 {
     StreamingState State { get; }
     StreamingStats? Stats { get; }
+    string? ActiveDestinationId { get; }
+    DateTimeOffset? StartedAt { get; }
+    string? LastError { get; }
 
     Task StartAsync(StreamingDestinationConfig destination, CancellationToken ct = default);
     Task StopAsync(CancellationToken ct = default);

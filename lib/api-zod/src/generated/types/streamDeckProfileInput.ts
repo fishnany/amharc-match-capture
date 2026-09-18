@@ -11,6 +11,5 @@ import type { StreamDeckProfileInputSport } from './streamDeckProfileInputSport'
 export interface StreamDeckProfileInput {
   name: string;
   sport: StreamDeckProfileInputSport;
-  isDefault?: boolean;
   buttons: StreamDeckButton[];
 }
