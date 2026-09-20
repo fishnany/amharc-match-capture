@@ -434,6 +434,68 @@ public sealed class FfmpegStreamReceiverTests
         SnapshotBootstrap(bootstrap).Should().BeEmpty();
     }
 
+    [Fact]
+    public void LiveAlignedBootstrap_DoesNotInheritHistoricalBootstrap()
+    {
+        var historical = CreateBootstrapBuffer();
+        AppendBootstrap(
+            historical,
+            CreatePatPacket(0x1000)
+                .Concat(CreatePmtPacket(0x1000, 0x0100))
+                .Concat(CreateH264IdrPacket(0x0100))
+                .ToArray());
+
+        SnapshotBootstrap(historical).Should().NotBeEmpty();
+
+        var liveAligned = CreateBootstrapBuffer();
+
+        SnapshotBootstrap(liveAligned).Should().BeEmpty();
+
+        AppendBootstrap(
+            liveAligned,
+            CreateH264IdrPacket(0x0100));
+
+        SnapshotBootstrap(liveAligned).Should().BeEmpty(
+            "a post-registration IDR must not be combined with historical PAT/PMT");
+
+        AppendBootstrap(
+            liveAligned,
+            CreatePatPacket(0x1000)
+                .Concat(CreatePmtPacket(0x1000, 0x0100))
+                .Concat(CreateH264IdrPacket(0x0100))
+                .ToArray());
+
+        SnapshotBootstrap(liveAligned).Should().NotBeEmpty(
+            "the consumer's own future PAT/PMT/IDR establishes a decodable boundary");
+    }
+
+    [Fact]
+    public void LiveAlignedBootstrap_ConsumersMaintainIndependentState()
+    {
+        var first = CreateBootstrapBuffer();
+        var second = CreateBootstrapBuffer();
+
+        AppendBootstrap(
+            first,
+            CreatePatPacket(0x1000)
+                .Concat(CreatePmtPacket(0x1000, 0x0100))
+                .Concat(CreateH264IdrPacket(0x0100))
+                .ToArray());
+
+        SnapshotBootstrap(first).Should().NotBeEmpty();
+        SnapshotBootstrap(second).Should().BeEmpty();
+
+        AppendBootstrap(
+            second,
+            CreatePatPacket(0x1000)
+                .Concat(CreatePmtPacket(0x1000, 0x0100))
+                .Concat(CreateH264IdrPacket(0x0100))
+                .ToArray());
+
+        SnapshotBootstrap(second).Should().NotBeEmpty();
+        SnapshotBootstrap(first).Should().NotBeEmpty();
+    }
+
     private static object CreateBootstrapBuffer()
     {
         var type = typeof(FfmpegStreamReceiver)
@@ -571,7 +633,7 @@ public sealed class FfmpegStreamReceiverTests
                 .GetParameters();
 
         parameters.Should()
-            .HaveCount(2);
+            .HaveCount(3);
 
         parameters[0]
             .ParameterType.Should()
@@ -592,6 +654,22 @@ public sealed class FfmpegStreamReceiverTests
         parameters[1]
             .DefaultValue.Should()
             .Be(false);
+
+        parameters[2]
+            .ParameterType.Should()
+            .Be(typeof(StreamReceiverMediaStartMode));
+
+        parameters[2]
+            .Name.Should()
+            .Be("startMode");
+
+        parameters[2]
+            .HasDefaultValue.Should()
+            .BeTrue();
+
+        parameters[2]
+            .DefaultValue.Should()
+            .Be(StreamReceiverMediaStartMode.Bootstrap);
 
         typeof(IStreamReceiverMediaSource)
             .GetMembers(

@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Globalization;
 using System.Text.RegularExpressions;
@@ -96,7 +96,9 @@ public sealed class FfmpegStreamReceiver :
 
     public async Task<IStreamReceiverMediaLease> AcquireAsync(
         CancellationToken ct = default,
-        bool lossIntolerant = false)
+        bool lossIntolerant = false,
+        StreamReceiverMediaStartMode startMode =
+            StreamReceiverMediaStartMode.Bootstrap)
     {
         var consumerId = Guid.NewGuid();
 
@@ -113,6 +115,48 @@ public sealed class FfmpegStreamReceiver :
                 });
 
         await StartAsync(ct);
+
+        if (startMode ==
+            StreamReceiverMediaStartMode.LiveAligned)
+        {
+            var liveConsumer =
+                new MediaConsumer(
+                    channel,
+                    lossIntolerant,
+                    liveBootstrap:
+                        new MpegTsBootstrapBuffer());
+
+            lock (_mediaDispatchLock)
+            {
+                if (!_consumers.TryAdd(
+                        consumerId,
+                        liveConsumer))
+                {
+                    channel.Writer.TryComplete();
+
+                    throw new InvalidOperationException(
+                        "Unable to register live-aligned canonical media consumer.");
+                }
+            }
+
+            try
+            {
+                await liveConsumer.LiveReady.Task.WaitAsync(
+                    TimeSpan.FromSeconds(5),
+                    ct);
+            }
+            catch
+            {
+                RemoveConsumer(consumerId);
+                throw;
+            }
+
+            return new StreamReceiverMediaLease(
+                new ChannelReadStream(
+                    channel.Reader),
+                () => RemoveConsumer(
+                    consumerId));
+        }
 
         var deadline =
             DateTime.UtcNow.AddSeconds(5);
@@ -137,7 +181,10 @@ public sealed class FfmpegStreamReceiver :
 
                     if (!_consumers.TryAdd(
                             consumerId,
-                            new MediaConsumer(channel, lossIntolerant)))
+                            new MediaConsumer(
+                                channel,
+                                lossIntolerant,
+                                liveBootstrap: null)))
                     {
                         channel.Writer.TryComplete();
 
@@ -468,6 +515,53 @@ public sealed class FfmpegStreamReceiver :
                 foreach (var entry in consumers)
                 {
                     var consumer = entry.Value;
+
+                    if (consumer.LiveBootstrap is not null)
+                    {
+                        consumer.LiveBootstrap.Append(
+                            alignedMedia);
+
+                        var liveBootstrap =
+                            consumer.LiveBootstrap.Snapshot();
+
+                        if (liveBootstrap.Length == 0)
+                        {
+                            continue;
+                        }
+
+                        var delivered = false;
+
+                        if (consumer.LossIntolerant)
+                        {
+                            try
+                            {
+                                await consumer.Channel.Writer.WriteAsync(
+                                    liveBootstrap,
+                                    ct);
+                                delivered = true;
+                            }
+                            catch (ChannelClosedException)
+                                when (!_consumers.ContainsKey(entry.Key))
+                            {
+                                // The lease was detached after the dispatch snapshot.
+                            }
+                        }
+                        else
+                        {
+                            delivered =
+                                consumer.Channel.Writer.TryWrite(
+                                    liveBootstrap);
+                        }
+
+                        if (!delivered)
+                        {
+                            continue;
+                        }
+
+                        consumer.LiveBootstrap = null;
+                        consumer.LiveReady.TrySetResult(true);
+                        continue;
+                    }
 
                     if (consumer.LossIntolerant)
                     {
@@ -1226,9 +1320,29 @@ public sealed class FfmpegStreamReceiver :
             bool IsPmt,
             bool HasIdr);
     }
-    private sealed record MediaConsumer(
-        Channel<byte[]> Channel,
-        bool LossIntolerant);
+    private sealed class MediaConsumer
+    {
+        public MediaConsumer(
+            Channel<byte[]> channel,
+            bool lossIntolerant,
+            MpegTsBootstrapBuffer? liveBootstrap)
+        {
+            Channel = channel;
+            LossIntolerant = lossIntolerant;
+            LiveBootstrap = liveBootstrap;
+        }
+
+        public Channel<byte[]> Channel { get; }
+
+        public bool LossIntolerant { get; }
+
+        public MpegTsBootstrapBuffer? LiveBootstrap { get; set; }
+
+        public TaskCompletionSource<bool> LiveReady { get; } =
+            new(
+                TaskCreationOptions
+                    .RunContinuationsAsynchronously);
+    }
 
     private sealed class StreamReceiverMediaLease :
         IStreamReceiverMediaLease

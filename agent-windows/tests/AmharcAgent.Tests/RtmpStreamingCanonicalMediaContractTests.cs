@@ -1,4 +1,4 @@
-﻿using AmharcAgent.Core.Interfaces;
+using AmharcAgent.Core.Interfaces;
 using AmharcAgent.Infrastructure.Streaming;
 using Xunit;
 
@@ -40,24 +40,55 @@ public sealed class RtmpStreamingCanonicalMediaContractTests
             typeof(ICameraAdapter),
             parameterTypes);
     }
-
     [Fact]
-    public void StreamingService_DoesNotContainDirectRtspIngress()
+    public void StreamingService_UsesCanonicalVideoAndSeparateAuthoritativeAudioIngress()
     {
+        var source = StreamingSource;
+
+        // R1-03 preserves the R1-02 canonical video authority.
+        Assert.Contains(
+            "IStreamReceiverMediaSource",
+            source);
+
+        Assert.Contains(
+            "lossIntolerant: false",
+            source);
+
+        Assert.Contains(
+            "-f mpegts",
+            source);
+
+        Assert.Contains(
+            "-i pipe:0",
+            source);
+
+        Assert.Contains(
+            "-map 0:v:0",
+            source);
+
+        // Authoritative audio is deliberately independent of
+        // canonical video ingress.
+        Assert.Contains(
+            "IRecordingAudioSourceResolver",
+            source);
+
+        Assert.Contains(
+            "-rtsp_transport tcp",
+            source);
+
+        Assert.Contains(
+            "-map 1:a:0",
+            source);
+
+        // Streaming must not take ownership of the canonical
+        // receiver or bypass the existing audio authority.
         Assert.DoesNotContain(
-            "-rtsp_transport",
-            StreamingSource,
-            StringComparison.Ordinal);
+            "IStreamReceiver ",
+            source);
 
         Assert.DoesNotContain(
-            "rtsp://camera",
-            StreamingSource,
-            StringComparison.OrdinalIgnoreCase);
-
-        Assert.DoesNotContain(
-            "GetAuthenticatedStreamUrlAsync",
-            StreamingSource,
-            StringComparison.Ordinal);
+            "IAudioCredentialProvider",
+            source);
     }
 
     [Fact]
@@ -92,29 +123,40 @@ public sealed class RtmpStreamingCanonicalMediaContractTests
             StreamingSource,
             StringComparison.Ordinal);
     }
-
     [Fact]
-    public void StreamingService_DoesNotClaimAuthoritativeAudio()
+    public void StreamingService_RequiresAuthoritativeAudioForNormalStreaming()
     {
+        var source = StreamingSource;
+
         Assert.Contains(
-            "\"-an\"",
-            StreamingSource,
-            StringComparison.Ordinal);
-
-        Assert.DoesNotContain(
-            "-c:a",
-            StreamingSource,
-            StringComparison.Ordinal);
-
-        Assert.DoesNotContain(
-            "IAudioCredentialProvider",
-            StreamingSource,
-            StringComparison.Ordinal);
-
-        Assert.DoesNotContain(
             "IRecordingAudioSourceResolver",
-            StreamingSource,
-            StringComparison.Ordinal);
+            source);
+
+        Assert.Contains(
+            "Authoritative audio source is unavailable",
+            source);
+
+        Assert.Contains(
+            "-map 0:v:0",
+            source);
+
+        Assert.Contains(
+            "-map 1:a:0",
+            source);
+
+        Assert.Contains(
+            "-c:a aac",
+            source);
+
+        Assert.Contains(
+            "-b:a 128k",
+            source);
+
+        // Completed R1-03 normal Streaming is AV.
+        // Silent video-only output is not an acceptable fallback.
+        Assert.DoesNotContain(
+            "\"-an\"",
+            source);
     }
 
     [Fact]
@@ -162,5 +204,19 @@ public sealed class RtmpStreamingCanonicalMediaContractTests
 
         throw new DirectoryNotFoundException(
             "Repository root was not found.");
+    }
+
+    [Fact]
+    public void StreamingService_RequestsLiveAlignedCanonicalVideo()
+    {
+        Assert.Contains(
+            "StreamReceiverMediaStartMode.LiveAligned",
+            StreamingSource,
+            StringComparison.Ordinal);
+
+        Assert.DoesNotContain(
+            "-itsoffset",
+            StreamingSource,
+            StringComparison.Ordinal);
     }
 }

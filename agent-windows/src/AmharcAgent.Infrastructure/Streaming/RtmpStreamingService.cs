@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using AmharcAgent.Core.Interfaces;
 using AmharcAgent.Core.Models;
 using Microsoft.Extensions.Logging;
@@ -20,6 +20,7 @@ public sealed class RtmpStreamingService :
 
     private readonly ILogger<RtmpStreamingService> _logger;
     private readonly IStreamReceiverMediaSource _mediaSource;
+    private readonly IRecordingAudioSourceResolver _audioSourceResolver;
     private readonly string _ffmpegPath;
     private readonly SemaphoreSlim _lifecycleGate = new(1, 1);
 
@@ -40,10 +41,14 @@ public sealed class RtmpStreamingService :
     public RtmpStreamingService(
         ILogger<RtmpStreamingService> logger,
         IStreamReceiverMediaSource mediaSource,
+        IRecordingAudioSourceResolver audioSourceResolver,
         string ffmpegPath = "ffmpeg.exe")
     {
         _logger = logger;
         _mediaSource = mediaSource;
+        _audioSourceResolver =
+            audioSourceResolver ??
+            throw new ArgumentNullException(nameof(audioSourceResolver));
         _ffmpegPath =
             string.IsNullOrWhiteSpace(ffmpegPath)
                 ? throw new ArgumentException(
@@ -171,14 +176,16 @@ public sealed class RtmpStreamingService :
         var lease =
             await _mediaSource.AcquireAsync(
                 ct,
-                lossIntolerant: false);
+                lossIntolerant: false,
+                startMode:
+                    StreamReceiverMediaStartMode.LiveAligned);
 
         Process? process = null;
 
         try
         {
             var arguments =
-                BuildStreamingArguments(destination);
+                await BuildStreamingArgumentsAsync(destination, ct);
 
             process =
                 new Process
@@ -581,9 +588,20 @@ public sealed class RtmpStreamingService :
         SetState(StreamingState.Idle);
     }
 
-    private static string BuildStreamingArguments(
-        StreamingDestinationConfig destination)
+    private async Task<string> BuildStreamingArgumentsAsync(
+        StreamingDestinationConfig destination,
+        CancellationToken ct)
     {
+        var audio =
+            await _audioSourceResolver.ResolveAsync(ct);
+
+        if (!audio.IsAvailable ||
+            audio.Credential is null)
+        {
+            throw new InvalidOperationException(
+                "Authoritative audio source is unavailable; streaming will not start without audio.");
+        }
+
         var bitrate =
             destination.BitRate ?? 4000;
 
@@ -596,14 +614,29 @@ public sealed class RtmpStreamingService :
         var rtmpTarget =
             $"{destination.ServerUrl.TrimEnd('/')}/{destination.StreamKey}";
 
+        var audioRuntimeRtspUrl =
+            BuildAuthenticatedRtspUrl(
+                audio.Endpoint,
+                audio.Port,
+                audio.PresentationPath,
+                audio.Credential);
+
         return string.Join(
             " ",
             "-hide_banner",
             "-loglevel warning",
+
+            // Input 0: canonical AMHARC video.
             "-f mpegts",
             "-i pipe:0",
+
+            // Input 1: authoritative AMHARC audio.
+            "-rtsp_transport tcp",
+            $"-i \"{audioRuntimeRtspUrl}\"",
+
             "-map 0:v:0",
-            "-an",
+            "-map 1:a:0",
+
             "-c:v libx264",
             "-preset veryfast",
             $"-b:v {bitrate}k",
@@ -611,8 +644,37 @@ public sealed class RtmpStreamingService :
             $"-bufsize {bitrate * 2}k",
             $"-vf scale={resolution}",
             $"-r {fps}",
+
+            "-c:a aac",
+            "-b:a 128k",
+
             "-f flv",
             $"\"{rtmpTarget}\"");
+    }
+
+    private static string BuildAuthenticatedRtspUrl(
+        string endpoint,
+        int port,
+        string presentationPath,
+        AudioCredential credential)
+    {
+        var path =
+            presentationPath.StartsWith(
+                "/",
+                StringComparison.Ordinal)
+                ? presentationPath
+                : "/" + presentationPath;
+
+        var user =
+            Uri.EscapeDataString(
+                credential.Username);
+
+        var password =
+            Uri.EscapeDataString(
+                credential.Password);
+
+        return
+            $"rtsp://{user}:{password}@{endpoint}:{port}{path}";
     }
 
     private void OnFfmpegStderr(

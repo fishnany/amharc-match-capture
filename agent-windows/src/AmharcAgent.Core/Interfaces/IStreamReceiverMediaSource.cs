@@ -5,9 +5,17 @@ namespace AmharcAgent.Core.Interfaces;
 /// Consumers acquire credential-free media leases and never receive the
 /// authenticated camera source.
 /// </summary>
+public enum StreamReceiverMediaStartMode
+{
+    Bootstrap,
+    LiveAligned
+}
+
 public interface IStreamReceiverMediaSource
 {
     Task<IStreamReceiverMediaLease> AcquireAsync(
         CancellationToken ct = default,
-        bool lossIntolerant = false);
+        bool lossIntolerant = false,
+        StreamReceiverMediaStartMode startMode =
+            StreamReceiverMediaStartMode.Bootstrap);
 }
