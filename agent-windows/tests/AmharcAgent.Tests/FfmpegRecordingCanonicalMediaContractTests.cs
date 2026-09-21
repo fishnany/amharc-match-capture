@@ -37,7 +37,7 @@ public sealed class FfmpegRecordingCanonicalMediaContractTests
     {
         var source = File.ReadAllText(
             Path.Combine(
-                FindRepositoryRoot(),
+                TestRepository.FindRoot(),
                 "agent-windows",
                 "src",
                 "AmharcAgent.Infrastructure",
@@ -50,23 +50,4 @@ public sealed class FfmpegRecordingCanonicalMediaContractTests
                 "AcquireAsync(ct, lossIntolerant: true)",
                 StringSplitOptions.None).Length - 1);
     }
-    private static string FindRepositoryRoot()
-    {
-        var directory = new DirectoryInfo(AppContext.BaseDirectory);
-
-        while (directory is not null)
-        {
-            if (Directory.Exists(
-                    Path.Combine(
-                        directory.FullName,
-                        ".git")))
-            {
-                return directory.FullName;
-            }
-
-            directory = directory.Parent;
-        }
-
-        throw new DirectoryNotFoundException(
-            "Repository root was not found.");
-    }}
+    }

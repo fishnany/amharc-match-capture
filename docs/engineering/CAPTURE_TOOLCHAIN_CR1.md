@@ -33,7 +33,13 @@ dotnet restore .\agent-windows\AmharcAgent.sln
 dotnet build .\agent-windows\AmharcAgent.sln
 ```
 
-The canonical repository-root test command is deliberately NOT declared here yet. CR1-004 owns correction and verification of the known test-discovery problem.
+The canonical repository-root test command is:
+
+```powershell
+.\scripts\tooling\test-dotnet.ps1
+```
+
+The script resolves `agent-windows\AmharcAgent.sln` from its own repository location, so invocation does not depend on the caller's current directory. CR1-004 also corrected test-only repository discovery to recognise both a normal `.git` directory and a linked-worktree `.git` file.
 
 ## Known version ambiguities
 

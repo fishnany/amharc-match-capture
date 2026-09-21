@@ -9,7 +9,7 @@ public sealed class RtmpStreamingCanonicalMediaContractTests
     private static readonly string StreamingSource =
         File.ReadAllText(
             Path.Combine(
-                FindRepositoryRoot(),
+                TestRepository.FindRoot(),
                 "agent-windows",
                 "src",
                 "AmharcAgent.Infrastructure",
@@ -182,29 +182,7 @@ public sealed class RtmpStreamingCanonicalMediaContractTests
             StringComparison.Ordinal);
     }
 
-    private static string FindRepositoryRoot()
-    {
-        var directory =
-            new DirectoryInfo(
-                AppContext.BaseDirectory);
-
-        while (directory is not null)
-        {
-            if (Directory.Exists(
-                    Path.Combine(
-                        directory.FullName,
-                        ".git")))
-            {
-                return directory.FullName;
-            }
-
-            directory =
-                directory.Parent;
-        }
-
-        throw new DirectoryNotFoundException(
-            "Repository root was not found.");
-    }
+    
 
     [Fact]
     public void StreamingService_RequestsLiveAlignedCanonicalVideo()
