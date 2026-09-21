@@ -24,7 +24,7 @@ public class Camera
     [JsonIgnore]
     public string Username { get; set; } = "root";
     [JsonIgnore]
-    public string Password { get; set; } = "pass";
+    public string Password { get; set; } = string.Empty;
 
     public CameraRole Role { get; set; } = CameraRole.Primary;
 

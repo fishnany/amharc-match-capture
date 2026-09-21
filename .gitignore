@@ -76,3 +76,14 @@ agent-windows/src/AmharcAgent.Api/amharc.db-shm
 agent-windows/src/AmharcAgent.Api/amharc.db-wal
 agent-windows/src/AmharcAgent.Api/amharc.pre-migrations.db
 agent-windows/src/AmharcAgent.Api/Properties/launchSettings.json
+
+# AMHARC SQLite runtime artifacts (all repository locations)
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+*.sqlite3
+*.sqlite3-shm
+*.sqlite3-wal

@@ -85,6 +85,19 @@ await using (var startupScope = app.Services.CreateAsyncScope())
             startupScope.ServiceProvider.GetRequiredService<
                 AmharcAgent.Core.Domain.AgentSettings>();
 
+        var protectedCredentials =
+            startupScope.ServiceProvider.GetRequiredService<
+                IProtectedCredentialStore>();
+
+        if (!string.IsNullOrEmpty(cameraSettings.DefaultCameraPassword))
+        {
+            await protectedCredentials.WriteAsync(
+                "AMHARC/Camera/primary",
+                new AmharcAgent.Core.Models.ProtectedCredential(
+                    cameraSettings.DefaultCameraUsername,
+                    cameraSettings.DefaultCameraPassword));
+        }
+
         await cameraRepository.CreateAsync(
             new AmharcAgent.Core.Domain.Camera
             {
@@ -95,8 +108,8 @@ await using (var startupScope = app.Services.CreateAsyncScope())
                 IpAddress = "192.168.1.135",
                 RtspPort = 554,
                 HttpPort = 80,
-                Username = cameraSettings.DefaultCameraUsername,
-                Password = cameraSettings.DefaultCameraPassword,
+                Username = string.Empty,
+                Password = string.Empty,
                 CreatedAt = DateTimeOffset.UtcNow,
                 UpdatedAt = DateTimeOffset.UtcNow
             });
