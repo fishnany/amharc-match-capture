@@ -37,7 +37,7 @@ public class AxisCameraAdapter : ICameraAdapter, IPtzController, IAsyncDisposabl
     {
         SetState(CameraConnectionState.Connecting);
         _client = new AxisVapixClient(_config.IpAddress, _config.Username, _config.Password,
-            _logger as ILogger<AxisVapixClient> ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<AxisVapixClient>.Instance);
+            _logger as ILogger<AxisVapixClient> ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<AxisVapixClient>.Instance, _config.RtspPort);
         try
         {
             var info = await _client.GetDeviceInfoAsync(ct);
@@ -101,6 +101,12 @@ public class AxisCameraAdapter : ICameraAdapter, IPtzController, IAsyncDisposabl
         return Task.FromResult(_client!.GetRtspUrl(profileName));
     }
 
+    public Task<string> GetAuthenticatedStreamUrlAsync(string? profileName = null, CancellationToken ct = default)
+    {
+        EnsureConnected();
+        return Task.FromResult(_client!.GetAuthenticatedRtspUrl(profileName));
+    }
+
     public Task<CameraInfo> GetCameraInfoAsync(CancellationToken ct = default) =>
         Task.FromResult(new CameraInfo(_config.Model, _config.SerialNumber,
             _config.FirmwareVersion, _config.MacAddress));
@@ -119,7 +125,11 @@ public class AxisCameraAdapter : ICameraAdapter, IPtzController, IAsyncDisposabl
         EnsureConnected();
         var s = (int)Math.Clamp(speed * 100, -100, 100);
         int pan = direction switch { PtzDirection.Left => -s, PtzDirection.Right => s, _ => 0 };
-        await _client!.PtzContinuousMoveAsync(pan, 0, ct);
+        await _client!.PtzContinuousMoveAsync(
+            pan,
+            0,
+            0,
+            ct);
     }
 
     public async Task TiltAsync(PtzDirection direction, double speed, CancellationToken ct = default)
@@ -127,7 +137,11 @@ public class AxisCameraAdapter : ICameraAdapter, IPtzController, IAsyncDisposabl
         EnsureConnected();
         var s = (int)Math.Clamp(speed * 100, -100, 100);
         int tilt = direction switch { PtzDirection.Up => s, PtzDirection.Down => -s, _ => 0 };
-        await _client!.PtzContinuousMoveAsync(0, tilt, ct);
+        await _client!.PtzContinuousMoveAsync(
+            0,
+            tilt,
+            0,
+            ct);
     }
 
     public async Task ZoomAsync(ZoomDirection direction, double speed, CancellationToken ct = default)
@@ -182,6 +196,36 @@ public class AxisCameraAdapter : ICameraAdapter, IPtzController, IAsyncDisposabl
         var vapixPresets = await _client!.GetPresetsAsync(ct);
         return vapixPresets.Select(p => new PtzPreset(p.PresetId, p.Name, p.IsHome, null));
     }
+
+    public async Task MoveContinuousAsync(
+        double panSpeed,
+        double tiltSpeed,
+        double zoomSpeed,
+        CancellationToken ct = default)
+{
+    EnsureConnected();
+
+    var pan = (int)Math.Clamp(
+        panSpeed * 100,
+        -100,
+        100);
+
+    var tilt = (int)Math.Clamp(
+        tiltSpeed * 100,
+        -100,
+        100);
+
+    var zoom = (int)Math.Clamp(
+        zoomSpeed * 100,
+        -100,
+        100);
+
+    await _client!.PtzContinuousMoveAsync(
+        pan,
+        tilt,
+        zoom,
+        ct);
+}
 
     // ── helpers ───────────────────────────────────────────────────────────────
 

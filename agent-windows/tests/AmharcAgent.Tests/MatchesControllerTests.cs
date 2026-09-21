@@ -1,0 +1,1017 @@
+using AmharcAgent.Api.Controllers;
+using AmharcAgent.Core.Contracts;
+using AmharcAgent.Core.Domain;
+using AmharcAgent.Core.Interfaces;
+using AmharcAgent.Core.Models;
+using AmharcAgent.Data.Repositories;
+using FluentAssertions;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
+using Xunit;
+using DomainMatch = AmharcAgent.Core.Domain.Match;
+
+namespace AmharcAgent.Tests;
+
+public class MatchesControllerTests
+{
+    private static DomainMatch Match() => new()
+    {
+        MatchId = "m1",
+        Sport = Sport.GaelicFootball,
+        HomeTeam = "Home",
+        AwayTeam = "Away",
+        Status = MatchStatus.Ready,
+        CurrentPeriod = 0
+    };
+
+    private static ClockState Clock() => new(
+        MatchClockSeconds: 123,
+        RecordingElapsedSeconds: 150,
+        IsRunning: true,
+        CurrentPeriod: 1,
+        PeriodStartTotalMatchElapsedSeconds: 0,
+        ClockMode: "count-up",
+        UpdatedAt: DateTimeOffset.UtcNow);
+
+    [Fact]
+    public async Task StartClock_DispatchesSemanticStartCommand()
+    {
+        var repo = new Mock<IMatchRepository>();
+        var clock = new Mock<IMatchClockService>();
+        var canonicalSnapshotService = new Mock<ICanonicalClockSnapshotService>();
+        var broadcast = new Mock<IBroadcastPresentationStateService>();
+        var dispatcher = new Mock<IAmharcCommandDispatcher>();
+        var overlay = new Mock<IOverlayService>();
+
+        clock.SetupGet(c => c.State)
+            .Returns(Clock());
+
+        AmharcCommand? captured = null;
+
+        dispatcher
+            .Setup(d => d.DispatchAsync(
+                It.IsAny<AmharcCommand>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<AmharcCommand, CancellationToken>(
+                (command, _) => captured = command)
+            .Returns(Task.CompletedTask);
+
+        var sut = new MatchesController(
+            repo.Object,
+            clock.Object,
+            canonicalSnapshotService.Object,
+            broadcast.Object,
+            new Mock<ILiveReadinessService>().Object,
+            dispatcher.Object,
+            overlay.Object,
+            NullLogger<MatchesController>.Instance);
+
+        var result =
+            await sut.StartClock(
+                "m1",
+                default);
+
+        result.Should().BeOfType<OkObjectResult>();
+
+        captured.Should().NotBeNull();
+        captured!.CommandId.Should()
+            .Be(AmharcCommandIds.MatchClockStart);
+        captured.MatchId.Should().Be("m1");
+        captured.Source.Should().Be(EventSource.Api);
+
+        clock.Verify(
+            c => c.Start(),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task PauseClock_DispatchesSemanticPauseCommand()
+    {
+        var repo = new Mock<IMatchRepository>();
+        var clock = new Mock<IMatchClockService>();
+        var canonicalSnapshotService = new Mock<ICanonicalClockSnapshotService>();
+        var broadcast = new Mock<IBroadcastPresentationStateService>();
+        var dispatcher = new Mock<IAmharcCommandDispatcher>();
+        var overlay = new Mock<IOverlayService>();
+
+        clock.SetupGet(c => c.State)
+            .Returns(Clock());
+
+        await new MatchesController(
+                repo.Object,
+                clock.Object,
+                canonicalSnapshotService.Object,
+                broadcast.Object,
+                new Mock<ILiveReadinessService>().Object,
+                dispatcher.Object,
+                overlay.Object,
+                NullLogger<MatchesController>.Instance)
+            .PauseClock(
+                "m1",
+                default);
+
+        dispatcher.Verify(
+            d => d.DispatchAsync(
+                It.Is<AmharcCommand>(
+                    c =>
+                        c.CommandId ==
+                            AmharcCommandIds.MatchClockPause &&
+                        c.MatchId == "m1" &&
+                        c.Source == EventSource.Api),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+
+        clock.Verify(
+            c => c.Pause(),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task ResumeClock_DispatchesSemanticResumeCommand()
+    {
+        var repo = new Mock<IMatchRepository>();
+        var clock = new Mock<IMatchClockService>();
+        var canonicalSnapshotService = new Mock<ICanonicalClockSnapshotService>();
+        var broadcast = new Mock<IBroadcastPresentationStateService>();
+        var dispatcher = new Mock<IAmharcCommandDispatcher>();
+        var overlay = new Mock<IOverlayService>();
+
+        clock.SetupGet(c => c.State)
+            .Returns(Clock());
+
+        await new MatchesController(
+                repo.Object,
+                clock.Object,
+                canonicalSnapshotService.Object,
+                broadcast.Object,
+                new Mock<ILiveReadinessService>().Object,
+                dispatcher.Object,
+                overlay.Object,
+                NullLogger<MatchesController>.Instance)
+            .ResumeClock(
+                "m1",
+                default);
+
+        dispatcher.Verify(
+            d => d.DispatchAsync(
+                It.Is<AmharcCommand>(
+                    c =>
+                        c.CommandId ==
+                            AmharcCommandIds.MatchClockResume &&
+                        c.MatchId == "m1"),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+
+        clock.Verify(
+            c => c.Resume(),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task CorrectClock_DispatchesCorrectionParameters()
+    {
+        var repo = new Mock<IMatchRepository>();
+        var clock = new Mock<IMatchClockService>();
+        var canonicalSnapshotService = new Mock<ICanonicalClockSnapshotService>();
+        var broadcast = new Mock<IBroadcastPresentationStateService>();
+        var dispatcher = new Mock<IAmharcCommandDispatcher>();
+        var overlay = new Mock<IOverlayService>();
+
+        clock.SetupGet(c => c.State)
+            .Returns(Clock());
+
+        AmharcCommand? captured = null;
+
+        dispatcher
+            .Setup(d => d.DispatchAsync(
+                It.IsAny<AmharcCommand>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<AmharcCommand, CancellationToken>(
+                (command, _) => captured = command)
+            .Returns(Task.CompletedTask);
+
+        var sut = new MatchesController(
+            repo.Object,
+            clock.Object,
+            canonicalSnapshotService.Object,
+            broadcast.Object,
+            new Mock<ILiveReadinessService>().Object,
+            dispatcher.Object,
+            overlay.Object,
+            NullLogger<MatchesController>.Instance);
+
+        await sut.CorrectClock(
+            "m1",
+            new ClockCorrectRequest(
+                600,
+                "Operator correction"),
+            default);
+
+        captured.Should().NotBeNull();
+
+        captured!.CommandId.Should()
+            .Be(AmharcCommandIds.MatchClockCorrect);
+
+        captured.MatchId.Should().Be("m1");
+
+        captured.Parameters.Should().NotBeNull();
+
+        captured.Parameters!["matchClockSeconds"]
+            .Should().Be("600");
+
+        captured.Parameters["reason"]
+            .Should().Be("Operator correction");
+
+        clock.Verify(
+            c => c.Correct(
+                It.IsAny<int>(),
+                It.IsAny<string?>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task MarkReady_FromSetup_SetsReady()
+    {
+        var match = Match();
+        match.Status = MatchStatus.Setup;
+
+        var repo = new Mock<IMatchRepository>();
+        var clock = new Mock<IMatchClockService>();
+        var canonicalSnapshotService = new Mock<ICanonicalClockSnapshotService>();
+        var broadcast = new Mock<IBroadcastPresentationStateService>();
+        var dispatcher = new Mock<IAmharcCommandDispatcher>();
+        var overlay = new Mock<IOverlayService>();
+
+        repo
+            .Setup(r => r.GetByIdAsync(
+                "m1",
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(match);
+
+        repo
+            .Setup(r => r.UpdateAsync(
+                It.IsAny<DomainMatch>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                (DomainMatch m, CancellationToken _) => m);
+
+        var sut = new MatchesController(
+            repo.Object,
+            clock.Object,
+            canonicalSnapshotService.Object,
+            broadcast.Object,
+            new Mock<ILiveReadinessService>().Object,
+            dispatcher.Object,
+            overlay.Object,
+            NullLogger<MatchesController>.Instance);
+
+        var result =
+            await sut.MarkReady(
+                "m1",
+                default);
+
+        result.Should().BeOfType<OkObjectResult>();
+        match.Status.Should().Be(MatchStatus.Ready);
+        match.CurrentPeriod.Should().Be(0);
+
+        repo.Verify(
+            r => r.UpdateAsync(
+                It.Is<DomainMatch>(
+                    m =>
+                        m.MatchId == "m1" &&
+                        m.Status == MatchStatus.Ready),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task MarkReady_DoesNotDispatchClockStart()
+    {
+        var match = Match();
+        match.Status = MatchStatus.Setup;
+
+        var repo = new Mock<IMatchRepository>();
+        var clock = new Mock<IMatchClockService>();
+        var canonicalSnapshotService = new Mock<ICanonicalClockSnapshotService>();
+        var broadcast = new Mock<IBroadcastPresentationStateService>();
+        var dispatcher = new Mock<IAmharcCommandDispatcher>();
+        var overlay = new Mock<IOverlayService>();
+
+        repo
+            .Setup(r => r.GetByIdAsync(
+                "m1",
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(match);
+
+        repo
+            .Setup(r => r.UpdateAsync(
+                It.IsAny<DomainMatch>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                (DomainMatch m, CancellationToken _) => m);
+
+        var sut = new MatchesController(
+            repo.Object,
+            clock.Object,
+            canonicalSnapshotService.Object,
+            broadcast.Object,
+            new Mock<ILiveReadinessService>().Object,
+            dispatcher.Object,
+            overlay.Object,
+            NullLogger<MatchesController>.Instance);
+
+        var result =
+            await sut.MarkReady(
+                "m1",
+                default);
+
+        result.Should().BeOfType<OkObjectResult>();
+
+        dispatcher.Verify(
+            d => d.DispatchAsync(
+                It.IsAny<AmharcCommand>(),
+                It.IsAny<CancellationToken>()),
+            Times.Never);
+
+        clock.Verify(
+            c => c.Start(),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task MarkReady_FromNonSetup_ReturnsConflict()
+    {
+        var match = Match();
+
+        var repo = new Mock<IMatchRepository>();
+        var clock = new Mock<IMatchClockService>();
+        var canonicalSnapshotService = new Mock<ICanonicalClockSnapshotService>();
+        var broadcast = new Mock<IBroadcastPresentationStateService>();
+        var dispatcher = new Mock<IAmharcCommandDispatcher>();
+        var overlay = new Mock<IOverlayService>();
+
+        repo
+            .Setup(r => r.GetByIdAsync(
+                "m1",
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(match);
+
+        var sut = new MatchesController(
+            repo.Object,
+            clock.Object,
+            canonicalSnapshotService.Object,
+            broadcast.Object,
+            new Mock<ILiveReadinessService>().Object,
+            dispatcher.Object,
+            overlay.Object,
+            NullLogger<MatchesController>.Instance);
+
+        var result =
+            await sut.MarkReady(
+                "m1",
+                default);
+
+        result.Should().BeOfType<ConflictObjectResult>();
+        match.Status.Should().Be(MatchStatus.Ready);
+
+        repo.Verify(
+            r => r.UpdateAsync(
+                It.IsAny<DomainMatch>(),
+                It.IsAny<CancellationToken>()),
+            Times.Never);
+
+        dispatcher.Verify(
+            d => d.DispatchAsync(
+                It.IsAny<AmharcCommand>(),
+                It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task StartMatch_FromSetup_ReturnsConflict()
+    {
+        var match = Match();
+        match.Status = MatchStatus.Setup;
+
+        var repo = new Mock<IMatchRepository>();
+        var clock = new Mock<IMatchClockService>();
+        var canonicalSnapshotService = new Mock<ICanonicalClockSnapshotService>();
+        var broadcast = new Mock<IBroadcastPresentationStateService>();
+        var dispatcher = new Mock<IAmharcCommandDispatcher>();
+        var overlay = new Mock<IOverlayService>();
+
+        repo
+            .Setup(r => r.GetByIdAsync(
+                "m1",
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(match);
+
+        var sut = new MatchesController(
+            repo.Object,
+            clock.Object,
+            canonicalSnapshotService.Object,
+            broadcast.Object,
+            new Mock<ILiveReadinessService>().Object,
+            dispatcher.Object,
+            overlay.Object,
+            NullLogger<MatchesController>.Instance);
+
+        var result =
+            await sut.StartMatch(
+                "m1",
+                default);
+
+        result.Should().BeOfType<ConflictObjectResult>();
+        match.Status.Should().Be(MatchStatus.Setup);
+        match.CurrentPeriod.Should().Be(0);
+
+        dispatcher.Verify(
+            d => d.DispatchAsync(
+                It.IsAny<AmharcCommand>(),
+                It.IsAny<CancellationToken>()),
+            Times.Never);
+
+        repo.Verify(
+            r => r.UpdateAsync(
+                It.IsAny<DomainMatch>(),
+                It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task StartMatch_FromReady_ActivatesMatch_AndDispatchesClockStart()
+    {
+        var match = Match();
+
+        var repo = new Mock<IMatchRepository>();
+        var clock = new Mock<IMatchClockService>();
+        var canonicalSnapshotService = new Mock<ICanonicalClockSnapshotService>();
+        var broadcast = new Mock<IBroadcastPresentationStateService>();
+        var dispatcher = new Mock<IAmharcCommandDispatcher>();
+        var overlay = new Mock<IOverlayService>();
+
+        repo
+            .Setup(r => r.GetByIdAsync(
+                "m1",
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(match);
+
+        repo
+            .Setup(r => r.UpdateAsync(
+                It.IsAny<DomainMatch>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                (DomainMatch m, CancellationToken _) => m);
+
+        dispatcher
+            .Setup(d => d.DispatchAsync(
+                It.Is<AmharcCommand>(
+                    c =>
+                        c.CommandId ==
+                            AmharcCommandIds.MatchClockStart &&
+                        c.MatchId == "m1"),
+                It.IsAny<CancellationToken>()))
+            .Callback<AmharcCommand, CancellationToken>(
+                (_, _) =>
+                {
+                    match.Status = MatchStatus.Active;
+                    match.CurrentPeriod = 1;
+                })
+            .Returns(Task.CompletedTask);
+        var sut = new MatchesController(
+            repo.Object,
+            clock.Object,
+            canonicalSnapshotService.Object,
+            broadcast.Object,
+            new Mock<ILiveReadinessService>().Object,
+            dispatcher.Object,
+            overlay.Object,
+            NullLogger<MatchesController>.Instance);
+
+        var result =
+            await sut.StartMatch(
+                "m1",
+                default);
+
+        result.Should().BeOfType<OkObjectResult>();
+
+        match.Status.Should().Be(MatchStatus.Active);
+        match.CurrentPeriod.Should().Be(1);
+
+        dispatcher.Verify(
+            d => d.DispatchAsync(
+                It.Is<AmharcCommand>(
+                    c =>
+                        c.CommandId ==
+                            AmharcCommandIds.MatchClockStart &&
+                        c.MatchId == "m1"),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+
+        clock.Verify(
+            c => c.Start(),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task StopMatch_CompletesMatch_AndDispatchesFullTime()
+    {
+        var match = Match();
+        match.Status = MatchStatus.Active;
+
+        var repo = new Mock<IMatchRepository>();
+        var clock = new Mock<IMatchClockService>();
+        var canonicalSnapshotService = new Mock<ICanonicalClockSnapshotService>();
+        var broadcast = new Mock<IBroadcastPresentationStateService>();
+        var dispatcher = new Mock<IAmharcCommandDispatcher>();
+        var overlay = new Mock<IOverlayService>();
+
+        repo
+            .Setup(r => r.GetByIdAsync(
+                "m1",
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(match);
+
+        repo
+            .Setup(r => r.UpdateAsync(
+                It.IsAny<DomainMatch>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                (DomainMatch m, CancellationToken _) => m);
+
+        dispatcher
+            .Setup(d => d.DispatchAsync(
+                It.Is<AmharcCommand>(
+                    c =>
+                        c.CommandId ==
+                            AmharcCommandIds.MatchClockFullTime &&
+                        c.MatchId == "m1"),
+                It.IsAny<CancellationToken>()))
+            .Callback<AmharcCommand, CancellationToken>(
+                (_, _) =>
+                {
+                    match.Status = MatchStatus.Complete;
+                })
+            .Returns(Task.CompletedTask);
+        var sut = new MatchesController(
+            repo.Object,
+            clock.Object,
+            canonicalSnapshotService.Object,
+            broadcast.Object,
+            new Mock<ILiveReadinessService>().Object,
+            dispatcher.Object,
+            overlay.Object,
+            NullLogger<MatchesController>.Instance);
+
+        var result =
+            await sut.StopMatch(
+                "m1",
+                default);
+
+        result.Should().BeOfType<OkObjectResult>();
+
+        match.Status.Should().Be(MatchStatus.Complete);
+
+        dispatcher.Verify(
+            d => d.DispatchAsync(
+                It.Is<AmharcCommand>(
+                    c =>
+                        c.CommandId ==
+                            AmharcCommandIds.MatchClockFullTime &&
+                        c.MatchId == "m1"),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+
+        clock.Verify(
+            c => c.MarkFullTime(),
+            Times.Never);
+
+    }
+    [Fact]
+    public async Task GetBroadcastPresentation_ReturnsCanonicalState()
+    {
+        var repo = new Mock<IMatchRepository>();
+        var clock = new Mock<IMatchClockService>();
+        var canonicalSnapshotService = new Mock<ICanonicalClockSnapshotService>();
+        var broadcast = new Mock<IBroadcastPresentationStateService>();
+        var dispatcher = new Mock<IAmharcCommandDispatcher>();
+        var overlay = new Mock<IOverlayService>();
+
+        var state =
+            BroadcastPresentationStateV1.FromCanonical(
+                new DomainMatch
+                {
+                    MatchId = "match-1",
+                    Sport = Sport.GaelicFootball,
+                    Competition = "Controller Test",
+                    Season = "2026",
+                    Round = "Final",
+                    HomeTeam = "Home",
+                    AwayTeam = "Away",
+                    Venue = "AMHARC Test",
+                    Date = new DateOnly(2026, 9, 8)
+                },
+                new ScoreState(
+                    MatchId: "match-1",
+                    Sport: Sport.GaelicFootball,
+                    ScoringModel: ScoringModel.GoalsTwoPointOnePoint,
+                    HomeGoals: 1,
+                    HomeTwoPointScores: 2,
+                    HomePoints: 5,
+                    AwayGoals: 0,
+                    AwayTwoPointScores: 1,
+                    AwayPoints: 8,
+                    UpdatedAt:
+                        new DateTimeOffset(
+                            2026,
+                            9,
+                            8,
+                            10,
+                            0,
+                            0,
+                            TimeSpan.Zero)),
+                new ClockSnapshotV1(
+                    ContractVersion: "1.0",
+                    MatchId: "match-1",
+                    Period: 2,
+                    PeriodClockSeconds: 245,
+                    TotalMatchElapsedSeconds: 2345,
+                    IsRunning: true,
+                    RecordingElapsedSeconds: 2500,
+                    ObservedAtUtc:
+                        new DateTimeOffset(
+                            2026,
+                            9,
+                            8,
+                            10,
+                            0,
+                            1,
+                            TimeSpan.Zero),
+                    Authority:
+                        new ClockAuthorityV1(
+                            "amharc-match-capture",
+                            "capture-instance-1"),
+                    AuthorityEpoch: 1,
+                    Sequence: 42),
+                new OverlayState(
+                    ActiveTemplateId: "standard-scoreboard",
+                    IsVisible: true,
+                    OutputMode: OverlayOutputMode.Programme,
+                    CurrentGraphic: null,
+                    GraphicVisible: false,
+                    HomeGoals: 99,
+                    HomePoints: 98,
+                    AwayGoals: 97,
+                    AwayPoints: 96,
+                    MatchClockSeconds: 9999,
+                    CurrentPeriod: 9));
+
+        broadcast
+            .Setup(b => b.CreateStateAsync(
+                "match-1",
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(state);
+
+        var sut =
+            new MatchesController(
+                repo.Object,
+                clock.Object,
+                canonicalSnapshotService.Object,
+                broadcast.Object,
+                new Mock<ILiveReadinessService>().Object,
+                dispatcher.Object,
+                overlay.Object,
+                NullLogger<MatchesController>.Instance);
+
+        var result =
+            await sut.GetBroadcastPresentation(
+                "match-1",
+                CancellationToken.None);
+
+        var ok =
+            result.Should()
+                .BeOfType<OkObjectResult>()
+                .Subject;
+
+        ok.Value.Should().BeSameAs(state);
+
+        broadcast.Verify(
+            b => b.CreateStateAsync(
+                "match-1",
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task GetBroadcastPresentation_ReturnsNotFoundWhenStateCannotBeComposed()
+    {
+        var repo = new Mock<IMatchRepository>();
+        var clock = new Mock<IMatchClockService>();
+        var canonicalSnapshotService = new Mock<ICanonicalClockSnapshotService>();
+        var broadcast = new Mock<IBroadcastPresentationStateService>();
+        var dispatcher = new Mock<IAmharcCommandDispatcher>();
+        var overlay = new Mock<IOverlayService>();
+
+        broadcast
+            .Setup(b => b.CreateStateAsync(
+                "missing-match",
+                It.IsAny<CancellationToken>()))
+            .ThrowsAsync(
+                new InvalidOperationException(
+                    "Cannot create broadcast presentation state because match 'missing-match' does not exist."));
+
+        var sut =
+            new MatchesController(
+                repo.Object,
+                clock.Object,
+                canonicalSnapshotService.Object,
+                broadcast.Object,
+                new Mock<ILiveReadinessService>().Object,
+                dispatcher.Object,
+                overlay.Object,
+                NullLogger<MatchesController>.Instance);
+
+        var result =
+            await sut.GetBroadcastPresentation(
+                "missing-match",
+                CancellationToken.None);
+
+        result.Should()
+            .BeOfType<NotFoundObjectResult>();
+    }
+
+    [Fact]
+    public void GetClockSnapshot_ReturnsCanonicalSnapshot()
+    {
+        var repo =
+            new Mock<IMatchRepository>();
+
+        var clock =
+            new Mock<IMatchClockService>();
+
+        var canonicalSnapshotService =
+            new Mock<ICanonicalClockSnapshotService>();
+        var broadcast = new Mock<IBroadcastPresentationStateService>();
+
+        var dispatcher =
+            new Mock<IAmharcCommandDispatcher>();
+
+        var overlay =
+            new Mock<IOverlayService>();
+
+        var expected =
+            new ClockSnapshotV1(
+                ContractVersion: "1.0",
+                MatchId: "m1",
+                Period: 2,
+                PeriodClockSeconds: 315,
+                TotalMatchElapsedSeconds: 2115,
+                IsRunning: true,
+                RecordingElapsedSeconds: 2200,
+                ObservedAtUtc:
+                    new DateTimeOffset(
+                        2026,
+                        9,
+                        7,
+                        16,
+                        45,
+                        0,
+                        TimeSpan.Zero),
+                Authority:
+                    new ClockAuthorityV1(
+                        "AMHARC Capture",
+                        "capture-instance-1"),
+                AuthorityEpoch: 123456,
+                Sequence: 42);
+
+        canonicalSnapshotService
+            .Setup(s => s.CreateSnapshot(
+                "m1"))
+            .Returns(expected);
+
+        var sut =
+            new MatchesController(
+                repo.Object,
+                clock.Object,
+                canonicalSnapshotService.Object,
+                broadcast.Object,
+                new Mock<ILiveReadinessService>().Object,
+                dispatcher.Object,
+                overlay.Object,
+                NullLogger<MatchesController>.Instance);
+
+        var result =
+            sut.GetClockSnapshot(
+                "m1");
+
+        var ok =
+            result.Should()
+                .BeOfType<OkObjectResult>()
+                .Subject;
+
+        ok.Value.Should()
+            .BeSameAs(expected);
+
+        canonicalSnapshotService.Verify(
+            s => s.CreateSnapshot(
+                "m1"),
+            Times.Once);
+
+        repo.Verify(
+            r => r.GetByIdAsync(
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()),
+            Times.Never);
+
+        repo.Verify(
+            r => r.GetActiveMatchAsync(
+                It.IsAny<CancellationToken>()),
+            Times.Never);
+
+        clock.VerifyGet(
+            c => c.State,
+            Times.Never);
+    }
+    [Fact]
+    public async Task GetLiveReadiness_ReturnsCanonicalState()
+    {
+        var repo = new Mock<IMatchRepository>();
+        var clock = new Mock<IMatchClockService>();
+        var canonicalSnapshotService = new Mock<ICanonicalClockSnapshotService>();
+        var broadcast = new Mock<IBroadcastPresentationStateService>();
+        var readiness = new Mock<ILiveReadinessService>();
+        var dispatcher = new Mock<IAmharcCommandDispatcher>();
+        var overlay = new Mock<IOverlayService>();
+
+        var expected =
+            LiveReadinessStateV1.Create(
+                matchId: "match-1",
+                checks:
+                [
+                    new(
+                        LiveReadinessDimensionV1.Match,
+                        LiveReadinessStatusV1.Ready,
+                        Required: true,
+                        Summary: "KILDARE v DUBLIN")
+                ],
+                observedAtUtc:
+                    new DateTimeOffset(
+                        2026, 9, 9, 12, 0, 0, TimeSpan.Zero));
+
+        using var tokenSource =
+            new CancellationTokenSource();
+
+        readiness
+            .Setup(service =>
+                service.EvaluateAsync(
+                    "match-1",
+                    tokenSource.Token))
+            .ReturnsAsync(expected);
+
+        var sut =
+            new MatchesController(
+                repo.Object,
+                clock.Object,
+                canonicalSnapshotService.Object,
+                broadcast.Object,
+                readiness.Object,
+                dispatcher.Object,
+                overlay.Object,
+                NullLogger<MatchesController>.Instance);
+
+        var result =
+            await sut.GetLiveReadiness(
+                "match-1",
+                tokenSource.Token);
+
+        var ok =
+            result.Should()
+                .BeOfType<OkObjectResult>()
+                .Subject;
+
+        ok.Value.Should().BeSameAs(expected);
+
+        readiness.Verify(
+            service =>
+                service.EvaluateAsync(
+                    "match-1",
+                    tokenSource.Token),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task GetLiveReadiness_ReturnsNotFoundForUnknownMatch()
+    {
+        var repo = new Mock<IMatchRepository>();
+        var clock = new Mock<IMatchClockService>();
+        var canonicalSnapshotService = new Mock<ICanonicalClockSnapshotService>();
+        var broadcast = new Mock<IBroadcastPresentationStateService>();
+        var readiness = new Mock<ILiveReadinessService>();
+        var dispatcher = new Mock<IAmharcCommandDispatcher>();
+        var overlay = new Mock<IOverlayService>();
+
+        var missing =
+            LiveReadinessStateV1.Create(
+                matchId: "missing-match",
+                checks:
+                [
+                    new(
+                        LiveReadinessDimensionV1.Match,
+                        LiveReadinessStatusV1.Blocked,
+                        Required: true,
+                        Summary: "Selected match does not exist.")
+                ],
+                findings:
+                [
+                    new(
+                        LiveReadinessDimensionV1.Match,
+                        LiveReadinessSeverityV1.Blocking,
+                        Code: "match.not-found",
+                        Message: "Match 'missing-match' does not exist.")
+                ]);
+
+        readiness
+            .Setup(service =>
+                service.EvaluateAsync(
+                    "missing-match",
+                    It.IsAny<CancellationToken>()))
+            .ReturnsAsync(missing);
+
+        var sut =
+            new MatchesController(
+                repo.Object,
+                clock.Object,
+                canonicalSnapshotService.Object,
+                broadcast.Object,
+                readiness.Object,
+                dispatcher.Object,
+                overlay.Object,
+                NullLogger<MatchesController>.Instance);
+
+        var result =
+            await sut.GetLiveReadiness(
+                "missing-match",
+                CancellationToken.None);
+
+        result.Should().BeOfType<NotFoundObjectResult>();
+
+        readiness.Verify(
+            service =>
+                service.EvaluateAsync(
+                    "missing-match",
+                    It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task GetLiveReadiness_DoesNotDispatchCommands()
+    {
+        var repo = new Mock<IMatchRepository>();
+        var clock = new Mock<IMatchClockService>();
+        var canonicalSnapshotService = new Mock<ICanonicalClockSnapshotService>();
+        var broadcast = new Mock<IBroadcastPresentationStateService>();
+        var readiness = new Mock<ILiveReadinessService>();
+        var dispatcher = new Mock<IAmharcCommandDispatcher>();
+        var overlay = new Mock<IOverlayService>();
+
+        readiness
+            .Setup(service =>
+                service.EvaluateAsync(
+                    "match-1",
+                    It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                LiveReadinessStateV1.Create(
+                    matchId: "match-1",
+                    checks:
+                    [
+                        new(
+                            LiveReadinessDimensionV1.Match,
+                            LiveReadinessStatusV1.Ready,
+                            Required: true,
+                            Summary: "Match ready")
+                    ]));
+
+        var sut =
+            new MatchesController(
+                repo.Object,
+                clock.Object,
+                canonicalSnapshotService.Object,
+                broadcast.Object,
+                readiness.Object,
+                dispatcher.Object,
+                overlay.Object,
+                NullLogger<MatchesController>.Instance);
+
+        await sut.GetLiveReadiness(
+            "match-1",
+            CancellationToken.None);
+
+        dispatcher.Verify(
+            service =>
+                service.DispatchAsync(
+                    It.IsAny<AmharcCommand>(),
+                    It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+}

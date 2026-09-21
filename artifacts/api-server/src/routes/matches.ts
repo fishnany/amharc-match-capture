@@ -62,6 +62,30 @@ const matches = new Map<string, any>([
 const clocks = new Map<string, any>();
 const scores = new Map<string, any>();
 
+function createInitialScore(matchId: string, sport: string): any {
+  const scoringModel =
+    sport === "gaelic-football"
+      ? "goals-two-point-one-point"
+      : "goals-points";
+
+  return {
+    matchId,
+    sport,
+    scoringModel,
+    homeGoals: 0,
+    homeTwoPointScores: 0,
+    homePoints: 0,
+    awayGoals: 0,
+    awayTwoPointScores: 0,
+    awayPoints: 0,
+    homeTotal: 0,
+    awayTotal: 0,
+    homeDisplay: "0-00",
+    awayDisplay: "0-00",
+    updatedAt: new Date().toISOString(),
+  };
+}
+
 function getMatchSecondsFromNow(startedAt: string | null): number {
   if (!startedAt) return 0;
   return Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000);
@@ -101,16 +125,7 @@ router.post("/matches", async (req, res): Promise<void> => {
     _startedAt: null,
     _recordingStartedAt: null,
   });
-  scores.set(matchId, {
-    matchId,
-    homeGoals: 0,
-    homePoints: 0,
-    awayGoals: 0,
-    awayPoints: 0,
-    homeTotal: 0,
-    awayTotal: 0,
-    updatedAt: null,
-  });
+  scores.set(matchId, createInitialScore(matchId, match.sport));
   res.status(201).json(match);
 });
 
@@ -320,7 +335,12 @@ router.get("/matches/:matchId/score", async (req, res): Promise<void> => {
   }
   let score = scores.get(params.data.matchId);
   if (!score) {
-    score = { matchId: params.data.matchId, homeGoals: 0, homePoints: 0, awayGoals: 0, awayPoints: 0, homeTotal: 0, awayTotal: 0, updatedAt: null };
+    const match = matches.get(params.data.matchId);
+    if (!match) {
+      res.status(404).json({ error: "Match not found" });
+      return;
+    }
+    score = createInitialScore(params.data.matchId, match.sport);
     scores.set(params.data.matchId, score);
   }
   res.json(score);
@@ -337,21 +357,48 @@ router.put("/matches/:matchId/score", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  let score = scores.get(params.data.matchId) ?? {
-    matchId: params.data.matchId, homeGoals: 0, homePoints: 0, awayGoals: 0, awayPoints: 0, homeTotal: 0, awayTotal: 0, updatedAt: null,
-  };
-  const { team, scoreType, delta } = parsed.data;
-  if (team === "home") {
-    if (scoreType === "goal") score.homeGoals = Math.max(0, score.homeGoals + delta);
-    else if (scoreType === "point") score.homePoints = Math.max(0, score.homePoints + delta);
-    else if (scoreType === "two-point") score.homePoints = Math.max(0, score.homePoints + delta * 2);
-  } else {
-    if (scoreType === "goal") score.awayGoals = Math.max(0, score.awayGoals + delta);
-    else if (scoreType === "point") score.awayPoints = Math.max(0, score.awayPoints + delta);
-    else if (scoreType === "two-point") score.awayPoints = Math.max(0, score.awayPoints + delta * 2);
+  let score = scores.get(params.data.matchId);
+  if (!score) {
+    const match = matches.get(params.data.matchId);
+    if (!match) {
+      res.status(404).json({ error: "Match not found" });
+      return;
+    }
+    score = createInitialScore(params.data.matchId, match.sport);
   }
-  score.homeTotal = score.homeGoals * 3 + score.homePoints;
-  score.awayTotal = score.awayGoals * 3 + score.awayPoints;
+
+  const { team, scoreType } = parsed.data;
+
+  if (
+    scoreType === "two-point" &&
+    score.scoringModel !== "goals-two-point-one-point"
+  ) {
+    res.status(400).json({
+      error: `Score type '${scoreType}' is not valid for scoring model '${score.scoringModel}'`,
+    });
+    return;
+  }
+
+  if (team === "home") {
+    if (scoreType === "goal") score.homeGoals += 1;
+    else if (scoreType === "two-point") score.homeTwoPointScores += 1;
+    else score.homePoints += 1;
+  } else {
+    if (scoreType === "goal") score.awayGoals += 1;
+    else if (scoreType === "two-point") score.awayTwoPointScores += 1;
+    else score.awayPoints += 1;
+  }
+
+  score.homeTotal =
+    score.homeGoals * 3 +
+    score.homeTwoPointScores * 2 +
+    score.homePoints;
+  score.awayTotal =
+    score.awayGoals * 3 +
+    score.awayTwoPointScores * 2 +
+    score.awayPoints;
+  score.homeDisplay = `${score.homeGoals}-${String(score.homeTotal - score.homeGoals * 3).padStart(2, "0")}`;
+  score.awayDisplay = `${score.awayGoals}-${String(score.awayTotal - score.awayGoals * 3).padStart(2, "0")}`;
   score.updatedAt = new Date().toISOString();
   scores.set(params.data.matchId, score);
   res.json(score);

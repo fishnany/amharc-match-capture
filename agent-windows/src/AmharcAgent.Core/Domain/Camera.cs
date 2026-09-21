@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace AmharcAgent.Core.Domain;
 
 /// <summary>Role of a camera in the capture setup.</summary>
@@ -19,8 +21,10 @@ public class Camera
 
     public int RtspPort { get; set; } = 554;
     public int HttpPort { get; set; } = 80;
+    [JsonIgnore]
     public string Username { get; set; } = "root";
-    public string Password { get; set; } = "pass";
+    [JsonIgnore]
+    public string Password { get; set; } = string.Empty;
 
     public CameraRole Role { get; set; } = CameraRole.Primary;
 

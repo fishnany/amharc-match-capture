@@ -14,7 +14,7 @@ public interface IRecordingService
     Task StartRecordingAsync(RecordingOptions options, CancellationToken ct = default);
     Task StopRecordingAsync(CancellationToken ct = default);
     Task<string> RemuxToMp4Async(CancellationToken ct = default);
-    Task RecoverAsync(CancellationToken ct = default);
+    Task RecoverAsync(string matchId, CancellationToken ct = default);
     IReadOnlyList<RecordingSegmentInfo> GetSegments();
     Task<string> GetChecksumAsync(string filePath, CancellationToken ct = default);
 

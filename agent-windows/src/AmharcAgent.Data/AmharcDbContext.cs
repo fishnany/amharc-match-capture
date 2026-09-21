@@ -8,6 +8,7 @@ public class AmharcDbContext(DbContextOptions<AmharcDbContext> options) : DbCont
     public DbSet<Match> Matches => Set<Match>();
     public DbSet<Camera> Cameras => Set<Camera>();
     public DbSet<MatchEvent> MatchEvents => Set<MatchEvent>();
+    public DbSet<MatchClockRuntimeState> MatchClockRuntimeStates => Set<MatchClockRuntimeState>();
     public DbSet<RecordingSession> RecordingSessions => Set<RecordingSession>();
     public DbSet<StreamingDestination> StreamingDestinations => Set<StreamingDestination>();
     public DbSet<StreamDeckProfile> StreamDeckProfiles => Set<StreamDeckProfile>();

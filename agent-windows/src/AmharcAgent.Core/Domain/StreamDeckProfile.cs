@@ -3,10 +3,20 @@ namespace AmharcAgent.Core.Domain;
 /// <summary>Which team a Stream Deck button is associated with.</summary>
 public enum ButtonTeam { Home, Away }
 
-/// <summary>Configuration for a single Stream Deck button (0-indexed, 0-14 for 15-key XL).</summary>
+/// <summary>
+/// Configuration for a single Stream Deck button.
+/// ButtonNumber is device-relative; supported key count is determined by the connected device.
+/// </summary>
 public class StreamDeckButton
 {
     public int ButtonNumber { get; set; }
+
+    /// <summary>
+    /// Stable semantic AMHARC command identifier, independent of physical key position.
+    /// Example: "score.home.goal".
+    /// </summary>
+    public string? CommandId { get; set; }
+
     public string Label { get; set; } = string.Empty;
     public string? Icon { get; set; }
 

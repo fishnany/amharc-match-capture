@@ -1,15 +1,13 @@
 import { Router, type IRouter } from "express";
 import { randomUUID } from "crypto";
 import {
-  StartStreamingParams,
-  StopStreamingParams,
-  GetStreamingStatusParams,
+  StartStreamingBody,
   CreateStreamingDestinationBody,
 } from "@workspace/api-zod";
 
 const router: IRouter = Router();
 
-const streamState = new Map<string, any>();
+let streamState: any = null;
 
 const destinations = new Map<string, any>([
   [
@@ -28,57 +26,75 @@ const destinations = new Map<string, any>([
   ],
 ]);
 
-function getStreamStatus(matchId: string): any {
-  const state = streamState.get(matchId);
-  if (!state || !state.isStreaming) {
-    return { isStreaming: false, destination: null, uptimeSeconds: null, outgoingBitRate: null, droppedFrames: null, reconnectCount: 0, error: null, startedAt: null };
+function getStreamStatus(): any {
+  if (!streamState || !streamState.isStreaming) {
+    return {
+      state: "idle",
+      isStreaming: false,
+      destination: null,
+      uptimeSeconds: null,
+      outgoingBitRate: null,
+      droppedFrames: null,
+      reconnectCount: 0,
+      error: null,
+      startedAt: null,
+    };
   }
-  const uptimeSeconds = Math.floor((Date.now() - new Date(state.startedAt).getTime()) / 1000);
+
+  const uptimeSeconds = Math.floor(
+    (Date.now() - new Date(streamState.startedAt).getTime()) / 1000,
+  );
+
   return {
+    state: "streaming",
     isStreaming: true,
-    destination: state.destination,
+    destination: streamState.destination,
     uptimeSeconds,
     outgoingBitRate: 4_500_000,
     droppedFrames: 0,
     reconnectCount: 0,
     error: null,
-    startedAt: state.startedAt,
+    startedAt: streamState.startedAt,
   };
 }
 
-router.post("/matches/:matchId/streaming/start", async (req, res): Promise<void> => {
-  const params = StartStreamingParams.safeParse(req.params);
-  if (!params.success) {
-    res.status(400).json({ error: params.error.message });
+router.post("/streaming/start", async (req, res): Promise<void> => {
+  const parsed = StartStreamingBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
     return;
   }
-  streamState.set(params.data.matchId, { isStreaming: true, startedAt: new Date().toISOString(), destination: "YouTube Live" });
-  req.log.info({ matchId: params.data.matchId }, "Streaming started");
-  res.json(getStreamStatus(params.data.matchId));
+
+  const destination = destinations.get(parsed.data.destinationId);
+  if (!destination) {
+    res.status(400).json({ error: "Unknown streaming destination" });
+    return;
+  }
+
+  streamState = {
+    isStreaming: true,
+    startedAt: new Date().toISOString(),
+    destination: destination.name,
+  };
+
+  req.log.info(
+    { destinationId: parsed.data.destinationId },
+    "Streaming started",
+  );
+  res.json(getStreamStatus());
 });
 
-router.post("/matches/:matchId/streaming/stop", async (req, res): Promise<void> => {
-  const params = StopStreamingParams.safeParse(req.params);
-  if (!params.success) {
-    res.status(400).json({ error: params.error.message });
-    return;
+router.post("/streaming/stop", async (req, res): Promise<void> => {
+  if (streamState) {
+    streamState.isStreaming = false;
   }
-  const state = streamState.get(params.data.matchId);
-  if (state) {
-    state.isStreaming = false;
-    streamState.set(params.data.matchId, state);
-  }
-  req.log.info({ matchId: params.data.matchId }, "Streaming stopped");
-  res.json(getStreamStatus(params.data.matchId));
+
+  req.log.info("Streaming stopped");
+  res.json(getStreamStatus());
 });
 
-router.get("/matches/:matchId/streaming/status", async (req, res): Promise<void> => {
-  const params = GetStreamingStatusParams.safeParse(req.params);
-  if (!params.success) {
-    res.status(400).json({ error: params.error.message });
-    return;
-  }
-  res.json(getStreamStatus(params.data.matchId));
+router.get("/streaming/status", async (_req, res): Promise<void> => {
+  res.json(getStreamStatus());
 });
 
 router.get("/streaming/destinations", async (_req, res): Promise<void> => {
@@ -91,15 +107,20 @@ router.post("/streaming/destinations", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const destinationId = `DEST-${randomUUID().substring(0, 6).toUpperCase()}`;
+
+  const destinationId =
+    `DEST-${randomUUID().substring(0, 6).toUpperCase()}`;
+
   const dest = {
     destinationId,
     ...parsed.data,
     hasStreamKey: !!parsed.data.streamKey,
     isDefault: parsed.data.isDefault ?? false,
   };
-  // Do not store stream key in memory in plain text
+
+  // Do not store stream key in memory in plain text.
   delete dest.streamKey;
+
   destinations.set(destinationId, dest);
   res.status(201).json(dest);
 });

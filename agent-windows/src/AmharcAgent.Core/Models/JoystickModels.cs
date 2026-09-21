@@ -1,6 +1,9 @@
 namespace AmharcAgent.Core.Models;
 
-public record JoystickAxisState(double Pan, double Tilt, double Zoom);
+public record JoystickAxisState(
+    double Pan,
+    double Tilt,
+    double Zoom);
 
 public record JoystickConfig(
     double DeadZone = 0.05,
@@ -9,4 +12,6 @@ public record JoystickConfig(
     double ZoomSensitivity = 1.0,
     bool InvertPan = false,
     bool InvertTilt = false,
-    bool InvertZoom = false);
+    bool InvertZoom = false,
+    int PtzUpdateIntervalMs = 80,
+    double ResponseCurveStrength = 1.0);

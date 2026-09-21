@@ -23,6 +23,8 @@ public interface IMatchClockService
     void EndHalfTime();
     void MarkFullTime();
 
+    Task SaveRuntimeStateAsync(string matchId, CancellationToken ct = default);
+    Task<bool> RecoverRuntimeStateAsync(string matchId, CancellationToken ct = default);
     IReadOnlyList<ClockCorrectionEntry> GetAuditLog();
     event Action<ClockState> StateChanged;
 }

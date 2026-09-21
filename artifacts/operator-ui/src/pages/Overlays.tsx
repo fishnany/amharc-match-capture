@@ -1,5 +1,12 @@
 import React from "react";
-import { useGetOverlayTemplates, useGetOverlayState } from "@workspace/api-client-react";
+import {
+  hideOverlays,
+  setOverlayMode,
+  showOverlays,
+  useGetOverlayTemplates,
+  useGetOverlayState,
+  type SetOverlayModeRequestMode,
+} from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -8,7 +15,22 @@ import { Badge } from "@/components/ui/badge";
 
 export default function Overlays() {
   const { data: templates } = useGetOverlayTemplates();
-  const { data: state } = useGetOverlayState();
+  const { data: state, refetch: refetchState } = useGetOverlayState();
+  const [isMutating, setIsMutating] = React.useState(false);
+
+  const mutateOverlay = async (mutation: () => Promise<unknown>) => {
+    if (isMutating) return;
+    setIsMutating(true);
+    try {
+      await mutation();
+      await refetchState();
+    } finally {
+      setIsMutating(false);
+    }
+  };
+
+  const setMode = (mode: SetOverlayModeRequestMode) =>
+    mutateOverlay(() => setOverlayMode({ mode }));
 
   const activeTemplate = templates?.find(t => t.templateId === state?.activeTemplateId) || templates?.[0];
 
@@ -23,7 +45,11 @@ export default function Overlays() {
           <Badge variant="outline" className={`font-mono ${state?.isVisible ? 'border-amharc-green text-amharc-green' : 'border-neutral-600 text-neutral-500'}`}>
             {state?.isVisible ? 'OVERLAYS LIVE' : 'OVERLAYS HIDDEN'}
           </Badge>
-          <Button className={state?.isVisible ? "bg-destructive text-white hover:bg-destructive/90" : "bg-amharc-green text-white hover:bg-amharc-green/90"}>
+          <Button
+            disabled={isMutating}
+            onClick={() => mutateOverlay(() => state?.isVisible ? hideOverlays() : showOverlays())}
+            className={state?.isVisible ? "bg-destructive text-white hover:bg-destructive/90" : "bg-amharc-green text-white hover:bg-amharc-green/90"}
+          >
             {state?.isVisible ? "Hide All" : "Show All"}
           </Button>
         </div>
@@ -80,13 +106,13 @@ export default function Overlays() {
                 <p className="text-xs text-neutral-500">How the video feed is composed</p>
               </div>
               <div className="flex gap-2">
-                <Button variant={state?.outputMode === 'clean' ? 'default' : 'outline'} className={state?.outputMode === 'clean' ? 'bg-white text-black' : 'bg-black border-white/10'}>
+                <Button disabled={isMutating} onClick={() => setMode('clean')} variant={state?.outputMode === 'clean' ? 'default' : 'outline'} className={state?.outputMode === 'clean' ? 'bg-white text-black' : 'bg-black border-white/10'}>
                   Clean
                 </Button>
-                <Button variant={state?.outputMode === 'programme' ? 'default' : 'outline'} className={state?.outputMode === 'programme' ? 'bg-white text-black' : 'bg-black border-white/10'}>
+                <Button disabled={isMutating} onClick={() => setMode('programme')} variant={state?.outputMode === 'programme' ? 'default' : 'outline'} className={state?.outputMode === 'programme' ? 'bg-white text-black' : 'bg-black border-white/10'}>
                   Programme
                 </Button>
-                <Button variant={state?.outputMode === 'overlay-only' ? 'default' : 'outline'} className={state?.outputMode === 'overlay-only' ? 'bg-white text-black' : 'bg-black border-white/10'}>
+                <Button disabled={isMutating} onClick={() => setMode('overlay-only')} variant={state?.outputMode === 'overlay-only' ? 'default' : 'outline'} className={state?.outputMode === 'overlay-only' ? 'bg-white text-black' : 'bg-black border-white/10'}>
                   Key & Fill
                 </Button>
               </div>

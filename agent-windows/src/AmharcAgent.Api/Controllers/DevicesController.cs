@@ -10,16 +10,29 @@ namespace AmharcAgent.Api.Controllers;
 [Route("api/devices")]
 public class DevicesController(
     IStreamDeckService streamDeck,
+    IStreamDeckOwnershipService streamDeckOwnership,
     IJoystickService joystick,
+    AgentSettings settings,
+    IAgentSettingsStore settingsStore,
     AmharcDbContext db) : ControllerBase
 {
     [HttpGet("stream-deck")]
-    public IActionResult GetStreamDeckStatus() => Ok(new
+    public async Task<IActionResult> GetStreamDeckStatus(
+        CancellationToken ct)
+{
+    var ownershipState =
+        await streamDeckOwnership.InspectAsync(ct);
+
+    return Ok(new
     {
         connected = streamDeck.IsConnected,
         deviceName = streamDeck.DeviceName,
-        activeProfileId = streamDeck.ActiveProfileId
+        activeProfileId = streamDeck.ActiveProfileId,
+        ownershipState,
+        competingProcesses =
+            streamDeckOwnership.CompetingProcesses
     });
+}
 
     [HttpGet("joystick")]
     public IActionResult GetJoystickStatus() => Ok(new
@@ -29,32 +42,98 @@ public class DevicesController(
     });
 
     [HttpGet("stream-deck/profiles")]
-    public async Task<IActionResult> GetProfiles(CancellationToken ct) =>
+    public async Task<IActionResult> GetProfiles(
+        CancellationToken ct) =>
         Ok(await db.StreamDeckProfiles.ToListAsync(ct));
 
     [HttpPost("stream-deck/profiles")]
-    public async Task<IActionResult> CreateProfile([FromBody] StreamDeckProfile profile, CancellationToken ct)
+    public async Task<IActionResult> CreateProfile(
+        [FromBody] StreamDeckProfile profile,
+        CancellationToken ct)
     {
         profile.ProfileId = Guid.NewGuid().ToString();
-        profile.CreatedAt = profile.UpdatedAt = DateTimeOffset.UtcNow;
+        profile.CreatedAt = DateTimeOffset.UtcNow;
+        profile.UpdatedAt = profile.CreatedAt;
+
         db.StreamDeckProfiles.Add(profile);
         await db.SaveChangesAsync(ct);
-        return CreatedAtAction(nameof(GetProfile), new { profileId = profile.ProfileId }, profile);
+
+        return CreatedAtAction(
+            nameof(GetProfile),
+            new { profileId = profile.ProfileId },
+            profile);
     }
 
     [HttpGet("stream-deck/profiles/{profileId}")]
-    public async Task<IActionResult> GetProfile(string profileId, CancellationToken ct)
+    public async Task<IActionResult> GetProfile(
+        string profileId,
+        CancellationToken ct)
     {
-        var profile = await db.StreamDeckProfiles.FindAsync([profileId], ct);
-        return profile is null ? NotFound() : Ok(profile);
+        var profile = await db.StreamDeckProfiles
+            .FindAsync([profileId], ct);
+
+        return profile is null
+            ? NotFound()
+            : Ok(profile);
+    }
+
+    [HttpPut("stream-deck/profiles/{profileId}")]
+    public async Task<IActionResult> UpdateProfile(
+        string profileId,
+        [FromBody] StreamDeckProfile input,
+        CancellationToken ct)
+    {
+        var profile = await db.StreamDeckProfiles
+            .FindAsync([profileId], ct);
+
+        if (profile is null)
+            return NotFound();
+
+        profile.Name = input.Name;
+        profile.Sport = input.Sport;
+        profile.Buttons = input.Buttons;
+        profile.UpdatedAt = DateTimeOffset.UtcNow;
+
+        await db.SaveChangesAsync(ct);
+
+        if (streamDeck.ActiveProfileId == profileId)
+        {
+            await streamDeck.LoadProfileAsync(
+                profile,
+                ct);
+        }
+
+        return Ok(profile);
     }
 
     [HttpPost("stream-deck/profiles/{profileId}/activate")]
-    public async Task<IActionResult> ActivateProfile(string profileId, CancellationToken ct)
+    public async Task<IActionResult> ActivateProfile(
+        string profileId,
+        CancellationToken ct)
+{
+    var profile = await db.StreamDeckProfiles
+        .FindAsync([profileId], ct);
+
+    if (profile is null)
+        return NotFound();
+
+    await streamDeck.LoadProfileAsync(
+        profile,
+        ct);
+
+    settings.StreamDeck =
+        settings.StreamDeck with
+        {
+            ActiveProfileId = profileId
+        };
+
+    await settingsStore.SaveAsync(
+        settings,
+        ct);
+
+    return Ok(new
     {
-        var profile = await db.StreamDeckProfiles.FindAsync([profileId], ct);
-        if (profile is null) return NotFound();
-        await streamDeck.LoadProfileAsync(profile, ct);
-        return Ok(new { activeProfileId = profileId });
-    }
+        activeProfileId = profileId
+    });
+}
 }

@@ -110,7 +110,6 @@ router.post("/stream-deck/profiles", async (req, res): Promise<void> => {
   const profile = {
     profileId,
     ...parsed.data,
-    isDefault: parsed.data.isDefault ?? false,
     createdAt: new Date().toISOString(),
   };
   streamDeckProfiles.set(profileId, profile);
