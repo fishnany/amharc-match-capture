@@ -33,7 +33,7 @@ export default function Dashboard() {
     query: { enabled: !!activeMatch?.matchId, refetchInterval: 500 }
   });
 
-  const { data: recording } = useGetRecordingStatus(activeMatch?.matchId || "", {
+  const { data: recording } = useGetRecordingStatus({
     query: { enabled: !!activeMatch?.matchId, refetchInterval: 2000 }
   });
 
@@ -140,7 +140,7 @@ export default function Dashboard() {
                   <div className="p-4 bg-neutral-900 rounded-lg border border-white/5">
                     <h4 className="text-sm text-neutral-400 mb-2">Recording Status</h4>
                     <div className="flex items-center gap-3">
-                      {recording?.isRecording ? (
+                      {recording?.state === "recording" ? (
                         <>
                           <span className="w-3 h-3 rounded-full bg-amharc-green animate-pulse-fast"></span>
                           <span className="font-mono text-xl">{formatTime(recording?.elapsedSeconds || 0)}</span>

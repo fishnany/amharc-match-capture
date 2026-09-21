@@ -1,87 +1,104 @@
 import { Router, type IRouter } from "express";
-import {
-  StartRecordingParams,
-  StopRecordingParams,
-  GetRecordingStatusParams,
-} from "@workspace/api-zod";
+import { StartRecordingBody } from "@workspace/api-zod";
 
 const router: IRouter = Router();
 
 // In-memory recording state
+let activeMatchId: string | null = null;
 const recordingState = new Map<string, any>();
 
-function getStatus(matchId: string): any {
-  const state = recordingState.get(matchId) ?? {
-    isRecording: false,
-    startedAt: null,
-    segmentCount: 0,
-    recordingDirectory: null,
-    stoppedAt: null,
-  };
+function getStatus(matchId: string | null): any {
+  const state = matchId ? recordingState.get(matchId) : undefined;
+  if (!state) {
+    return {
+      state: "idle",
+      elapsedSeconds: 0,
+      segmentCount: 0,
+      outputDirectory: null,
+      segments: [],
+    };
+  }
+
   let elapsedSeconds = 0;
   if (state.isRecording && state.startedAt) {
-    elapsedSeconds = Math.floor((Date.now() - new Date(state.startedAt).getTime()) / 1000);
+    elapsedSeconds = Math.floor(
+      (Date.now() - new Date(state.startedAt).getTime()) / 1000,
+    );
   } else if (state.stoppedAt && state.startedAt) {
-    elapsedSeconds = Math.floor((new Date(state.stoppedAt).getTime() - new Date(state.startedAt).getTime()) / 1000);
+    elapsedSeconds = Math.floor(
+      (new Date(state.stoppedAt).getTime() -
+        new Date(state.startedAt).getTime()) /
+        1000,
+    );
   }
+
   return {
-    isRecording: state.isRecording,
+    state: state.isRecording ? "recording" : "idle",
     elapsedSeconds,
     segmentCount: state.segmentCount,
-    currentSegmentFile: state.isRecording ? `segment_${String(state.segmentCount).padStart(4, "0")}.mkv` : null,
-    recordingDirectory: state.recordingDirectory,
-    bitRate: state.isRecording ? 8_500_000 : null,
-    droppedFrames: state.isRecording ? 0 : null,
-    startedAt: state.startedAt,
-    stoppedAt: state.stoppedAt,
+    outputDirectory: state.recordingDirectory,
+    segments: [],
   };
 }
 
-router.post("/matches/:matchId/recording/start", async (req, res): Promise<void> => {
-  const params = StartRecordingParams.safeParse(req.params);
-  if (!params.success) {
-    res.status(400).json({ error: params.error.message });
+router.post("/recording/start", async (req, res): Promise<void> => {
+  const parsed = StartRecordingBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const existing = recordingState.get(params.data.matchId);
+
+  const { matchId, outputDirectory } = parsed.data;
+
+  if (activeMatchId && activeMatchId !== matchId) {
+    const activeState = recordingState.get(activeMatchId);
+    if (activeState?.isRecording) {
+      res.status(409).json({
+        error: `Recording already active for match '${activeMatchId}'`,
+      });
+      return;
+    }
+  }
+
+  const existing = recordingState.get(matchId);
   if (existing?.isRecording) {
-    res.json(getStatus(params.data.matchId));
+    activeMatchId = matchId;
+    res.json(getStatus(matchId));
     return;
   }
-  recordingState.set(params.data.matchId, {
+
+  recordingState.set(matchId, {
     isRecording: true,
     startedAt: new Date().toISOString(),
     segmentCount: 1,
-    recordingDirectory: `C:/Matches/${new Date().getFullYear()}/${params.data.matchId}`,
+    recordingDirectory:
+      outputDirectory ??
+      `C:/Matches/${new Date().getFullYear()}/${matchId}`,
     stoppedAt: null,
   });
-  req.log.info({ matchId: params.data.matchId }, "Recording started");
-  res.json(getStatus(params.data.matchId));
+  activeMatchId = matchId;
+
+  req.log.info({ matchId }, "Recording started");
+  res.json(getStatus(matchId));
 });
 
-router.post("/matches/:matchId/recording/stop", async (req, res): Promise<void> => {
-  const params = StopRecordingParams.safeParse(req.params);
-  if (!params.success) {
-    res.status(400).json({ error: params.error.message });
-    return;
+router.post("/recording/stop", async (req, res): Promise<void> => {
+  const matchId = activeMatchId;
+  if (matchId) {
+    const state = recordingState.get(matchId);
+    if (state) {
+      state.isRecording = false;
+      state.stoppedAt = new Date().toISOString();
+      recordingState.set(matchId, state);
+    }
+    req.log.info({ matchId }, "Recording stopped");
   }
-  const state = recordingState.get(params.data.matchId);
-  if (state) {
-    state.isRecording = false;
-    state.stoppedAt = new Date().toISOString();
-    recordingState.set(params.data.matchId, state);
-  }
-  req.log.info({ matchId: params.data.matchId }, "Recording stopped");
-  res.json(getStatus(params.data.matchId));
+
+  res.json(getStatus(matchId));
 });
 
-router.get("/matches/:matchId/recording/status", async (req, res): Promise<void> => {
-  const params = GetRecordingStatusParams.safeParse(req.params);
-  if (!params.success) {
-    res.status(400).json({ error: params.error.message });
-    return;
-  }
-  res.json(getStatus(params.data.matchId));
+router.get("/recording/status", async (_req, res): Promise<void> => {
+  res.json(getStatus(activeMatchId));
 });
 
 export default router;
