@@ -39,8 +39,10 @@ public class AmharcCommandDispatcherTests
         Mock<IClockSnapshotPublicationScheduler>? publicationScheduler = null,
         Mock<IRecordingService>? recording = null,
         Mock<ICameraAdapter>? camera = null,
-        AgentSettings? settings = null) =>
-        new(
+        AgentSettings? settings = null)
+    {
+        W1ClockTestBinding.Attach(clock);
+        return new(
             matches.Object,
             events.Object,
             clock.Object,
@@ -53,6 +55,7 @@ public class AmharcCommandDispatcherTests
             settings ??
                 new AgentSettings(),
             NullLogger<AmharcCommandDispatcher>.Instance);
+    }
 
     [Fact]
     public async Task ScoreHomeTwoPoint_CreatesCanonicalStreamDeckEvent()

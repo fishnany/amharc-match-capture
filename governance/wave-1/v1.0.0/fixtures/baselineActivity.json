@@ -1,0 +1,41 @@
+{
+  "identifier": "urn:amharc:fixture:w1:baselineActivity:1.0.0",
+  "standing": "TEST / CONFORMANCE FIXTURE — NON-OPERATIONAL; no real appointment",
+  "subject": "10000000-0000-4000-8000-000000000001",
+  "kind": "baseline",
+  "logicalOperationKey": "fixture-baseline",
+  "inputs": [
+    {
+      "id": "urn:amharc:fixture:w1:resolution:1.0.0",
+      "sha256": "960bb672f23b6f5c8d01e2aeff4b366d1540d0d6166a4c2fa33f0eddc98a6707"
+    }
+  ],
+  "actorProcess": "synthetic producer",
+  "build": "NON-PRODUCT",
+  "context": {
+    "semantic": {
+      "id": "urn:amharc:w1:semantic-profile:1.0.0",
+      "sha256": "041f67899c61a2fb93acbb4ea7532c0daa32832f877a491c8073b62b4c74b508"
+    },
+    "contract": {
+      "id": "urn:amharc:w1:clock-authority-contract:1.0.0",
+      "sha256": "c07fc9e62e5138a2c8c35eb924e59b16c1808fc419763cb310222232c08ba6a2"
+    },
+    "provenance": {
+      "id": "urn:amharc:w1:material-history:1.0.0",
+      "sha256": "c0c3cc9caaf704f18b004c1e3309d81cc0c23399842f0fa30852494d0b0fd681"
+    },
+    "format": {
+      "id": "urn:amharc:fixture:w1:format:1.0.0",
+      "sha256": "5fe7b959f147949e872bf23ca36af959a918c2d31055c6285d5a6321bef520b7"
+    }
+  },
+  "outputs": {
+    "principalId": "synthetic-capture-principal",
+    "bindingId": "synthetic-binding-a",
+    "incarnationId": "30000000-0000-4000-8000-000000000003",
+    "generation": "1",
+    "sequence": "10"
+  },
+  "uncertainty": "synthetic oracle; no physical historical continuity"
+}

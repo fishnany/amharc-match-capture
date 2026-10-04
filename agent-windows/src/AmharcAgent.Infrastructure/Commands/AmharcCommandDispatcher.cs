@@ -28,6 +28,13 @@ public class AmharcCommandDispatcher(
         AmharcCommand command,
         CancellationToken ct = default)
     {
+        await using var subjectLease =
+            command.CommandId.StartsWith("match.clock.", StringComparison.Ordinal) ||
+                command.CommandId == AmharcCommandIds.MatchAbandon
+                ? await RequireBoundClock().EnterCommandAsync(
+                    await ResolveMatchIdAsync(command, ct),
+                    command.CommandId == AmharcCommandIds.MatchClockStart, ct)
+                : null;
         switch (command.CommandId)
         {
             case AmharcCommandIds.ScoreHomeGoal:
@@ -107,7 +114,7 @@ public class AmharcCommandDispatcher(
                             $"is already operationally live with status {liveMatch.Status}.");
                     }
 
-                    clock.Start();
+                    RequireBoundClock().StartFor(matchId);
 
                     match.Status =
                         MatchStatus.Active;
@@ -507,7 +514,7 @@ public class AmharcCommandDispatcher(
                             $"Match {matchId} cannot be abandoned from state {match.Status}.");
                     }
 
-                    clock.Pause();
+                    RequireBoundClock().EndSubject(matchId);
 
                     match.Status =
                         MatchStatus.Abandoned;
@@ -695,6 +702,10 @@ public class AmharcCommandDispatcher(
         }
     }
 
+    private ISubjectBoundClockService RequireBoundClock() =>
+        clock as ISubjectBoundClockService ??
+        throw new InvalidOperationException("CLOCK_SUBJECT_CONTEXT_UNAVAILABLE");
+
     private async Task CreateScoreEventAsync(
         AmharcCommand command,
         string eventType,
@@ -704,7 +715,7 @@ public class AmharcCommandDispatcher(
         var matchId =
             await ResolveMatchIdAsync(command, ct);
 
-        var state = clock.State;
+        var state = RequireBoundClock().ReadFor(matchId, state => state);
 
         var options = new CreateEventOptions(
             MatchId: matchId,

@@ -1,0 +1,79 @@
+{
+  "identifier": "urn:amharc:w1:clock-authority-contract:1.0.0",
+  "title": "W1 CLOCK AUTHORITY CONTRACT",
+  "version": "1.0.0",
+  "controlledPath": "governance/wave-1/v1.0.0/W1_CLOCK_AUTHORITY_CONTRACT.json",
+  "owner": "Competent AMHARC Architecture Owner",
+  "steward": "AMHARC Ontology governance steward",
+  "implementationResponsibilities": {
+    "capture": "producer / initial prospective allocator implementation location",
+    "tagger": "isolated read-only qualified consumer",
+    "transformer": "NONE"
+  },
+  "sourceArchitecture": {
+    "repository": "fishnany/amharc-ontology",
+    "revision": "ff9ac2234dfb4032bf87f700ec8188e1af339649",
+    "tree": "f9d96a8c0bc68fd77777415a436a76994ec39913"
+  },
+  "directionEvidence": {
+    "file": "Pasted--AMHARC-WAVE-1-CONSOLIDATED-ARCHITECTURE-OWNER-DIRECTIO_1791109470766.txt",
+    "sha256": "08c9aa269d43b1413916d36ceed24fd63f9f1adeb634f65a513d2d441646cf94",
+    "standing": "approves finalisation direction, NOT this exact publication"
+  },
+  "statusRule": "Controlled specification on competent Owner-authorised verified publication; candidate before that event",
+  "effectivityRule": "Effective for W1 DEVELOPMENT / CONFORMANCE at the verified Owner-authorised atomic publication revision; no invented date or containing hash",
+  "operationalApplicability": "NOT established by publication; exact real format, issuer/allocator, principal/grant, policy and deployment applicability required before corresponding real use",
+  "implementationAuthorisation": "NONE conveyed by this specification or its publication",
+  "proposedCompatibilityClass": "NEW VERSIONED BOUNDARY; not an in-place reinterpretation of ClockSnapshot v1",
+  "producer": "Capture official clock, only under verified bound subject and scoped eligible authority",
+  "consumer": "Tagger qualified read-only observer; not a producer or transformer",
+  "transformer": "none in first slice; any future transformation needs independent applicable role/use evidence",
+  "direction": "new producer to new observer only; old v1 remains separate legacy-qualified boundary",
+  "proposedTechnicalLimits": "Protocol identifiers/reference strings: 1–512 Unicode characters; unsigned decimal ordering strings: 1–64 digits; seconds: non-negative signed-int32 range; UUIDv4: fixed profile; SHA-256: 64 lower-case hex; Ed25519 signature: 88 base64 characters. Refuse overflow/unsupported limits; never truncate or change an issued local ID. These are candidate wire limits, not approved service SLOs.",
+  "schemaVersusSemantic": "Wire structure necessary, not sufficient; verification rules and material history remain independently required",
+  "signedPayload": "UTF-8 compact JSON with recursively UTF-16-sorted object keys, array order preserved, excluding attestation; integer-only numeric protocol values; reject invalid Unicode scalar strings; SHA-256 then Ed25519 over lowercase ASCII digest",
+  "trust": "Separately competent grant decisions, applicable scope-complete control-plane coverage and exact local trust bundle required. Fixtures are non-operational; no real principal appointment.",
+  "history": "ordering within subject/principal/binding/incarnation only; same tuple and same bytes => replay, same tuple different bytes => conflict; authorised correction has later same-context sequence and attributable prior/new activity",
+  "gapConflict": "reason explicit; identifiers/order may be null; clock state withheld; no authoritative progress; no false authoritative pause; last trusted observation can remain labelled historical",
+  "unsupported": "reject invalid structure/subject/signature; quarantine unavailable/mismatched context; withhold unverified authority; no fallback to latest or legacy-as-governed",
+  "projection": "none in first-slice Tagger observer; no advance inferred from transport freshness",
+  "testAndActivation": "Frozen vectors demonstrate development candidate rules only; product role/use/runtime conformance and real operational appointment/format/policy/deployment remain separate gates.",
+  "normativeDependencies": {
+    "semantic": {
+      "id": "urn:amharc:w1:semantic-profile:1.0.0",
+      "sha256": "041f67899c61a2fb93acbb4ea7532c0daa32832f877a491c8073b62b4c74b508"
+    },
+    "identifier": {
+      "id": "urn:amharc:w1:identifier-application:1.0.0",
+      "sha256": "c956baed4ef18c54bcdcf32d1e7019bfe131e655e5609a32ac25c93cf2b650e1"
+    },
+    "schema": {
+      "id": "urn:amharc:w1:clock-envelope-schema:1.0.0",
+      "sha256": "3dbe8160562f7c6fd576631f24291bd01371314e47826c3c76b99703d3c70c6f"
+    },
+    "provenance": {
+      "id": "urn:amharc:w1:material-history:1.0.0",
+      "sha256": "c0c3cc9caaf704f18b004c1e3309d81cc0c23399842f0fa30852494d0b0fd681"
+    }
+  },
+  "applicability": "W1 DEVELOPMENT / CONFORMANCE upon verified approved publication. Generic product work still requires separate W1-1 authorisation. Real application requires exact external operational context.",
+  "capabilityModel": {
+    "envelope": "authority.capability is snapshot or null. It attests permission to emit the observation, NOT permission for every state-producing operation.",
+    "state": "Applicable grant/activity/baseline evidence must independently establish the requested transition's capability. Running progression requires advance; corrections require correct and retained prior/new history; recovery requires recover and new eligibility/incarnation.",
+    "consumer": "Read-only consumer never acts on emission permission as progress/correction/transfer authority. Absent proofs => withheld or historical-qualified observation, never authoritative progression."
+  },
+  "canonicalBytes": {
+    "input": "Parse JSON with duplicate object names rejected. All strings must contain valid Unicode scalars; reject lone surrogates. No Unicode normalization.",
+    "objectKeys": "Recursively ascending unsigned UTF-16 code-unit lexicographic order, ordinal and locale-independent; duplicate decoded keys rejected.",
+    "strings": "Quote with U+0022. Escape quote/backslash and U+0008/0009/000A/000C/000D as \\\", \\\\, \\b, \\t, \\n, \\f, \\r. Other U+0000..001F as lower-case \\u00xx. All other Unicode scalars are emitted as UTF-8 unescaped, including slash, U+2028/U+2029 and supplementary characters.",
+    "numbers": "Finite non-negative integers in 0..2147483647 only; negative zero refused. Equivalent allowed JSON numeric spellings are canonicalized to plain unsigned base-10 without leading zeros, decimal point or exponent. Ordering counters are strings and remain byte-preserved.",
+    "arrays": "Input order preserved; no sorting",
+    "literals": "true/false/null lower-case",
+    "whitespace": "None; no BOM or trailing newline",
+    "attestationExclusion": "Remove ONLY the top-level attestation member from a clock envelope before canonicalizing. All remaining fields included. Governance bundle excludes only its top-level governanceProof for its proof calculation.",
+    "sha256": "Hash exact canonical UTF-8 bytes; encode digest as 64 lower-case ASCII hexadecimal characters.",
+    "exactSignedBytes": "Ed25519 signs exactly the 64 ASCII bytes of the lower-case SHA-256 hexadecimal digest; NOT the raw payload, NOT the 32 binary digest bytes, NOT a prehashed Ed25519ph message.",
+    "keyId": "Exact opaque reference resolved only within the pinned applicable trust bundle, paired with algorithm, principal and grant scope. Never global text equality, self-appointment or current/default key selection.",
+    "failure": "Invalid Unicode/duplicate names/numbers/algorithm/key/context/signature => reject; missing applicable grant/coverage/effectivity => withhold; valid signature alone grants nothing."
+  }
+}

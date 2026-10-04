@@ -1,0 +1,11 @@
+{
+  "identifier": "urn:amharc:fixture:w1:resolution:1.0.0",
+  "standing": "TEST / CONFORMANCE FIXTURE — NON-OPERATIONAL; no real appointment",
+  "occurrenceId": "10000000-0000-4000-8000-000000000001",
+  "identityStanding": "provisional",
+  "representation": {
+    "issuer": "urn:amharc:test:capture:installation-a",
+    "localId": "unchanged-local-guid-a"
+  },
+  "basis": "explicit test assignment, not secure allocation or historical identity proof"
+}

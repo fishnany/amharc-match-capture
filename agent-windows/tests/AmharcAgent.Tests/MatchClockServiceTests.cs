@@ -27,7 +27,7 @@ public class MatchClockServiceTests : IDisposable
     [Fact]
     public void Start_SetsIsRunning_True()
     {
-        _sut.Start();
+        _sut.StartFor("match-1");
 
         _sut.State.IsRunning.Should().BeTrue();
         _sut.State.CurrentPeriod.Should().Be(1);
@@ -36,7 +36,7 @@ public class MatchClockServiceTests : IDisposable
     [Fact]
     public void Pause_StopsMatchClock_ButRecordingClockContinues()
     {
-        _sut.Start();
+        _sut.StartFor("match-1");
 
         Thread.Sleep(200);
 
@@ -63,7 +63,7 @@ public class MatchClockServiceTests : IDisposable
     [Fact]
     public void Correct_ChangesMatchClock_ButNeverRecordingClock()
     {
-        _sut.Start();
+        _sut.StartFor("match-1");
 
         Thread.Sleep(100);
 
@@ -86,7 +86,7 @@ public class MatchClockServiceTests : IDisposable
     [Fact]
     public void AuditLog_RecordsCorrection()
     {
-        _sut.Start();
+        _sut.StartFor("match-1");
 
         _sut.Correct(
             300,
@@ -101,7 +101,7 @@ public class MatchClockServiceTests : IDisposable
     [Fact]
     public void Reset_ClearsBothClocks()
     {
-        _sut.Start();
+        _sut.StartFor("match-1");
 
         Thread.Sleep(100);
 
@@ -115,7 +115,7 @@ public class MatchClockServiceTests : IDisposable
     [Fact]
     public void Resume_AfterPause_ContinuesMatchClockFromPausePoint()
     {
-        _sut.Start();
+        _sut.StartFor("match-1");
 
         Thread.Sleep(100);
 
@@ -152,7 +152,7 @@ public class MatchClockServiceTests : IDisposable
                 (state, _) => captured = state)
             .Returns(Task.CompletedTask);
 
-        _sut.Start();
+        _sut.StartFor("match-1");
 
         _sut.Correct(
             120,
@@ -268,7 +268,7 @@ public class MatchClockServiceTests : IDisposable
                 (state, _) => captured = state)
             .Returns(Task.CompletedTask);
 
-        _sut.Start();
+        _sut.StartFor("match-1");
         _sut.Pause();
 
         await _sut.SaveRuntimeStateAsync("match-1");
@@ -291,7 +291,7 @@ public class MatchClockServiceTests : IDisposable
                 (state, _) => captured = state)
             .Returns(Task.CompletedTask);
 
-        _sut.Start();
+        _sut.StartFor("match-1");
         _sut.Pause();
 
         _sut.Correct(
@@ -321,7 +321,7 @@ public class MatchClockServiceTests : IDisposable
                 (state, _) => captured = state)
             .Returns(Task.CompletedTask);
 
-        _sut.Start();
+        _sut.StartFor("match-1");
         _sut.Pause();
 
         _sut.Correct(

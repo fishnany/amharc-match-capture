@@ -1,0 +1,68 @@
+{
+  "identifier": "urn:amharc:w1:identifier-application:1.0.0",
+  "title": "W1 IDENTIFIER APPLICATION BINDING",
+  "version": "1.0.0",
+  "controlledPath": "governance/wave-1/v1.0.0/W1_IDENTIFIER_APPLICATION_BINDING.json",
+  "owner": "Competent AMHARC Architecture Owner",
+  "steward": "AMHARC Ontology governance steward",
+  "implementationResponsibilities": {
+    "capture": "producer / initial prospective allocator implementation location",
+    "tagger": "isolated read-only qualified consumer",
+    "transformer": "NONE"
+  },
+  "sourceArchitecture": {
+    "repository": "fishnany/amharc-ontology",
+    "revision": "ff9ac2234dfb4032bf87f700ec8188e1af339649",
+    "tree": "f9d96a8c0bc68fd77777415a436a76994ec39913"
+  },
+  "directionEvidence": {
+    "file": "Pasted--AMHARC-WAVE-1-CONSOLIDATED-ARCHITECTURE-OWNER-DIRECTIO_1791109470766.txt",
+    "sha256": "08c9aa269d43b1413916d36ceed24fd63f9f1adeb634f65a513d2d441646cf94",
+    "standing": "approves finalisation direction, NOT this exact publication"
+  },
+  "statusRule": "Controlled specification on competent Owner-authorised verified publication; candidate before that event",
+  "effectivityRule": "Effective for W1 DEVELOPMENT / CONFORMANCE at the verified Owner-authorised atomic publication revision; no invented date or containing hash",
+  "operationalApplicability": "NOT established by publication; exact real format, issuer/allocator, principal/grant, policy and deployment applicability required before corresponding real use",
+  "implementationAuthorisation": "NONE conveyed by this specification or its publication",
+  "governingProfile": "ADR-AMHARC-006, Canonical Match Occurrence Identifier Profile v1 (already Accepted/Effective)",
+  "canonicalAllocation": {
+    "format": "RFC 9562 UUIDv4; lower-case hyphenated",
+    "allowedMechanisms": ".NET 8 Guid.NewGuid with explicit lower-case D serialization for the bounded Capture allocator; any separately applicable Node allocator uses node:crypto.randomUUID, never browser/global fallback.",
+    "forbidden": [
+      "Math.random fallback",
+      "teams/date/venue derivation",
+      "local-ID string equality",
+      "legacy bulk allocation"
+    ],
+    "idempotencyScope": "exact appointed allocator/issuer namespace + stable durable logical creation operation key",
+    "atomicity": "one durable creation result and one occurrence per logical creation; retry returns same result; collision allocates another unused UUID within same logical operation",
+    "nonReuse": "never reissue retired/deleted occurrence ID; retain necessary/permissible allocation tombstone and decision history",
+    "acknowledgement": "creation result / allocation ledger / material activity atomically recoverable before durable success acknowledgement"
+  },
+  "namespaces": {
+    "capture": "PROPOSED namespace urn:amharc:representation:capture; installation/issuer qualification required",
+    "tagger": "PROPOSED namespace urn:amharc:representation:tagger; installation/issuer qualification required",
+    "standing": "candidate names, not registered issuer appointments"
+  },
+  "resolution": {
+    "fields": [
+      "resolutionId",
+      "occurrenceId",
+      "representationIssuer",
+      "representationLocalId",
+      "basisActivity",
+      "effectiveFrom",
+      "effectiveUntil",
+      "standing",
+      "supersededBy"
+    ],
+    "change": "new attributable resolution revision; no rewrite of prior denotation",
+    "prohibited": "automatic retrospective reconciliation; existing GUID/UUID primary keys remain unchanged"
+  },
+  "semanticDependency": {
+    "id": "urn:amharc:w1:semantic-profile:1.0.0",
+    "sha256": "041f67899c61a2fb93acbb4ea7532c0daa32832f877a491c8073b62b4c74b508"
+  },
+  "allocatorApplicability": "Capture is initial implementation LOCATION, not universal identity/semantic/acceptance authority. Generic verification/allocation mechanism requires no real installation appointment; operational allocation requires its exact governed issuer/allocator context.",
+  "issuerNamespaceModel": "Externally governed installation-qualified issuer identity. Suggested namespace family urn:amharc:issuer:capture:<installation-id> is a template, NOT a real appointment; distinguish Tagger issuer scope. Never bake fixture identifiers into authority."
+}

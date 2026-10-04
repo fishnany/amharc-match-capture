@@ -1,0 +1,47 @@
+{
+  "identifier": "urn:amharc:fixture:w1:trustBundle:1.0.0",
+  "standing": "TEST / CONFORMANCE FIXTURE — NON-OPERATIONAL",
+  "closure": {
+    "subject": "10000000-0000-4000-8000-000000000001",
+    "domain": "official-match-accumulated",
+    "completeForDeclaredScope": true,
+    "scenarioIsolation": "trustBundle"
+  },
+  "grant": {
+    "principalId": "synthetic-capture-principal",
+    "bindingId": "synthetic-binding-a",
+    "subject": "10000000-0000-4000-8000-000000000001",
+    "domain": "official-match-accumulated",
+    "incarnationId": "30000000-0000-4000-8000-000000000003",
+    "capabilities": [
+      "snapshot",
+      "advance",
+      "correct",
+      "checkpoint"
+    ],
+    "effectiveFrom": "2026-10-04T09:00:00Z",
+    "effectiveUntil": "2026-10-04T11:00:00Z",
+    "activationBasis": "explicit TEST baseline; NOT real authority"
+  },
+  "conflictingGrants": [],
+  "resolutionRef": {
+    "id": "urn:amharc:fixture:w1:resolution:1.0.0",
+    "sha256": "960bb672f23b6f5c8d01e2aeff4b366d1540d0d6166a4c2fa33f0eddc98a6707"
+  },
+  "materialHistory": [
+    {
+      "id": "urn:amharc:fixture:w1:baselineActivity:1.0.0",
+      "sha256": "07d0ac1e7f92c8d01b7a5a6525fa05d421b8d95c67830af45f949774cb5052fa"
+    },
+    {
+      "id": "urn:amharc:fixture:w1:correctionActivity:1.0.0",
+      "sha256": "edef902f6f68409b7858277b58316284d18093801a93789db13252b7d0bfad6a"
+    }
+  ],
+  "keyId": "synthetic-producer-key",
+  "principalPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAoBhO/Nt/TUPYApnbD8YxdtHhOheg2z44tL2ozk4uq6k=\n-----END PUBLIC KEY-----\n",
+  "governanceProof": {
+    "payloadSha256": "f2b300198a08d86d1e065c6cbd5c12a376681c460424d5c3acbb19aa04c9aa28",
+    "signatureBase64": "sxO2VpQmwjdE/44N8o1ldWUMP/QDjzyqQebLEiPMY1t27Fi3T1RtOPIJ6IxCrNAJdAy9KWClFelmiebgDpGAAQ=="
+  }
+}

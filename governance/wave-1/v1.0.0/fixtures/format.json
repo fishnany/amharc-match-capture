@@ -1,0 +1,16 @@
+{
+  "identifier": "urn:amharc:fixture:w1:format:1.0.0",
+  "standing": "TEST / CONFORMANCE FIXTURE — NON-OPERATIONAL; no real appointment",
+  "periods": [
+    {
+      "key": "p1",
+      "ordinal": 1
+    },
+    {
+      "key": "p2",
+      "ordinal": 2
+    }
+  ],
+  "duration": "NOT PRESCRIBED",
+  "sportingAuthority": "NONE"
+}

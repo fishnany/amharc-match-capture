@@ -21,6 +21,8 @@ builder.Host.UseSerilog();
 
 // â”€â”€ Services â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 builder.Services.AddAmharcInfrastructure(builder.Configuration);
+AmharcAgent.Api.W1.W1DevelopmentServices.AddW1DevelopmentComposition(
+    builder.Services, builder.Configuration, builder.Environment);
 builder.Services.AddHostedService<StreamReceiverLifecycleHostedService>();
 builder.Services
     .AddControllers()

@@ -1,0 +1,223 @@
+{
+  "identifier": "urn:amharc:w1:dependency-manifest:1.0.0",
+  "title": "W1 DEPENDENCY MANIFEST",
+  "version": "1.0.0",
+  "controlledPath": "governance/wave-1/v1.0.0/W1_DEPENDENCY_MANIFEST.json",
+  "owner": "Competent AMHARC Architecture Owner",
+  "steward": "AMHARC Ontology governance steward",
+  "implementationResponsibilities": {
+    "capture": "producer / initial prospective allocator implementation location",
+    "tagger": "isolated read-only qualified consumer",
+    "transformer": "NONE"
+  },
+  "sourceArchitecture": {
+    "repository": "fishnany/amharc-ontology",
+    "revision": "ff9ac2234dfb4032bf87f700ec8188e1af339649",
+    "tree": "f9d96a8c0bc68fd77777415a436a76994ec39913"
+  },
+  "directionEvidence": {
+    "file": "Pasted--AMHARC-WAVE-1-CONSOLIDATED-ARCHITECTURE-OWNER-DIRECTIO_1791109470766.txt",
+    "sha256": "08c9aa269d43b1413916d36ceed24fd63f9f1adeb634f65a513d2d441646cf94",
+    "standing": "approves finalisation direction, NOT this exact publication"
+  },
+  "statusRule": "Controlled specification on competent Owner-authorised verified publication; candidate before that event",
+  "effectivityRule": "Effective for W1 DEVELOPMENT / CONFORMANCE at the verified Owner-authorised atomic publication revision; no invented date or containing hash",
+  "operationalApplicability": "NOT established by publication; exact real format, issuer/allocator, principal/grant, policy and deployment applicability required before corresponding real use",
+  "implementationAuthorisation": "NONE conveyed by this specification or its publication",
+  "exactDependencies": {
+    "semantic": {
+      "id": "urn:amharc:w1:semantic-profile:1.0.0",
+      "sha256": "041f67899c61a2fb93acbb4ea7532c0daa32832f877a491c8073b62b4c74b508"
+    },
+    "identifier": {
+      "id": "urn:amharc:w1:identifier-application:1.0.0",
+      "sha256": "c956baed4ef18c54bcdcf32d1e7019bfe131e655e5609a32ac25c93cf2b650e1"
+    },
+    "provenance": {
+      "id": "urn:amharc:w1:material-history:1.0.0",
+      "sha256": "c0c3cc9caaf704f18b004c1e3309d81cc0c23399842f0fa30852494d0b0fd681"
+    },
+    "schema": {
+      "id": "urn:amharc:w1:clock-envelope-schema:1.0.0",
+      "sha256": "3dbe8160562f7c6fd576631f24291bd01371314e47826c3c76b99703d3c70c6f"
+    },
+    "contract": {
+      "id": "urn:amharc:w1:clock-authority-contract:1.0.0",
+      "sha256": "c07fc9e62e5138a2c8c35eb924e59b16c1808fc419763cb310222232c08ba6a2"
+    },
+    "format": {
+      "id": "urn:amharc:fixture:w1:format:1.0.0",
+      "sha256": "5fe7b959f147949e872bf23ca36af959a918c2d31055c6285d5a6321bef520b7"
+    },
+    "resolution": {
+      "id": "urn:amharc:fixture:w1:resolution:1.0.0",
+      "sha256": "960bb672f23b6f5c8d01e2aeff4b366d1540d0d6166a4c2fa33f0eddc98a6707"
+    },
+    "baselineActivity": {
+      "id": "urn:amharc:fixture:w1:baselineActivity:1.0.0",
+      "sha256": "07d0ac1e7f92c8d01b7a5a6525fa05d421b8d95c67830af45f949774cb5052fa"
+    },
+    "correctionActivity": {
+      "id": "urn:amharc:fixture:w1:correctionActivity:1.0.0",
+      "sha256": "edef902f6f68409b7858277b58316284d18093801a93789db13252b7d0bfad6a"
+    },
+    "trustBundle": {
+      "id": "urn:amharc:fixture:w1:trustBundle:1.0.0",
+      "sha256": "50be9f25fc922e698732c73b0550958635faf65013c4b42bd239c6dcaed68e75"
+    },
+    "snapshotOnlyTrust": {
+      "id": "urn:amharc:fixture:w1:snapshotOnlyTrust:1.0.0",
+      "sha256": "b65189a93b7f4b7370c8f5f4c0eded77b05c2e3425050ee76c767f562df80a10"
+    },
+    "vectors": {
+      "id": "urn:amharc:w1:conformance-vectors:1.0.0",
+      "sha256": "adebc38b181c663ed3b98d12ac953f5204e5e5679400c73fcb9574427ae3223f"
+    }
+  },
+  "components": [
+    {
+      "path": "governance/wave-1/v1.0.0/W1_SEMANTIC_PROFILE.json",
+      "sha256": "041f67899c61a2fb93acbb4ea7532c0daa32832f877a491c8073b62b4c74b508",
+      "bytes": 5384
+    },
+    {
+      "path": "governance/wave-1/v1.0.0/W1_IDENTIFIER_APPLICATION_BINDING.json",
+      "sha256": "c956baed4ef18c54bcdcf32d1e7019bfe131e655e5609a32ac25c93cf2b650e1",
+      "bytes": 4262
+    },
+    {
+      "path": "governance/wave-1/v1.0.0/W1_MATERIAL_HISTORY_RULES.json",
+      "sha256": "c0c3cc9caaf704f18b004c1e3309d81cc0c23399842f0fa30852494d0b0fd681",
+      "bytes": 4803
+    },
+    {
+      "path": "governance/wave-1/v1.0.0/W1_CLOCK_ENVELOPE_SCHEMA.json",
+      "sha256": "3dbe8160562f7c6fd576631f24291bd01371314e47826c3c76b99703d3c70c6f",
+      "bytes": 9993
+    },
+    {
+      "path": "governance/wave-1/v1.0.0/W1_CLOCK_AUTHORITY_CONTRACT.json",
+      "sha256": "c07fc9e62e5138a2c8c35eb924e59b16c1808fc419763cb310222232c08ba6a2",
+      "bytes": 7682
+    },
+    {
+      "path": "governance/wave-1/v1.0.0/fixtures/format.json",
+      "sha256": "5fe7b959f147949e872bf23ca36af959a918c2d31055c6285d5a6321bef520b7",
+      "bytes": 326
+    },
+    {
+      "path": "governance/wave-1/v1.0.0/fixtures/resolution.json",
+      "sha256": "960bb672f23b6f5c8d01e2aeff4b366d1540d0d6166a4c2fa33f0eddc98a6707",
+      "bytes": 455
+    },
+    {
+      "path": "governance/wave-1/v1.0.0/fixtures/baselineActivity.json",
+      "sha256": "07d0ac1e7f92c8d01b7a5a6525fa05d421b8d95c67830af45f949774cb5052fa",
+      "bytes": 1458
+    },
+    {
+      "path": "governance/wave-1/v1.0.0/fixtures/correctionActivity.json",
+      "sha256": "edef902f6f68409b7858277b58316284d18093801a93789db13252b7d0bfad6a",
+      "bytes": 1555
+    },
+    {
+      "path": "governance/wave-1/v1.0.0/fixtures/trustBundle.json",
+      "sha256": "50be9f25fc922e698732c73b0550958635faf65013c4b42bd239c6dcaed68e75",
+      "bytes": 1788
+    },
+    {
+      "path": "governance/wave-1/v1.0.0/fixtures/snapshotOnlyTrust.json",
+      "sha256": "b65189a93b7f4b7370c8f5f4c0eded77b05c2e3425050ee76c767f562df80a10",
+      "bytes": 1746
+    },
+    {
+      "path": "governance/wave-1/v1.0.0/fixtures/governance-public-key.pem",
+      "sha256": "a9dad584004f63bba6c89fee95b1f2219dd7a5d485e6650f20af63133e2949f6",
+      "bytes": 113
+    },
+    {
+      "path": "governance/wave-1/v1.0.0/W1_CONFORMANCE_VECTORS.json",
+      "sha256": "adebc38b181c663ed3b98d12ac953f5204e5e5679400c73fcb9574427ae3223f",
+      "bytes": 158066
+    }
+  ],
+  "foundationDependencies": [
+    {
+      "path": "governance/decisions/ADR-AMHARC-002-DATA-GOVERNANCE.md",
+      "gitBlob": "b47eefb32deb8612ff947c62eb1f2c46b9d9372e",
+      "sha256": "1d588e056a1950fc419714d4b08261d979de4a0331cbc433f7c2c8bfc613eba5"
+    },
+    {
+      "path": "governance/decisions/ADR-AMHARC-003-OPERATIONAL-NON-FUNCTIONAL-REQUIREMENTS.md",
+      "gitBlob": "9ff219348f627d796ae1d901f1b3158927a360a9",
+      "sha256": "f411df97f67503a56d3dc348c93d42474bc390768c54e9c6a1eca9b855fc21b8"
+    },
+    {
+      "path": "governance/decisions/ADR-AMHARC-004-FIXTURE-MATCH-SESSION.md",
+      "gitBlob": "196608ea4ec2d7e02ff5381eb3f9c7e5eaedaacd",
+      "sha256": "5e7711b0cf752b1aa80683e57247688df1333ef5f142adea224aa635346a3b57"
+    },
+    {
+      "path": "governance/decisions/ADR-AMHARC-005-IDENTITY-ARCHITECTURE.md",
+      "gitBlob": "e3b14cb9077c2db01b2f49c52a28dc11df269bbc",
+      "sha256": "18eb8a4923932d7bddefce3deecfb2318b279ad6447fa3752be05492d087cc98"
+    },
+    {
+      "path": "governance/decisions/ADR-AMHARC-006-IDENTIFIER-FORMAT-ALLOCATION.md",
+      "gitBlob": "537dfc7c5afcd135f3ca9aa43f8065717a410137",
+      "sha256": "c50b36a557111c51a6c0c1f48fe120feb5b48f6f13203f7a050fbba231e3afe6"
+    },
+    {
+      "path": "governance/decisions/ADR-AMHARC-007-EVIDENCE-ARCHITECTURE.md",
+      "gitBlob": "fbb01945a0bb6d9c6f0468cbaca43ce14ccaed61",
+      "sha256": "33eadc86035ea53597717406dd0da15ae4e5a2cc5b9e491b609b4dc7e34c9b53"
+    },
+    {
+      "path": "governance/decisions/ADR-AMHARC-008-ADDENDUM-R06-ASSERTION-EVENT-RELATIONSHIP.md",
+      "gitBlob": "27d9238ef49e31be83823810349aa999659b5eef",
+      "sha256": "e4123cf0e01074b1e50950ed92aa0bae29fb1a5c05ceb20f05e026e71d894d18"
+    },
+    {
+      "path": "governance/decisions/ADR-AMHARC-008-PROVENANCE-ARCHITECTURE.md",
+      "gitBlob": "066badd8327a60c24333cbe4fcb1d8554f6b44ba",
+      "sha256": "57b7e09814df981403d378bbd6a0b1dfb5636cbee3a369028b8f9a87fb7d514f"
+    },
+    {
+      "path": "governance/decisions/ADR-AMHARC-009-ADDENDUM-R08-CLOCK-OWNERSHIP-AUTHORITY.md",
+      "gitBlob": "6411d39bb04d593116b8f4d7445108bd7ff5f70d",
+      "sha256": "d4e204e667b759c96b2914d75562822e6ae4abac4cd86745e7bb6a1c5baf9773"
+    },
+    {
+      "path": "governance/decisions/ADR-AMHARC-009-TEMPORAL-TERMINOLOGY.md",
+      "gitBlob": "e7e979b8a33598ce76e7951d8806cbe7924ddae7",
+      "sha256": "77104f2741e5c42263c7f357895d9aa2f2d284ffcce41a0fdb17553b9414cdf7"
+    },
+    {
+      "path": "governance/decisions/ADR-AMHARC-010-FALLBACK-AUTHORITY-TRANSFER-SOURCE-LOSS.md",
+      "gitBlob": "7d2d53ec802e5d455cd4def21febda3c5b6106af",
+      "sha256": "dc7ef9df26284bb1382815d59058e0040d5d2f4193596242083712fc8832183f"
+    },
+    {
+      "path": "governance/decisions/ADR-AMHARC-011-SEMANTIC-GOVERNANCE.md",
+      "gitBlob": "6628c3f88da333ee7b968e58b1f987592138f310",
+      "sha256": "bb41f2dfbda5bdf9bd86bb72433d56c91d84f83ebf39cc282a19dabcbb9f92f3"
+    },
+    {
+      "path": "governance/decisions/ADR-AMHARC-012-CONTRACT-GOVERNANCE.md",
+      "gitBlob": "5dd911c891ebf2d41d32e70a8cf8e8ad3496b400",
+      "sha256": "b79826501a6040f45646eaa3371e01cc93f91d01040db245f074a0a233e59dbc"
+    },
+    {
+      "path": "governance/decisions/ADR-AMHARC-013-REVISION-COPY-RECORD-LINEAGE.md",
+      "gitBlob": "1949d65ac3ef068ef61abca6636b4ea55be95d20",
+      "sha256": "e1f40bd6bc955b87c0899e4f1e7761f64770850d1e06d07c4324473cb0dbedaa"
+    },
+    {
+      "path": "governance/decisions/ADR-AMHARC-014-PORTABILITY.md",
+      "gitBlob": "a3d671f774c4ce1bd3eea73fb35a00114771dc92",
+      "sha256": "1e59d05f85bf1fca58f740038d71cb7b0e7dc3cf883c58b9fcb32e305af255e6"
+    }
+  ],
+  "selfIdentity": "This manifest is identified by controlled path/version and verified containing tree; external file fingerprint inventory carries its SHA-256. Never insert its own digest or containing tree into itself.",
+  "closure": "All named exact candidate components present. Real format/issuer/grant/policy/deployment appointments explicitly OUTSIDE development fixture closure. Hash presence proves neither authority nor semantic truth."
+}

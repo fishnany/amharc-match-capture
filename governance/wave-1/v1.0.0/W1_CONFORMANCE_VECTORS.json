@@ -1,0 +1,3657 @@
+{
+  "identifier": "urn:amharc:w1:conformance-vectors:1.0.0",
+  "title": "W1 CONFORMANCE VECTORS",
+  "version": "1.0.0",
+  "controlledPath": "governance/wave-1/v1.0.0/W1_CONFORMANCE_VECTORS.json",
+  "owner": "Competent AMHARC Architecture Owner",
+  "steward": "AMHARC Ontology governance steward",
+  "implementationResponsibilities": {
+    "capture": "producer / initial prospective allocator implementation location",
+    "tagger": "isolated read-only qualified consumer",
+    "transformer": "NONE"
+  },
+  "sourceArchitecture": {
+    "repository": "fishnany/amharc-ontology",
+    "revision": "ff9ac2234dfb4032bf87f700ec8188e1af339649",
+    "tree": "f9d96a8c0bc68fd77777415a436a76994ec39913"
+  },
+  "directionEvidence": {
+    "file": "Pasted--AMHARC-WAVE-1-CONSOLIDATED-ARCHITECTURE-OWNER-DIRECTIO_1791109470766.txt",
+    "sha256": "08c9aa269d43b1413916d36ceed24fd63f9f1adeb634f65a513d2d441646cf94",
+    "standing": "approves finalisation direction, NOT this exact publication"
+  },
+  "statusRule": "Controlled specification on competent Owner-authorised verified publication; candidate before that event",
+  "effectivityRule": "Effective for W1 DEVELOPMENT / CONFORMANCE at the verified Owner-authorised atomic publication revision; no invented date or containing hash",
+  "operationalApplicability": "NOT established by publication; exact real format, issuer/allocator, principal/grant, policy and deployment applicability required before corresponding real use",
+  "implementationAuthorisation": "NONE conveyed by this specification or its publication",
+  "dependencies": {
+    "semantic": {
+      "id": "urn:amharc:w1:semantic-profile:1.0.0",
+      "sha256": "041f67899c61a2fb93acbb4ea7532c0daa32832f877a491c8073b62b4c74b508"
+    },
+    "identifier": {
+      "id": "urn:amharc:w1:identifier-application:1.0.0",
+      "sha256": "c956baed4ef18c54bcdcf32d1e7019bfe131e655e5609a32ac25c93cf2b650e1"
+    },
+    "schema": {
+      "id": "urn:amharc:w1:clock-envelope-schema:1.0.0",
+      "sha256": "3dbe8160562f7c6fd576631f24291bd01371314e47826c3c76b99703d3c70c6f"
+    },
+    "provenance": {
+      "id": "urn:amharc:w1:material-history:1.0.0",
+      "sha256": "c0c3cc9caaf704f18b004c1e3309d81cc0c23399842f0fa30852494d0b0fd681"
+    },
+    "contract": {
+      "id": "urn:amharc:w1:clock-authority-contract:1.0.0",
+      "sha256": "c07fc9e62e5138a2c8c35eb924e59b16c1808fc419763cb310222232c08ba6a2"
+    }
+  },
+  "sourceW1_0": {
+    "vectorsSha256": "cd9b2545c38fbddd67fce76b9c18818932274c22468ddacc04df2d2718a172f8",
+    "preservedScenarioCount": 35,
+    "refinements": "Generic format failure is semantic, not hard-coded schema enum; four new negative scenarios; re-signed controlled-context fixtures."
+  },
+  "oracleScope": "Development fixtures only. Replay, prior-state and scoped-closure inputs are scenario oracles, not production provenance or a state machine.",
+  "cases": [
+    {
+      "id": "V01-valid-qualified-observation",
+      "expected": "QUALIFIED",
+      "input": {
+        "snapshot": {
+          "contractRef": {
+            "id": "urn:amharc:w1:clock-authority-contract:1.0.0",
+            "sha256": "c07fc9e62e5138a2c8c35eb924e59b16c1808fc419763cb310222232c08ba6a2"
+          },
+          "subject": {
+            "occurrenceId": "10000000-0000-4000-8000-000000000001",
+            "identityStanding": "provisional",
+            "representation": {
+              "issuer": "urn:amharc:test:capture:installation-a",
+              "localId": "unchanged-local-guid-a"
+            },
+            "resolutionRef": {
+              "id": "urn:amharc:fixture:w1:resolution:1.0.0",
+              "sha256": "960bb672f23b6f5c8d01e2aeff4b366d1540d0d6166a4c2fa33f0eddc98a6707"
+            }
+          },
+          "context": {
+            "semantic": {
+              "id": "urn:amharc:w1:semantic-profile:1.0.0",
+              "sha256": "041f67899c61a2fb93acbb4ea7532c0daa32832f877a491c8073b62b4c74b508"
+            },
+            "identifier": {
+              "id": "urn:amharc:w1:identifier-application:1.0.0",
+              "sha256": "c956baed4ef18c54bcdcf32d1e7019bfe131e655e5609a32ac25c93cf2b650e1"
+            },
+            "format": {
+              "id": "urn:amharc:fixture:w1:format:1.0.0",
+              "sha256": "5fe7b959f147949e872bf23ca36af959a918c2d31055c6285d5a6321bef520b7"
+            },
+            "provenance": {
+              "id": "urn:amharc:w1:material-history:1.0.0",
+              "sha256": "c0c3cc9caaf704f18b004c1e3309d81cc0c23399842f0fa30852494d0b0fd681"
+            },
+            "trustBundle": {
+              "id": "urn:amharc:fixture:w1:trustBundle:1.0.0",
+              "sha256": "50be9f25fc922e698732c73b0550958635faf65013c4b42bd239c6dcaed68e75"
+            }
+          },
+          "authority": {
+            "status": "active",
+            "principalId": "synthetic-capture-principal",
+            "bindingId": "synthetic-binding-a",
+            "incarnationId": "30000000-0000-4000-8000-000000000003",
+            "generation": "1",
+            "sequence": "10",
+            "capability": "snapshot",
+            "reason": null
+          },
+          "clock": {
+            "domain": "official-match-accumulated",
+            "unit": "seconds",
+            "accumulated": 120,
+            "phase": "playing",
+            "periodKey": "p1",
+            "periodStart": 0,
+            "periodElapsed": 120,
+            "state": "running",
+            "method": "monotonic-live",
+            "uncertaintySeconds": null
+          },
+          "legacyRecording": {
+            "coordinate": "recordingElapsedSeconds",
+            "producerContract": "1.0",
+            "value": 175,
+            "qualification": "legacy-producer-coordinate-not-media-time"
+          },
+          "observedAtUtc": "2026-10-04T10:00:00Z",
+          "activityRef": {
+            "id": "urn:amharc:fixture:w1:baselineActivity:1.0.0",
+            "sha256": "07d0ac1e7f92c8d01b7a5a6525fa05d421b8d95c67830af45f949774cb5052fa"
+          },
+          "attestation": {
+            "keyId": "synthetic-producer-key",
+            "algorithm": "Ed25519",
+            "payloadSha256": "ad4fa7a1c4b3b122d3083f40c05156dbae7185b842794c065b4597f2b92d0d69",
+            "signatureBase64": "/p8Jmb/ciR+ybA5LnxEwa3K3a4nyH7iBgJvgllxFZsMq1fySv4KVA1ZkA+x2Kw2Ge789y1E0+HduOSyD/b9cBg=="
+          }
+        },
+        "requestedSubject": "10000000-0000-4000-8000-000000000001",
+        "availableDependencies": true,
+        "correctionActivity": false
+      },
+      "sourceFixtureId": "V01-valid-qualified-observation"
+    },
+    {
+      "id": "V02-wrong-request-subject",
+      "expected": "SUBJECT_REFUSAL",
+      "input": {
+        "snapshot": {
+          "contractRef": {
+            "id": "urn:amharc:w1:clock-authority-contract:1.0.0",
+            "sha256": "c07fc9e62e5138a2c8c35eb924e59b16c1808fc419763cb310222232c08ba6a2"
+          },
+          "subject": {
+            "occurrenceId": "10000000-0000-4000-8000-000000000001",
+            "identityStanding": "provisional",
+            "representation": {
+              "issuer": "urn:amharc:test:capture:installation-a",
+              "localId": "unchanged-local-guid-a"
+            },
+            "resolutionRef": {
+              "id": "urn:amharc:fixture:w1:resolution:1.0.0",
+              "sha256": "960bb672f23b6f5c8d01e2aeff4b366d1540d0d6166a4c2fa33f0eddc98a6707"
+            }
+          },
+          "context": {
+            "semantic": {
+              "id": "urn:amharc:w1:semantic-profile:1.0.0",
+              "sha256": "041f67899c61a2fb93acbb4ea7532c0daa32832f877a491c8073b62b4c74b508"
+            },
+            "identifier": {
+              "id": "urn:amharc:w1:identifier-application:1.0.0",
+              "sha256": "c956baed4ef18c54bcdcf32d1e7019bfe131e655e5609a32ac25c93cf2b650e1"
+            },
+            "format": {
+              "id": "urn:amharc:fixture:w1:format:1.0.0",
+              "sha256": "5fe7b959f147949e872bf23ca36af959a918c2d31055c6285d5a6321bef520b7"
+            },
+            "provenance": {
+              "id": "urn:amharc:w1:material-history:1.0.0",
+              "sha256": "c0c3cc9caaf704f18b004c1e3309d81cc0c23399842f0fa30852494d0b0fd681"
+            },
+            "trustBundle": {
+              "id": "urn:amharc:fixture:w1:trustBundle:1.0.0",
+              "sha256": "50be9f25fc922e698732c73b0550958635faf65013c4b42bd239c6dcaed68e75"
+            }
+          },
+          "authority": {
+            "status": "active",
+            "principalId": "synthetic-capture-principal",
+            "bindingId": "synthetic-binding-a",
+            "incarnationId": "30000000-0000-4000-8000-000000000003",
+            "generation": "1",
+            "sequence": "10",
+            "capability": "snapshot",
+            "reason": null
+          },
+          "clock": {
+            "domain": "official-match-accumulated",
+            "unit": "seconds",
+            "accumulated": 120,
+            "phase": "playing",
+            "periodKey": "p1",
+            "periodStart": 0,
+            "periodElapsed": 120,
+            "state": "running",
+            "method": "monotonic-live",
+            "uncertaintySeconds": null
+          },
+          "legacyRecording": {
+            "coordinate": "recordingElapsedSeconds",
+            "producerContract": "1.0",
+            "value": 175,
+            "qualification": "legacy-producer-coordinate-not-media-time"
+          },
+          "observedAtUtc": "2026-10-04T10:00:00Z",
+          "activityRef": {
+            "id": "urn:amharc:fixture:w1:baselineActivity:1.0.0",
+            "sha256": "07d0ac1e7f92c8d01b7a5a6525fa05d421b8d95c67830af45f949774cb5052fa"
+          },
+          "attestation": {
+            "keyId": "synthetic-producer-key",
+            "algorithm": "Ed25519",
+            "payloadSha256": "ad4fa7a1c4b3b122d3083f40c05156dbae7185b842794c065b4597f2b92d0d69",
+            "signatureBase64": "/p8Jmb/ciR+ybA5LnxEwa3K3a4nyH7iBgJvgllxFZsMq1fySv4KVA1ZkA+x2Kw2Ge789y1E0+HduOSyD/b9cBg=="
+          }
+        },
+        "requestedSubject": "20000000-0000-4000-8000-000000000002",
+        "availableDependencies": true,
+        "correctionActivity": false
+      },
+      "sourceFixtureId": "V02-wrong-request-subject"
+    },
+    {
+      "id": "V03-relabelled-subject",
+      "expected": "BINDING_REFUSAL",
+      "input": {
+        "snapshot": {
+          "contractRef": {
+            "id": "urn:amharc:w1:clock-authority-contract:1.0.0",
+            "sha256": "c07fc9e62e5138a2c8c35eb924e59b16c1808fc419763cb310222232c08ba6a2"
+          },
+          "subject": {
+            "occurrenceId": "20000000-0000-4000-8000-000000000002",
+            "identityStanding": "provisional",
+            "representation": {
+              "issuer": "urn:amharc:test:capture:installation-a",
+              "localId": "unchanged-local-guid-a"
+            },
+            "resolutionRef": {
+              "id": "urn:amharc:fixture:w1:resolution:1.0.0",
+              "sha256": "960bb672f23b6f5c8d01e2aeff4b366d1540d0d6166a4c2fa33f0eddc98a6707"
+            }
+          },
+          "context": {
+            "semantic": {
+              "id": "urn:amharc:w1:semantic-profile:1.0.0",
+              "sha256": "041f67899c61a2fb93acbb4ea7532c0daa32832f877a491c8073b62b4c74b508"
+            },
+            "identifier": {
+              "id": "urn:amharc:w1:identifier-application:1.0.0",
+              "sha256": "c956baed4ef18c54bcdcf32d1e7019bfe131e655e5609a32ac25c93cf2b650e1"
+            },
+            "format": {
+              "id": "urn:amharc:fixture:w1:format:1.0.0",
+              "sha256": "5fe7b959f147949e872bf23ca36af959a918c2d31055c6285d5a6321bef520b7"
+            },
+            "provenance": {
+              "id": "urn:amharc:w1:material-history:1.0.0",
+              "sha256": "c0c3cc9caaf704f18b004c1e3309d81cc0c23399842f0fa30852494d0b0fd681"
+            },
+            "trustBundle": {
+              "id": "urn:amharc:fixture:w1:trustBundle:1.0.0",
+              "sha256": "50be9f25fc922e698732c73b0550958635faf65013c4b42bd239c6dcaed68e75"
+            }
+          },
+          "authority": {
+            "status": "active",
+            "principalId": "synthetic-capture-principal",
+            "bindingId": "synthetic-binding-a",
+            "incarnationId": "30000000-0000-4000-8000-000000000003",
+            "generation": "1",
+            "sequence": "10",
+            "capability": "snapshot",
+            "reason": null
+          },
+          "clock": {
+            "domain": "official-match-accumulated",
+            "unit": "seconds",
+            "accumulated": 120,
+            "phase": "playing",
+            "periodKey": "p1",
+            "periodStart": 0,
+            "periodElapsed": 120,
+            "state": "running",
+            "method": "monotonic-live",
+            "uncertaintySeconds": null
+          },
+          "legacyRecording": {
+            "coordinate": "recordingElapsedSeconds",
+            "producerContract": "1.0",
+            "value": 175,
+            "qualification": "legacy-producer-coordinate-not-media-time"
+          },
+          "observedAtUtc": "2026-10-04T10:00:00Z",
+          "activityRef": {
+            "id": "urn:amharc:fixture:w1:baselineActivity:1.0.0",
+            "sha256": "07d0ac1e7f92c8d01b7a5a6525fa05d421b8d95c67830af45f949774cb5052fa"
+          },
+          "attestation": {
+            "keyId": "synthetic-producer-key",
+            "algorithm": "Ed25519",
+            "payloadSha256": "280cde18ef0d19507379f5103997adc6f63cdb966c026947a0dbcee9a4d3fa95",
+            "signatureBase64": "9KBhC62dxp9oSqGVqMVmDRG4YKzKMwbVB7MdglTTS/9Dj+zK3fzNeWR5myYhn9kPrlzbiPgQd6deI2reaL/ZAw=="
+          }
+        },
+        "requestedSubject": "20000000-0000-4000-8000-000000000002",
+        "availableDependencies": true,
+        "correctionActivity": false
+      },
+      "sourceFixtureId": "V03-relabelled-subject"
+    },
+    {
+      "id": "V04-unknown-contract",
+      "expected": "CONTEXT_UNRESOLVED",
+      "input": {
+        "snapshot": {
+          "contractRef": {
+            "id": "urn:amharc:w1:clock-authority-contract:1.0.0",
+            "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+          },
+          "subject": {
+            "occurrenceId": "10000000-0000-4000-8000-000000000001",
+            "identityStanding": "provisional",
+            "representation": {
+              "issuer": "urn:amharc:test:capture:installation-a",
+              "localId": "unchanged-local-guid-a"
+            },
+            "resolutionRef": {
+              "id": "urn:amharc:fixture:w1:resolution:1.0.0",
+              "sha256": "960bb672f23b6f5c8d01e2aeff4b366d1540d0d6166a4c2fa33f0eddc98a6707"
+            }
+          },
+          "context": {
+            "semantic": {
+              "id": "urn:amharc:w1:semantic-profile:1.0.0",
+              "sha256": "041f67899c61a2fb93acbb4ea7532c0daa32832f877a491c8073b62b4c74b508"
+            },
+            "identifier": {
+              "id": "urn:amharc:w1:identifier-application:1.0.0",
+              "sha256": "c956baed4ef18c54bcdcf32d1e7019bfe131e655e5609a32ac25c93cf2b650e1"
+            },
+            "format": {
+              "id": "urn:amharc:fixture:w1:format:1.0.0",
+              "sha256": "5fe7b959f147949e872bf23ca36af959a918c2d31055c6285d5a6321bef520b7"
+            },
+            "provenance": {
+              "id": "urn:amharc:w1:material-history:1.0.0",
+              "sha256": "c0c3cc9caaf704f18b004c1e3309d81cc0c23399842f0fa30852494d0b0fd681"
+            },
+            "trustBundle": {
+              "id": "urn:amharc:fixture:w1:trustBundle:1.0.0",
+              "sha256": "50be9f25fc922e698732c73b0550958635faf65013c4b42bd239c6dcaed68e75"
+            }
+          },
+          "authority": {
+            "status": "active",
+            "principalId": "synthetic-capture-principal",
+            "bindingId": "synthetic-binding-a",
+            "incarnationId": "30000000-0000-4000-8000-000000000003",
+            "generation": "1",
+            "sequence": "10",
+            "capability": "snapshot",
+            "reason": null
+          },
+          "clock": {
+            "domain": "official-match-accumulated",
+            "unit": "seconds",
+            "accumulated": 120,
+            "phase": "playing",
+            "periodKey": "p1",
+            "periodStart": 0,
+            "periodElapsed": 120,
+            "state": "running",
+            "method": "monotonic-live",
+            "uncertaintySeconds": null
+          },
+          "legacyRecording": {
+            "coordinate": "recordingElapsedSeconds",
+            "producerContract": "1.0",
+            "value": 175,
+            "qualification": "legacy-producer-coordinate-not-media-time"
+          },
+          "observedAtUtc": "2026-10-04T10:00:00Z",
+          "activityRef": {
+            "id": "urn:amharc:fixture:w1:baselineActivity:1.0.0",
+            "sha256": "07d0ac1e7f92c8d01b7a5a6525fa05d421b8d95c67830af45f949774cb5052fa"
+          },
+          "attestation": {
+            "keyId": "synthetic-producer-key",
+            "algorithm": "Ed25519",
+            "payloadSha256": "ebeea17197176d3d7ff5dd7f1409a9f52c19905616bc30fa29b907b20115576d",
+            "signatureBase64": "ysf3QMYoMh2ieGmnAHFCWOuPsPGrHwj/AvQdVTxzEuusaOMAZmw8jw0uibT918nj15ivXRgylf0Til/L82/iDw=="
+          }
+        },
+        "requestedSubject": "10000000-0000-4000-8000-000000000001",
+        "availableDependencies": true,
+        "correctionActivity": false
+      },
+      "sourceFixtureId": "V04-unknown-contract"
+    },
+    {
+      "id": "V05-unknown-semantic",
+      "expected": "CONTEXT_UNRESOLVED",
+      "input": {
+        "snapshot": {
+          "contractRef": {
+            "id": "urn:amharc:w1:clock-authority-contract:1.0.0",
+            "sha256": "c07fc9e62e5138a2c8c35eb924e59b16c1808fc419763cb310222232c08ba6a2"
+          },
+          "subject": {
+            "occurrenceId": "10000000-0000-4000-8000-000000000001",
+            "identityStanding": "provisional",
+            "representation": {
+              "issuer": "urn:amharc:test:capture:installation-a",
+              "localId": "unchanged-local-guid-a"
+            },
+            "resolutionRef": {
+              "id": "urn:amharc:fixture:w1:resolution:1.0.0",
+              "sha256": "960bb672f23b6f5c8d01e2aeff4b366d1540d0d6166a4c2fa33f0eddc98a6707"
+            }
+          },
+          "context": {
+            "semantic": {
+              "id": "urn:amharc:w1:semantic-profile:1.0.0",
+              "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+            },
+            "identifier": {
+              "id": "urn:amharc:w1:identifier-application:1.0.0",
+              "sha256": "c956baed4ef18c54bcdcf32d1e7019bfe131e655e5609a32ac25c93cf2b650e1"
+            },
+            "format": {
+              "id": "urn:amharc:fixture:w1:format:1.0.0",
+              "sha256": "5fe7b959f147949e872bf23ca36af959a918c2d31055c6285d5a6321bef520b7"
+            },
+            "provenance": {
+              "id": "urn:amharc:w1:material-history:1.0.0",
+              "sha256": "c0c3cc9caaf704f18b004c1e3309d81cc0c23399842f0fa30852494d0b0fd681"
+            },
+            "trustBundle": {
+              "id": "urn:amharc:fixture:w1:trustBundle:1.0.0",
+              "sha256": "50be9f25fc922e698732c73b0550958635faf65013c4b42bd239c6dcaed68e75"
+            }
+          },
+          "authority": {
+            "status": "active",
+            "principalId": "synthetic-capture-principal",
+            "bindingId": "synthetic-binding-a",
+            "incarnationId": "30000000-0000-4000-8000-000000000003",
+            "generation": "1",
+            "sequence": "10",
+            "capability": "snapshot",
+            "reason": null
+          },
+          "clock": {
+            "domain": "official-match-accumulated",
+            "unit": "seconds",
+            "accumulated": 120,
+            "phase": "playing",
+            "periodKey": "p1",
+            "periodStart": 0,
+            "periodElapsed": 120,
+            "state": "running",
+            "method": "monotonic-live",
+            "uncertaintySeconds": null
+          },
+          "legacyRecording": {
+            "coordinate": "recordingElapsedSeconds",
+            "producerContract": "1.0",
+            "value": 175,
+            "qualification": "legacy-producer-coordinate-not-media-time"
+          },
+          "observedAtUtc": "2026-10-04T10:00:00Z",
+          "activityRef": {
+            "id": "urn:amharc:fixture:w1:baselineActivity:1.0.0",
+            "sha256": "07d0ac1e7f92c8d01b7a5a6525fa05d421b8d95c67830af45f949774cb5052fa"
+          },
+          "attestation": {
+            "keyId": "synthetic-producer-key",
+            "algorithm": "Ed25519",
+            "payloadSha256": "5629ac9c8ce743ef89e4ac916d00dc63d3576280f7ca5023b93543191dccd10e",
+            "signatureBase64": "hCmN5v6oicaKJJY7T0s80j+QsGjzJASLhQN1v8dw3MbFJX2RUAHajK4YS2+pT3igcf+h3o4G62LA5fl2pQkHBg=="
+          }
+        },
+        "requestedSubject": "10000000-0000-4000-8000-000000000001",
+        "availableDependencies": true,
+        "correctionActivity": false
+      },
+      "sourceFixtureId": "V05-unknown-semantic"
+    },
+    {
+      "id": "V06-offline-missing-dependency",
+      "expected": "CONTEXT_UNRESOLVED",
+      "input": {
+        "snapshot": {
+          "contractRef": {
+            "id": "urn:amharc:w1:clock-authority-contract:1.0.0",
+            "sha256": "c07fc9e62e5138a2c8c35eb924e59b16c1808fc419763cb310222232c08ba6a2"
+          },
+          "subject": {
+            "occurrenceId": "10000000-0000-4000-8000-000000000001",
+            "identityStanding": "provisional",
+            "representation": {
+              "issuer": "urn:amharc:test:capture:installation-a",
+              "localId": "unchanged-local-guid-a"
+            },
+            "resolutionRef": {
+              "id": "urn:amharc:fixture:w1:resolution:1.0.0",
+              "sha256": "960bb672f23b6f5c8d01e2aeff4b366d1540d0d6166a4c2fa33f0eddc98a6707"
+            }
+          },
+          "context": {
+            "semantic": {
+              "id": "urn:amharc:w1:semantic-profile:1.0.0",
+              "sha256": "041f67899c61a2fb93acbb4ea7532c0daa32832f877a491c8073b62b4c74b508"
+            },
+            "identifier": {
+              "id": "urn:amharc:w1:identifier-application:1.0.0",
+              "sha256": "c956baed4ef18c54bcdcf32d1e7019bfe131e655e5609a32ac25c93cf2b650e1"
+            },
+            "format": {
+              "id": "urn:amharc:fixture:w1:format:1.0.0",
+              "sha256": "5fe7b959f147949e872bf23ca36af959a918c2d31055c6285d5a6321bef520b7"
+            },
+            "provenance": {
+              "id": "urn:amharc:w1:material-history:1.0.0",
+              "sha256": "c0c3cc9caaf704f18b004c1e3309d81cc0c23399842f0fa30852494d0b0fd681"
+            },
+            "trustBundle": {
+              "id": "urn:amharc:fixture:w1:trustBundle:1.0.0",
+              "sha256": "50be9f25fc922e698732c73b0550958635faf65013c4b42bd239c6dcaed68e75"
+            }
+          },
+          "authority": {
+            "status": "active",
+            "principalId": "synthetic-capture-principal",
+            "bindingId": "synthetic-binding-a",
+            "incarnationId": "30000000-0000-4000-8000-000000000003",
+            "generation": "1",
+            "sequence": "10",
+            "capability": "snapshot",
+            "reason": null
+          },
+          "clock": {
+            "domain": "official-match-accumulated",
+            "unit": "seconds",
+            "accumulated": 120,
+            "phase": "playing",
+            "periodKey": "p1",
+            "periodStart": 0,
+            "periodElapsed": 120,
+            "state": "running",
+            "method": "monotonic-live",
+            "uncertaintySeconds": null
+          },
+          "legacyRecording": {
+            "coordinate": "recordingElapsedSeconds",
+            "producerContract": "1.0",
+            "value": 175,
+            "qualification": "legacy-producer-coordinate-not-media-time"
+          },
+          "observedAtUtc": "2026-10-04T10:00:00Z",
+          "activityRef": {
+            "id": "urn:amharc:fixture:w1:baselineActivity:1.0.0",
+            "sha256": "07d0ac1e7f92c8d01b7a5a6525fa05d421b8d95c67830af45f949774cb5052fa"
+          },
+          "attestation": {
+            "keyId": "synthetic-producer-key",
+            "algorithm": "Ed25519",
+            "payloadSha256": "ad4fa7a1c4b3b122d3083f40c05156dbae7185b842794c065b4597f2b92d0d69",
+            "signatureBase64": "/p8Jmb/ciR+ybA5LnxEwa3K3a4nyH7iBgJvgllxFZsMq1fySv4KVA1ZkA+x2Kw2Ge789y1E0+HduOSyD/b9cBg=="
+          }
+        },
+        "requestedSubject": "10000000-0000-4000-8000-000000000001",
+        "availableDependencies": false,
+        "correctionActivity": false
+      },
+      "sourceFixtureId": "V06-offline-missing-dependency"
+    },
+    {
+      "id": "V07-unsupported-period",
+      "expected": "TEMPORAL_REFUSAL",
+      "input": {
+        "snapshot": {
+          "contractRef": {
+            "id": "urn:amharc:w1:clock-authority-contract:1.0.0",
+            "sha256": "c07fc9e62e5138a2c8c35eb924e59b16c1808fc419763cb310222232c08ba6a2"
+          },
+          "subject": {
+            "occurrenceId": "10000000-0000-4000-8000-000000000001",
+            "identityStanding": "provisional",
+            "representation": {
+              "issuer": "urn:amharc:test:capture:installation-a",
+              "localId": "unchanged-local-guid-a"
+            },
+            "resolutionRef": {
+              "id": "urn:amharc:fixture:w1:resolution:1.0.0",
+              "sha256": "960bb672f23b6f5c8d01e2aeff4b366d1540d0d6166a4c2fa33f0eddc98a6707"
+            }
+          },
+          "context": {
+            "semantic": {
+              "id": "urn:amharc:w1:semantic-profile:1.0.0",
+              "sha256": "041f67899c61a2fb93acbb4ea7532c0daa32832f877a491c8073b62b4c74b508"
+            },
+            "identifier": {
+              "id": "urn:amharc:w1:identifier-application:1.0.0",
+              "sha256": "c956baed4ef18c54bcdcf32d1e7019bfe131e655e5609a32ac25c93cf2b650e1"
+            },
+            "format": {
+              "id": "urn:amharc:fixture:w1:format:1.0.0",
+              "sha256": "5fe7b959f147949e872bf23ca36af959a918c2d31055c6285d5a6321bef520b7"
+            },
+            "provenance": {
+              "id": "urn:amharc:w1:material-history:1.0.0",
+              "sha256": "c0c3cc9caaf704f18b004c1e3309d81cc0c23399842f0fa30852494d0b0fd681"
+            },
+            "trustBundle": {
+              "id": "urn:amharc:fixture:w1:trustBundle:1.0.0",
+              "sha256": "50be9f25fc922e698732c73b0550958635faf65013c4b42bd239c6dcaed68e75"
+            }
+          },
+          "authority": {
+            "status": "active",
+            "principalId": "synthetic-capture-principal",
+            "bindingId": "synthetic-binding-a",
+            "incarnationId": "30000000-0000-4000-8000-000000000003",
+            "generation": "1",
+            "sequence": "10",
+            "capability": "snapshot",
+            "reason": null
+          },
+          "clock": {
+            "domain": "official-match-accumulated",
+            "unit": "seconds",
+            "accumulated": 120,
+            "phase": "playing",
+            "periodKey": "extra-time",
+            "periodStart": 0,
+            "periodElapsed": 120,
+            "state": "running",
+            "method": "monotonic-live",
+            "uncertaintySeconds": null
+          },
+          "legacyRecording": {
+            "coordinate": "recordingElapsedSeconds",
+            "producerContract": "1.0",
+            "value": 175,
+            "qualification": "legacy-producer-coordinate-not-media-time"
+          },
+          "observedAtUtc": "2026-10-04T10:00:00Z",
+          "activityRef": {
+            "id": "urn:amharc:fixture:w1:baselineActivity:1.0.0",
+            "sha256": "07d0ac1e7f92c8d01b7a5a6525fa05d421b8d95c67830af45f949774cb5052fa"
+          },
+          "attestation": {
+            "keyId": "synthetic-producer-key",
+            "algorithm": "Ed25519",
+            "payloadSha256": "eacf918421ced01fbaa5af3aa976553f042645c6d024111afd51b853984a94e0",
+            "signatureBase64": "Aar68Kn1tcuwQ0rzu8YkErrw0hQ6fG+vmY9s3PpNE5blkeVZVj0hMzIdK6bZfmpKhv8PXrHUpRx244JYocKiDQ=="
+          }
+        },
+        "requestedSubject": "10000000-0000-4000-8000-000000000001",
+        "availableDependencies": true,
+        "correctionActivity": false,
+        "formatUnsupported": true
+      },
+      "sourceFixtureId": "V07-unsupported-period"
+    },
+    {
+      "id": "V08-unknown-period-boundary",
+      "expected": "TEMPORAL_REFUSAL",
+      "input": {
+        "snapshot": {
+          "contractRef": {
+            "id": "urn:amharc:w1:clock-authority-contract:1.0.0",
+            "sha256": "c07fc9e62e5138a2c8c35eb924e59b16c1808fc419763cb310222232c08ba6a2"
+          },
+          "subject": {
+            "occurrenceId": "10000000-0000-4000-8000-000000000001",
+            "identityStanding": "provisional",
+            "representation": {
+              "issuer": "urn:amharc:test:capture:installation-a",
+              "localId": "unchanged-local-guid-a"
+            },
+            "resolutionRef": {
+              "id": "urn:amharc:fixture:w1:resolution:1.0.0",
+              "sha256": "960bb672f23b6f5c8d01e2aeff4b366d1540d0d6166a4c2fa33f0eddc98a6707"
+            }
+          },
+          "context": {
+            "semantic": {
+              "id": "urn:amharc:w1:semantic-profile:1.0.0",
+              "sha256": "041f67899c61a2fb93acbb4ea7532c0daa32832f877a491c8073b62b4c74b508"
+            },
+            "identifier": {
+              "id": "urn:amharc:w1:identifier-application:1.0.0",
+              "sha256": "c956baed4ef18c54bcdcf32d1e7019bfe131e655e5609a32ac25c93cf2b650e1"
+            },
+            "format": {
+              "id": "urn:amharc:fixture:w1:format:1.0.0",
+              "sha256": "5fe7b959f147949e872bf23ca36af959a918c2d31055c6285d5a6321bef520b7"
+            },
+            "provenance": {
+              "id": "urn:amharc:w1:material-history:1.0.0",
+              "sha256": "c0c3cc9caaf704f18b004c1e3309d81cc0c23399842f0fa30852494d0b0fd681"
+            },
+            "trustBundle": {
+              "id": "urn:amharc:fixture:w1:trustBundle:1.0.0",
+              "sha256": "50be9f25fc922e698732c73b0550958635faf65013c4b42bd239c6dcaed68e75"
+            }
+          },
+          "authority": {
+            "status": "active",
+            "principalId": "synthetic-capture-principal",
+            "bindingId": "synthetic-binding-a",
+            "incarnationId": "30000000-0000-4000-8000-000000000003",
+            "generation": "1",
+            "sequence": "10",
+            "capability": "snapshot",
+            "reason": null
+          },
+          "clock": {
+            "domain": "official-match-accumulated",
+            "unit": "seconds",
+            "accumulated": 120,
+            "phase": "playing",
+            "periodKey": "p1",
+            "periodStart": null,
+            "periodElapsed": 120,
+            "state": "running",
+            "method": "monotonic-live",
+            "uncertaintySeconds": null
+          },
+          "legacyRecording": {
+            "coordinate": "recordingElapsedSeconds",
+            "producerContract": "1.0",
+            "value": 175,
+            "qualification": "legacy-producer-coordinate-not-media-time"
+          },
+          "observedAtUtc": "2026-10-04T10:00:00Z",
+          "activityRef": {
+            "id": "urn:amharc:fixture:w1:baselineActivity:1.0.0",
+            "sha256": "07d0ac1e7f92c8d01b7a5a6525fa05d421b8d95c67830af45f949774cb5052fa"
+          },
+          "attestation": {
+            "keyId": "synthetic-producer-key",
+            "algorithm": "Ed25519",
+            "payloadSha256": "6648af27628cc183b5d94ac22778c5d9f311842914dd782d468f563178bafedf",
+            "signatureBase64": "0ubPIM59QroV9PoI2YRzILmOk01xQ/nhj7hhKrJ0JKEDm4VZejzm/FH7O1zt6oQ9QYSYJ6oSxhSMDmTxDcqZDQ=="
+          }
+        },
+        "requestedSubject": "10000000-0000-4000-8000-000000000001",
+        "availableDependencies": true,
+        "correctionActivity": false
+      },
+      "sourceFixtureId": "V08-unknown-period-boundary"
+    },
+    {
+      "id": "V09-period-arithmetic-mismatch",
+      "expected": "TEMPORAL_REFUSAL",
+      "input": {
+        "snapshot": {
+          "contractRef": {
+            "id": "urn:amharc:w1:clock-authority-contract:1.0.0",
+            "sha256": "c07fc9e62e5138a2c8c35eb924e59b16c1808fc419763cb310222232c08ba6a2"
+          },
+          "subject": {
+            "occurrenceId": "10000000-0000-4000-8000-000000000001",
+            "identityStanding": "provisional",
+            "representation": {
+              "issuer": "urn:amharc:test:capture:installation-a",
+              "localId": "unchanged-local-guid-a"
+            },
+            "resolutionRef": {
+              "id": "urn:amharc:fixture:w1:resolution:1.0.0",
+              "sha256": "960bb672f23b6f5c8d01e2aeff4b366d1540d0d6166a4c2fa33f0eddc98a6707"
+            }
+          },
+          "context": {
+            "semantic": {
+              "id": "urn:amharc:w1:semantic-profile:1.0.0",
+              "sha256": "041f67899c61a2fb93acbb4ea7532c0daa32832f877a491c8073b62b4c74b508"
+            },
+            "identifier": {
+              "id": "urn:amharc:w1:identifier-application:1.0.0",
+              "sha256": "c956baed4ef18c54bcdcf32d1e7019bfe131e655e5609a32ac25c93cf2b650e1"
+            },
+            "format": {
+              "id": "urn:amharc:fixture:w1:format:1.0.0",
+              "sha256": "5fe7b959f147949e872bf23ca36af959a918c2d31055c6285d5a6321bef520b7"
+            },
+            "provenance": {
+              "id": "urn:amharc:w1:material-history:1.0.0",
+              "sha256": "c0c3cc9caaf704f18b004c1e3309d81cc0c23399842f0fa30852494d0b0fd681"
+            },
+            "trustBundle": {
+              "id": "urn:amharc:fixture:w1:trustBundle:1.0.0",
+              "sha256": "50be9f25fc922e698732c73b0550958635faf65013c4b42bd239c6dcaed68e75"
+            }
+          },
+          "authority": {
+            "status": "active",
+            "principalId": "synthetic-capture-principal",
+            "bindingId": "synthetic-binding-a",
+            "incarnationId": "30000000-0000-4000-8000-000000000003",
+            "generation": "1",
+            "sequence": "10",
+            "capability": "snapshot",
+            "reason": null
+          },
+          "clock": {
+            "domain": "official-match-accumulated",
+            "unit": "seconds",
+            "accumulated": 120,
+            "phase": "playing",
+            "periodKey": "p1",
+            "periodStart": 0,
+            "periodElapsed": 121,
+            "state": "running",
+            "method": "monotonic-live",
+            "uncertaintySeconds": null
+          },
+          "legacyRecording": {
+            "coordinate": "recordingElapsedSeconds",
+            "producerContract": "1.0",
+            "value": 175,
+            "qualification": "legacy-producer-coordinate-not-media-time"
+          },
+          "observedAtUtc": "2026-10-04T10:00:00Z",
+          "activityRef": {
+            "id": "urn:amharc:fixture:w1:baselineActivity:1.0.0",
+            "sha256": "07d0ac1e7f92c8d01b7a5a6525fa05d421b8d95c67830af45f949774cb5052fa"
+          },
+          "attestation": {
+            "keyId": "synthetic-producer-key",
+            "algorithm": "Ed25519",
+            "payloadSha256": "f8f15f5794342c74f276926ce85f4d120ef536ac4f7c4aa47abb182e405b16ef",
+            "signatureBase64": "M5aug1X06LoKTxrwf/WqvOinF86P+NfD7B/+PGt3VEsqPWb8Nq+wvlfQUwhvDigb0vMmCQDUnZn+b8RSU25xBw=="
+          }
+        },
+        "requestedSubject": "10000000-0000-4000-8000-000000000001",
+        "availableDependencies": true,
+        "correctionActivity": false
+      },
+      "sourceFixtureId": "V09-period-arithmetic-mismatch"
+    },
+    {
+      "id": "V10-authority-gap",
+      "expected": "AUTHORITY_GAP",
+      "input": {
+        "snapshot": {
+          "contractRef": {
+            "id": "urn:amharc:w1:clock-authority-contract:1.0.0",
+            "sha256": "c07fc9e62e5138a2c8c35eb924e59b16c1808fc419763cb310222232c08ba6a2"
+          },
+          "subject": {
+            "occurrenceId": "10000000-0000-4000-8000-000000000001",
+            "identityStanding": "provisional",
+            "representation": {
+              "issuer": "urn:amharc:test:capture:installation-a",
+              "localId": "unchanged-local-guid-a"
+            },
+            "resolutionRef": {
+              "id": "urn:amharc:fixture:w1:resolution:1.0.0",
+              "sha256": "960bb672f23b6f5c8d01e2aeff4b366d1540d0d6166a4c2fa33f0eddc98a6707"
+            }
+          },
+          "context": {
+            "semantic": {
+              "id": "urn:amharc:w1:semantic-profile:1.0.0",
+              "sha256": "041f67899c61a2fb93acbb4ea7532c0daa32832f877a491c8073b62b4c74b508"
+            },
+            "identifier": {
+              "id": "urn:amharc:w1:identifier-application:1.0.0",
+              "sha256": "c956baed4ef18c54bcdcf32d1e7019bfe131e655e5609a32ac25c93cf2b650e1"
+            },
+            "format": {
+              "id": "urn:amharc:fixture:w1:format:1.0.0",
+              "sha256": "5fe7b959f147949e872bf23ca36af959a918c2d31055c6285d5a6321bef520b7"
+            },
+            "provenance": {
+              "id": "urn:amharc:w1:material-history:1.0.0",
+              "sha256": "c0c3cc9caaf704f18b004c1e3309d81cc0c23399842f0fa30852494d0b0fd681"
+            },
+            "trustBundle": {
+              "id": "urn:amharc:fixture:w1:trustBundle:1.0.0",
+              "sha256": "50be9f25fc922e698732c73b0550958635faf65013c4b42bd239c6dcaed68e75"
+            }
+          },
+          "authority": {
+            "status": "gap",
+            "principalId": null,
+            "bindingId": null,
+            "incarnationId": null,
+            "generation": null,
+            "sequence": null,
+            "capability": null,
+            "reason": "source-unavailable"
+          },
+          "clock": {
+            "domain": "official-match-accumulated",
+            "unit": "seconds",
+            "accumulated": 120,
+            "phase": "playing",
+            "periodKey": "p1",
+            "periodStart": 0,
+            "periodElapsed": 120,
+            "state": "withheld",
+            "method": "monotonic-live",
+            "uncertaintySeconds": null
+          },
+          "legacyRecording": {
+            "coordinate": "recordingElapsedSeconds",
+            "producerContract": "1.0",
+            "value": 175,
+            "qualification": "legacy-producer-coordinate-not-media-time"
+          },
+          "observedAtUtc": "2026-10-04T10:00:00Z",
+          "activityRef": {
+            "id": "urn:amharc:fixture:w1:baselineActivity:1.0.0",
+            "sha256": "07d0ac1e7f92c8d01b7a5a6525fa05d421b8d95c67830af45f949774cb5052fa"
+          },
+          "attestation": {
+            "keyId": "synthetic-producer-key",
+            "algorithm": "Ed25519",
+            "payloadSha256": "3eb15cf061e29f3c6a2a0fca54bd90a761bd222b5f533ae1877ab4bd403f5b5e",
+            "signatureBase64": "n0YtdIRZtKO9yaX2BGBwXSaivlHhwbcqxeQyQQ07BJ9DyIdiTOxS1K9PgYoAc1ZF/EpG/SDBJr0GImofikQuBQ=="
+          }
+        },
+        "requestedSubject": "10000000-0000-4000-8000-000000000001",
+        "availableDependencies": true,
+        "correctionActivity": false
+      },
+      "sourceFixtureId": "V10-authority-gap"
+    },
+    {
+      "id": "V11-authority-conflict",
+      "expected": "AUTHORITY_CONFLICT",
+      "input": {
+        "snapshot": {
+          "contractRef": {
+            "id": "urn:amharc:w1:clock-authority-contract:1.0.0",
+            "sha256": "c07fc9e62e5138a2c8c35eb924e59b16c1808fc419763cb310222232c08ba6a2"
+          },
+          "subject": {
+            "occurrenceId": "10000000-0000-4000-8000-000000000001",
+            "identityStanding": "provisional",
+            "representation": {
+              "issuer": "urn:amharc:test:capture:installation-a",
+              "localId": "unchanged-local-guid-a"
+            },
+            "resolutionRef": {
+              "id": "urn:amharc:fixture:w1:resolution:1.0.0",
+              "sha256": "960bb672f23b6f5c8d01e2aeff4b366d1540d0d6166a4c2fa33f0eddc98a6707"
+            }
+          },
+          "context": {
+            "semantic": {
+              "id": "urn:amharc:w1:semantic-profile:1.0.0",
+              "sha256": "041f67899c61a2fb93acbb4ea7532c0daa32832f877a491c8073b62b4c74b508"
+            },
+            "identifier": {
+              "id": "urn:amharc:w1:identifier-application:1.0.0",
+              "sha256": "c956baed4ef18c54bcdcf32d1e7019bfe131e655e5609a32ac25c93cf2b650e1"
+            },
+            "format": {
+              "id": "urn:amharc:fixture:w1:format:1.0.0",
+              "sha256": "5fe7b959f147949e872bf23ca36af959a918c2d31055c6285d5a6321bef520b7"
+            },
+            "provenance": {
+              "id": "urn:amharc:w1:material-history:1.0.0",
+              "sha256": "c0c3cc9caaf704f18b004c1e3309d81cc0c23399842f0fa30852494d0b0fd681"
+            },
+            "trustBundle": {
+              "id": "urn:amharc:fixture:w1:trustBundle:1.0.0",
+              "sha256": "50be9f25fc922e698732c73b0550958635faf65013c4b42bd239c6dcaed68e75"
+            }
+          },
+          "authority": {
+            "status": "conflict",
+            "principalId": "synthetic-capture-principal",
+            "bindingId": "synthetic-binding-a",
+            "incarnationId": "30000000-0000-4000-8000-000000000003",
+            "generation": "1",
+            "sequence": "10",
+            "capability": "snapshot",
+            "reason": "incompatible-grants"
+          },
+          "clock": {
+            "domain": "official-match-accumulated",
+            "unit": "seconds",
+            "accumulated": 120,
+            "phase": "playing",
+            "periodKey": "p1",
+            "periodStart": 0,
+            "periodElapsed": 120,
+            "state": "withheld",
+            "method": "monotonic-live",
+            "uncertaintySeconds": null
+          },
+          "legacyRecording": {
+            "coordinate": "recordingElapsedSeconds",
+            "producerContract": "1.0",
+            "value": 175,
+            "qualification": "legacy-producer-coordinate-not-media-time"
+          },
+          "observedAtUtc": "2026-10-04T10:00:00Z",
+          "activityRef": {
+            "id": "urn:amharc:fixture:w1:baselineActivity:1.0.0",
+            "sha256": "07d0ac1e7f92c8d01b7a5a6525fa05d421b8d95c67830af45f949774cb5052fa"
+          },
+          "attestation": {
+            "keyId": "synthetic-producer-key",
+            "algorithm": "Ed25519",
+            "payloadSha256": "ee87b8c9dbfa4c2aa8c2327c065e8d74e2aa6344b84e9d0b50363a267ab35894",
+            "signatureBase64": "+fdNfpvcp6dAJxhzMPphMl9w7crBz+O/znMhGo6cz5AhB9SBv++JbkKXeJM9WvW9xmNqF41lzB7Nr+WG4l4VDQ=="
+          }
+        },
+        "requestedSubject": "10000000-0000-4000-8000-000000000001",
+        "availableDependencies": true,
+        "correctionActivity": false
+      },
+      "sourceFixtureId": "V11-authority-conflict"
+    },
+    {
+      "id": "V12-wrong-binding",
+      "expected": "BINDING_REFUSAL",
+      "input": {
+        "snapshot": {
+          "contractRef": {
+            "id": "urn:amharc:w1:clock-authority-contract:1.0.0",
+            "sha256": "c07fc9e62e5138a2c8c35eb924e59b16c1808fc419763cb310222232c08ba6a2"
+          },
+          "subject": {
+            "occurrenceId": "10000000-0000-4000-8000-000000000001",
+            "identityStanding": "provisional",
+            "representation": {
+              "issuer": "urn:amharc:test:capture:installation-a",
+              "localId": "unchanged-local-guid-a"
+            },
+            "resolutionRef": {
+              "id": "urn:amharc:fixture:w1:resolution:1.0.0",
+              "sha256": "960bb672f23b6f5c8d01e2aeff4b366d1540d0d6166a4c2fa33f0eddc98a6707"
+            }
+          },
+          "context": {
+            "semantic": {
+              "id": "urn:amharc:w1:semantic-profile:1.0.0",
+              "sha256": "041f67899c61a2fb93acbb4ea7532c0daa32832f877a491c8073b62b4c74b508"
+            },
+            "identifier": {
+              "id": "urn:amharc:w1:identifier-application:1.0.0",
+              "sha256": "c956baed4ef18c54bcdcf32d1e7019bfe131e655e5609a32ac25c93cf2b650e1"
+            },
+            "format": {
+              "id": "urn:amharc:fixture:w1:format:1.0.0",
+              "sha256": "5fe7b959f147949e872bf23ca36af959a918c2d31055c6285d5a6321bef520b7"
+            },
+            "provenance": {
+              "id": "urn:amharc:w1:material-history:1.0.0",
+              "sha256": "c0c3cc9caaf704f18b004c1e3309d81cc0c23399842f0fa30852494d0b0fd681"
+            },
+            "trustBundle": {
+              "id": "urn:amharc:fixture:w1:trustBundle:1.0.0",
+              "sha256": "50be9f25fc922e698732c73b0550958635faf65013c4b42bd239c6dcaed68e75"
+            }
+          },
+          "authority": {
+            "status": "active",
+            "principalId": "synthetic-capture-principal",
+            "bindingId": "other-binding",
+            "incarnationId": "30000000-0000-4000-8000-000000000003",
+            "generation": "1",
+            "sequence": "10",
+            "capability": "snapshot",
+            "reason": null
+          },
+          "clock": {
+            "domain": "official-match-accumulated",
+            "unit": "seconds",
+            "accumulated": 120,
+            "phase": "playing",
+            "periodKey": "p1",
+            "periodStart": 0,
+            "periodElapsed": 120,
+            "state": "running",
+            "method": "monotonic-live",
+            "uncertaintySeconds": null
+          },
+          "legacyRecording": {
+            "coordinate": "recordingElapsedSeconds",
+            "producerContract": "1.0",
+            "value": 175,
+            "qualification": "legacy-producer-coordinate-not-media-time"
+          },
+          "observedAtUtc": "2026-10-04T10:00:00Z",
+          "activityRef": {
+            "id": "urn:amharc:fixture:w1:baselineActivity:1.0.0",
+            "sha256": "07d0ac1e7f92c8d01b7a5a6525fa05d421b8d95c67830af45f949774cb5052fa"
+          },
+          "attestation": {
+            "keyId": "synthetic-producer-key",
+            "algorithm": "Ed25519",
+            "payloadSha256": "7412b6229062a913dd7346427a913917f457184f3d0b290da0a5529d90043fa5",
+            "signatureBase64": "+6WxcDapRCkLHCqFHjLZ0MsTsKnrLN1WZSBw+AfzsRrqJ01xUTMj7bw7fDvKv1TYZiCSrneLRgohm9TDRoD6Ag=="
+          }
+        },
+        "requestedSubject": "10000000-0000-4000-8000-000000000001",
+        "availableDependencies": true,
+        "correctionActivity": false
+      },
+      "sourceFixtureId": "V12-wrong-binding"
+    },
+    {
+      "id": "V13-capability-mismatch",
+      "expected": "SCHEMA_INVALID",
+      "input": {
+        "snapshot": {
+          "contractRef": {
+            "id": "urn:amharc:w1:clock-authority-contract:1.0.0",
+            "sha256": "c07fc9e62e5138a2c8c35eb924e59b16c1808fc419763cb310222232c08ba6a2"
+          },
+          "subject": {
+            "occurrenceId": "10000000-0000-4000-8000-000000000001",
+            "identityStanding": "provisional",
+            "representation": {
+              "issuer": "urn:amharc:test:capture:installation-a",
+              "localId": "unchanged-local-guid-a"
+            },
+            "resolutionRef": {
+              "id": "urn:amharc:fixture:w1:resolution:1.0.0",
+              "sha256": "960bb672f23b6f5c8d01e2aeff4b366d1540d0d6166a4c2fa33f0eddc98a6707"
+            }
+          },
+          "context": {
+            "semantic": {
+              "id": "urn:amharc:w1:semantic-profile:1.0.0",
+              "sha256": "041f67899c61a2fb93acbb4ea7532c0daa32832f877a491c8073b62b4c74b508"
+            },
+            "identifier": {
+              "id": "urn:amharc:w1:identifier-application:1.0.0",
+              "sha256": "c956baed4ef18c54bcdcf32d1e7019bfe131e655e5609a32ac25c93cf2b650e1"
+            },
+            "format": {
+              "id": "urn:amharc:fixture:w1:format:1.0.0",
+              "sha256": "5fe7b959f147949e872bf23ca36af959a918c2d31055c6285d5a6321bef520b7"
+            },
+            "provenance": {
+              "id": "urn:amharc:w1:material-history:1.0.0",
+              "sha256": "c0c3cc9caaf704f18b004c1e3309d81cc0c23399842f0fa30852494d0b0fd681"
+            },
+            "trustBundle": {
+              "id": "urn:amharc:fixture:w1:trustBundle:1.0.0",
+              "sha256": "50be9f25fc922e698732c73b0550958635faf65013c4b42bd239c6dcaed68e75"
+            }
+          },
+          "authority": {
+            "status": "active",
+            "principalId": "synthetic-capture-principal",
+            "bindingId": "synthetic-binding-a",
+            "incarnationId": "30000000-0000-4000-8000-000000000003",
+            "generation": "1",
+            "sequence": "10",
+            "capability": "advance",
+            "reason": null
+          },
+          "clock": {
+            "domain": "official-match-accumulated",
+            "unit": "seconds",
+            "accumulated": 120,
+            "phase": "playing",
+            "periodKey": "p1",
+            "periodStart": 0,
+            "periodElapsed": 120,
+            "state": "running",
+            "method": "monotonic-live",
+            "uncertaintySeconds": null
+          },
+          "legacyRecording": {
+            "coordinate": "recordingElapsedSeconds",
+            "producerContract": "1.0",
+            "value": 175,
+            "qualification": "legacy-producer-coordinate-not-media-time"
+          },
+          "observedAtUtc": "2026-10-04T10:00:00Z",
+          "activityRef": {
+            "id": "urn:amharc:fixture:w1:baselineActivity:1.0.0",
+            "sha256": "07d0ac1e7f92c8d01b7a5a6525fa05d421b8d95c67830af45f949774cb5052fa"
+          },
+          "attestation": {
+            "keyId": "synthetic-producer-key",
+            "algorithm": "Ed25519",
+            "payloadSha256": "87e9eb69e27e93780c3a5dce1d1374cb6577945591271c2d8ff562671bfd361f",
+            "signatureBase64": "iGUK7utyZaftZh0pGxO6S1HGwiSxxG7aJY877Jv8aY698teGjlkwgcni3juH97lrgK9Fo6cL6TOI3HvtT5VsDA=="
+          }
+        },
+        "requestedSubject": "10000000-0000-4000-8000-000000000001",
+        "availableDependencies": true,
+        "correctionActivity": false
+      },
+      "sourceFixtureId": "V13-capability-mismatch"
+    },
+    {
+      "id": "V14-restart-not-eligible",
+      "expected": "BINDING_REFUSAL",
+      "input": {
+        "snapshot": {
+          "contractRef": {
+            "id": "urn:amharc:w1:clock-authority-contract:1.0.0",
+            "sha256": "c07fc9e62e5138a2c8c35eb924e59b16c1808fc419763cb310222232c08ba6a2"
+          },
+          "subject": {
+            "occurrenceId": "10000000-0000-4000-8000-000000000001",
+            "identityStanding": "provisional",
+            "representation": {
+              "issuer": "urn:amharc:test:capture:installation-a",
+              "localId": "unchanged-local-guid-a"
+            },
+            "resolutionRef": {
+              "id": "urn:amharc:fixture:w1:resolution:1.0.0",
+              "sha256": "960bb672f23b6f5c8d01e2aeff4b366d1540d0d6166a4c2fa33f0eddc98a6707"
+            }
+          },
+          "context": {
+            "semantic": {
+              "id": "urn:amharc:w1:semantic-profile:1.0.0",
+              "sha256": "041f67899c61a2fb93acbb4ea7532c0daa32832f877a491c8073b62b4c74b508"
+            },
+            "identifier": {
+              "id": "urn:amharc:w1:identifier-application:1.0.0",
+              "sha256": "c956baed4ef18c54bcdcf32d1e7019bfe131e655e5609a32ac25c93cf2b650e1"
+            },
+            "format": {
+              "id": "urn:amharc:fixture:w1:format:1.0.0",
+              "sha256": "5fe7b959f147949e872bf23ca36af959a918c2d31055c6285d5a6321bef520b7"
+            },
+            "provenance": {
+              "id": "urn:amharc:w1:material-history:1.0.0",
+              "sha256": "c0c3cc9caaf704f18b004c1e3309d81cc0c23399842f0fa30852494d0b0fd681"
+            },
+            "trustBundle": {
+              "id": "urn:amharc:fixture:w1:trustBundle:1.0.0",
+              "sha256": "50be9f25fc922e698732c73b0550958635faf65013c4b42bd239c6dcaed68e75"
+            }
+          },
+          "authority": {
+            "status": "active",
+            "principalId": "synthetic-capture-principal",
+            "bindingId": "synthetic-binding-a",
+            "incarnationId": "40000000-0000-4000-8000-000000000004",
+            "generation": "1",
+            "sequence": "10",
+            "capability": "snapshot",
+            "reason": null
+          },
+          "clock": {
+            "domain": "official-match-accumulated",
+            "unit": "seconds",
+            "accumulated": 120,
+            "phase": "playing",
+            "periodKey": "p1",
+            "periodStart": 0,
+            "periodElapsed": 120,
+            "state": "running",
+            "method": "monotonic-live",
+            "uncertaintySeconds": null
+          },
+          "legacyRecording": {
+            "coordinate": "recordingElapsedSeconds",
+            "producerContract": "1.0",
+            "value": 175,
+            "qualification": "legacy-producer-coordinate-not-media-time"
+          },
+          "observedAtUtc": "2026-10-04T10:00:00Z",
+          "activityRef": {
+            "id": "urn:amharc:fixture:w1:baselineActivity:1.0.0",
+            "sha256": "07d0ac1e7f92c8d01b7a5a6525fa05d421b8d95c67830af45f949774cb5052fa"
+          },
+          "attestation": {
+            "keyId": "synthetic-producer-key",
+            "algorithm": "Ed25519",
+            "payloadSha256": "dda73f83c5656257e5967f5026a9a774b2b1d785422f587005d3872e82bb39ed",
+            "signatureBase64": "whhdXRSMXEJoK3vRROiqJICicfhOvpQUJ5OwVjvZ6pkv83ZUsDK/nT5LzURhktgRsnj5GR1MYG+YFuPLaUtdCA=="
+          }
+        },
+        "requestedSubject": "10000000-0000-4000-8000-000000000001",
+        "availableDependencies": true,
+        "correctionActivity": false
+      },
+      "sourceFixtureId": "V14-restart-not-eligible"
+    },
+    {
+      "id": "V15-expired-binding",
+      "expected": "AUTHORITY_GAP",
+      "input": {
+        "snapshot": {
+          "contractRef": {
+            "id": "urn:amharc:w1:clock-authority-contract:1.0.0",
+            "sha256": "c07fc9e62e5138a2c8c35eb924e59b16c1808fc419763cb310222232c08ba6a2"
+          },
+          "subject": {
+            "occurrenceId": "10000000-0000-4000-8000-000000000001",
+            "identityStanding": "provisional",
+            "representation": {
+              "issuer": "urn:amharc:test:capture:installation-a",
+              "localId": "unchanged-local-guid-a"
+            },
+            "resolutionRef": {
+              "id": "urn:amharc:fixture:w1:resolution:1.0.0",
+              "sha256": "960bb672f23b6f5c8d01e2aeff4b366d1540d0d6166a4c2fa33f0eddc98a6707"
+            }
+          },
+          "context": {
+            "semantic": {
+              "id": "urn:amharc:w1:semantic-profile:1.0.0",
+              "sha256": "041f67899c61a2fb93acbb4ea7532c0daa32832f877a491c8073b62b4c74b508"
+            },
+            "identifier": {
+              "id": "urn:amharc:w1:identifier-application:1.0.0",
+              "sha256": "c956baed4ef18c54bcdcf32d1e7019bfe131e655e5609a32ac25c93cf2b650e1"
+            },
+            "format": {
+              "id": "urn:amharc:fixture:w1:format:1.0.0",
+              "sha256": "5fe7b959f147949e872bf23ca36af959a918c2d31055c6285d5a6321bef520b7"
+            },
+            "provenance": {
+              "id": "urn:amharc:w1:material-history:1.0.0",
+              "sha256": "c0c3cc9caaf704f18b004c1e3309d81cc0c23399842f0fa30852494d0b0fd681"
+            },
+            "trustBundle": {
+              "id": "urn:amharc:fixture:w1:trustBundle:1.0.0",
+              "sha256": "50be9f25fc922e698732c73b0550958635faf65013c4b42bd239c6dcaed68e75"
+            }
+          },
+          "authority": {
+            "status": "active",
+            "principalId": "synthetic-capture-principal",
+            "bindingId": "synthetic-binding-a",
+            "incarnationId": "30000000-0000-4000-8000-000000000003",
+            "generation": "1",
+            "sequence": "10",
+            "capability": "snapshot",
+            "reason": null
+          },
+          "clock": {
+            "domain": "official-match-accumulated",
+            "unit": "seconds",
+            "accumulated": 120,
+            "phase": "playing",
+            "periodKey": "p1",
+            "periodStart": 0,
+            "periodElapsed": 120,
+            "state": "running",
+            "method": "monotonic-live",
+            "uncertaintySeconds": null
+          },
+          "legacyRecording": {
+            "coordinate": "recordingElapsedSeconds",
+            "producerContract": "1.0",
+            "value": 175,
+            "qualification": "legacy-producer-coordinate-not-media-time"
+          },
+          "observedAtUtc": "2026-10-04T12:00:00Z",
+          "activityRef": {
+            "id": "urn:amharc:fixture:w1:baselineActivity:1.0.0",
+            "sha256": "07d0ac1e7f92c8d01b7a5a6525fa05d421b8d95c67830af45f949774cb5052fa"
+          },
+          "attestation": {
+            "keyId": "synthetic-producer-key",
+            "algorithm": "Ed25519",
+            "payloadSha256": "002acd7b26e059a497bc7f66172046574a64fbc3c3c2590e4862f53026b1dcc1",
+            "signatureBase64": "3ENCmuufBZKZnj/EtybA3z4JFkoXmeXYZquN03wgr4+SjCT9msSQbjBHtMKCYGHjqVx3UtPFZllQVUr5woBQCA=="
+          }
+        },
+        "requestedSubject": "10000000-0000-4000-8000-000000000001",
+        "availableDependencies": true,
+        "correctionActivity": false
+      },
+      "sourceFixtureId": "V15-expired-binding"
+    },
+    {
+      "id": "V16-correction-without-basis",
+      "expected": "CORRECTION_REFUSAL",
+      "input": {
+        "snapshot": {
+          "contractRef": {
+            "id": "urn:amharc:w1:clock-authority-contract:1.0.0",
+            "sha256": "c07fc9e62e5138a2c8c35eb924e59b16c1808fc419763cb310222232c08ba6a2"
+          },
+          "subject": {
+            "occurrenceId": "10000000-0000-4000-8000-000000000001",
+            "identityStanding": "provisional",
+            "representation": {
+              "issuer": "urn:amharc:test:capture:installation-a",
+              "localId": "unchanged-local-guid-a"
+            },
+            "resolutionRef": {
+              "id": "urn:amharc:fixture:w1:resolution:1.0.0",
+              "sha256": "960bb672f23b6f5c8d01e2aeff4b366d1540d0d6166a4c2fa33f0eddc98a6707"
+            }
+          },
+          "context": {
+            "semantic": {
+              "id": "urn:amharc:w1:semantic-profile:1.0.0",
+              "sha256": "041f67899c61a2fb93acbb4ea7532c0daa32832f877a491c8073b62b4c74b508"
+            },
+            "identifier": {
+              "id": "urn:amharc:w1:identifier-application:1.0.0",
+              "sha256": "c956baed4ef18c54bcdcf32d1e7019bfe131e655e5609a32ac25c93cf2b650e1"
+            },
+            "format": {
+              "id": "urn:amharc:fixture:w1:format:1.0.0",
+              "sha256": "5fe7b959f147949e872bf23ca36af959a918c2d31055c6285d5a6321bef520b7"
+            },
+            "provenance": {
+              "id": "urn:amharc:w1:material-history:1.0.0",
+              "sha256": "c0c3cc9caaf704f18b004c1e3309d81cc0c23399842f0fa30852494d0b0fd681"
+            },
+            "trustBundle": {
+              "id": "urn:amharc:fixture:w1:trustBundle:1.0.0",
+              "sha256": "50be9f25fc922e698732c73b0550958635faf65013c4b42bd239c6dcaed68e75"
+            }
+          },
+          "authority": {
+            "status": "active",
+            "principalId": "synthetic-capture-principal",
+            "bindingId": "synthetic-binding-a",
+            "incarnationId": "30000000-0000-4000-8000-000000000003",
+            "generation": "1",
+            "sequence": "11",
+            "capability": "snapshot",
+            "reason": null
+          },
+          "clock": {
+            "domain": "official-match-accumulated",
+            "unit": "seconds",
+            "accumulated": 100,
+            "phase": "playing",
+            "periodKey": "p1",
+            "periodStart": 0,
+            "periodElapsed": 100,
+            "state": "running",
+            "method": "monotonic-live",
+            "uncertaintySeconds": null
+          },
+          "legacyRecording": {
+            "coordinate": "recordingElapsedSeconds",
+            "producerContract": "1.0",
+            "value": 175,
+            "qualification": "legacy-producer-coordinate-not-media-time"
+          },
+          "observedAtUtc": "2026-10-04T10:00:00Z",
+          "activityRef": {
+            "id": "urn:amharc:fixture:w1:baselineActivity:1.0.0",
+            "sha256": "07d0ac1e7f92c8d01b7a5a6525fa05d421b8d95c67830af45f949774cb5052fa"
+          },
+          "attestation": {
+            "keyId": "synthetic-producer-key",
+            "algorithm": "Ed25519",
+            "payloadSha256": "9c6a3028c33ede6a624ce347a5a7979fcaa959c6f5b4917aac4fb04f3a705be6",
+            "signatureBase64": "cZpAxj826CoJot7BMZ1l9o4Kxz4GrztHo6i9OQiTmvdNyO69wgPsNHJy84Y7NYzQ6++mi8WwME/f6kMfS3RCBw=="
+          }
+        },
+        "requestedSubject": "10000000-0000-4000-8000-000000000001",
+        "availableDependencies": true,
+        "correctionActivity": false,
+        "prior": {
+          "subject": "10000000-0000-4000-8000-000000000001",
+          "principalId": "synthetic-capture-principal",
+          "bindingId": "synthetic-binding-a",
+          "incarnationId": "30000000-0000-4000-8000-000000000003",
+          "generation": "1",
+          "sequence": "10",
+          "accumulated": 120
+        }
+      },
+      "sourceFixtureId": "V16-correction-without-basis"
+    },
+    {
+      "id": "V17-authorised-downward-correction",
+      "expected": "QUALIFIED_CORRECTION",
+      "input": {
+        "snapshot": {
+          "contractRef": {
+            "id": "urn:amharc:w1:clock-authority-contract:1.0.0",
+            "sha256": "c07fc9e62e5138a2c8c35eb924e59b16c1808fc419763cb310222232c08ba6a2"
+          },
+          "subject": {
+            "occurrenceId": "10000000-0000-4000-8000-000000000001",
+            "identityStanding": "provisional",
+            "representation": {
+              "issuer": "urn:amharc:test:capture:installation-a",
+              "localId": "unchanged-local-guid-a"
+            },
+            "resolutionRef": {
+              "id": "urn:amharc:fixture:w1:resolution:1.0.0",
+              "sha256": "960bb672f23b6f5c8d01e2aeff4b366d1540d0d6166a4c2fa33f0eddc98a6707"
+            }
+          },
+          "context": {
+            "semantic": {
+              "id": "urn:amharc:w1:semantic-profile:1.0.0",
+              "sha256": "041f67899c61a2fb93acbb4ea7532c0daa32832f877a491c8073b62b4c74b508"
+            },
+            "identifier": {
+              "id": "urn:amharc:w1:identifier-application:1.0.0",
+              "sha256": "c956baed4ef18c54bcdcf32d1e7019bfe131e655e5609a32ac25c93cf2b650e1"
+            },
+            "format": {
+              "id": "urn:amharc:fixture:w1:format:1.0.0",
+              "sha256": "5fe7b959f147949e872bf23ca36af959a918c2d31055c6285d5a6321bef520b7"
+            },
+            "provenance": {
+              "id": "urn:amharc:w1:material-history:1.0.0",
+              "sha256": "c0c3cc9caaf704f18b004c1e3309d81cc0c23399842f0fa30852494d0b0fd681"
+            },
+            "trustBundle": {
+              "id": "urn:amharc:fixture:w1:trustBundle:1.0.0",
+              "sha256": "50be9f25fc922e698732c73b0550958635faf65013c4b42bd239c6dcaed68e75"
+            }
+          },
+          "authority": {
+            "status": "active",
+            "principalId": "synthetic-capture-principal",
+            "bindingId": "synthetic-binding-a",
+            "incarnationId": "30000000-0000-4000-8000-000000000003",
+            "generation": "1",
+            "sequence": "11",
+            "capability": "snapshot",
+            "reason": null
+          },
+          "clock": {
+            "domain": "official-match-accumulated",
+            "unit": "seconds",
+            "accumulated": 100,
+            "phase": "playing",
+            "periodKey": "p1",
+            "periodStart": 0,
+            "periodElapsed": 100,
+            "state": "running",
+            "method": "monotonic-live",
+            "uncertaintySeconds": null
+          },
+          "legacyRecording": {
+            "coordinate": "recordingElapsedSeconds",
+            "producerContract": "1.0",
+            "value": 175,
+            "qualification": "legacy-producer-coordinate-not-media-time"
+          },
+          "observedAtUtc": "2026-10-04T10:00:00Z",
+          "activityRef": {
+            "id": "urn:amharc:fixture:w1:correctionActivity:1.0.0",
+            "sha256": "edef902f6f68409b7858277b58316284d18093801a93789db13252b7d0bfad6a"
+          },
+          "attestation": {
+            "keyId": "synthetic-producer-key",
+            "algorithm": "Ed25519",
+            "payloadSha256": "015c5f93994cab646ea2fe70e28833fb11ac9d4599c8c4d24d179745ef6f1139",
+            "signatureBase64": "sOZ3BHlMxbxtHEXWG56Ss5FKl6xweNiRhLP+28Ht2A2wSaIiEG/epJ22jkYwaQOM0IZ+wTEg5FjwCw/R9K1zDw=="
+          }
+        },
+        "requestedSubject": "10000000-0000-4000-8000-000000000001",
+        "availableDependencies": true,
+        "correctionActivity": true,
+        "prior": {
+          "subject": "10000000-0000-4000-8000-000000000001",
+          "principalId": "synthetic-capture-principal",
+          "bindingId": "synthetic-binding-a",
+          "incarnationId": "30000000-0000-4000-8000-000000000003",
+          "generation": "1",
+          "sequence": "10",
+          "accumulated": 120
+        }
+      },
+      "sourceFixtureId": "V17-authorised-downward-correction"
+    },
+    {
+      "id": "V18-reordered-output",
+      "expected": "REORDERED_REFUSAL",
+      "input": {
+        "snapshot": {
+          "contractRef": {
+            "id": "urn:amharc:w1:clock-authority-contract:1.0.0",
+            "sha256": "c07fc9e62e5138a2c8c35eb924e59b16c1808fc419763cb310222232c08ba6a2"
+          },
+          "subject": {
+            "occurrenceId": "10000000-0000-4000-8000-000000000001",
+            "identityStanding": "provisional",
+            "representation": {
+              "issuer": "urn:amharc:test:capture:installation-a",
+              "localId": "unchanged-local-guid-a"
+            },
+            "resolutionRef": {
+              "id": "urn:amharc:fixture:w1:resolution:1.0.0",
+              "sha256": "960bb672f23b6f5c8d01e2aeff4b366d1540d0d6166a4c2fa33f0eddc98a6707"
+            }
+          },
+          "context": {
+            "semantic": {
+              "id": "urn:amharc:w1:semantic-profile:1.0.0",
+              "sha256": "041f67899c61a2fb93acbb4ea7532c0daa32832f877a491c8073b62b4c74b508"
+            },
+            "identifier": {
+              "id": "urn:amharc:w1:identifier-application:1.0.0",
+              "sha256": "c956baed4ef18c54bcdcf32d1e7019bfe131e655e5609a32ac25c93cf2b650e1"
+            },
+            "format": {
+              "id": "urn:amharc:fixture:w1:format:1.0.0",
+              "sha256": "5fe7b959f147949e872bf23ca36af959a918c2d31055c6285d5a6321bef520b7"
+            },
+            "provenance": {
+              "id": "urn:amharc:w1:material-history:1.0.0",
+              "sha256": "c0c3cc9caaf704f18b004c1e3309d81cc0c23399842f0fa30852494d0b0fd681"
+            },
+            "trustBundle": {
+              "id": "urn:amharc:fixture:w1:trustBundle:1.0.0",
+              "sha256": "50be9f25fc922e698732c73b0550958635faf65013c4b42bd239c6dcaed68e75"
+            }
+          },
+          "authority": {
+            "status": "active",
+            "principalId": "synthetic-capture-principal",
+            "bindingId": "synthetic-binding-a",
+            "incarnationId": "30000000-0000-4000-8000-000000000003",
+            "generation": "1",
+            "sequence": "9",
+            "capability": "snapshot",
+            "reason": null
+          },
+          "clock": {
+            "domain": "official-match-accumulated",
+            "unit": "seconds",
+            "accumulated": 120,
+            "phase": "playing",
+            "periodKey": "p1",
+            "periodStart": 0,
+            "periodElapsed": 120,
+            "state": "running",
+            "method": "monotonic-live",
+            "uncertaintySeconds": null
+          },
+          "legacyRecording": {
+            "coordinate": "recordingElapsedSeconds",
+            "producerContract": "1.0",
+            "value": 175,
+            "qualification": "legacy-producer-coordinate-not-media-time"
+          },
+          "observedAtUtc": "2026-10-04T10:00:00Z",
+          "activityRef": {
+            "id": "urn:amharc:fixture:w1:baselineActivity:1.0.0",
+            "sha256": "07d0ac1e7f92c8d01b7a5a6525fa05d421b8d95c67830af45f949774cb5052fa"
+          },
+          "attestation": {
+            "keyId": "synthetic-producer-key",
+            "algorithm": "Ed25519",
+            "payloadSha256": "375df14390fa569691183237d540b9f893f5b94fb8845b35c3df5da59b7ed3bc",
+            "signatureBase64": "iThE3hz1dRjQkZqzUBqTay63d1tISu3jweYQGYQa1+j5bzxD2l1zFmFmWdea7dE/3ELM7vNUMiJ9gYkYIe6CDg=="
+          }
+        },
+        "requestedSubject": "10000000-0000-4000-8000-000000000001",
+        "availableDependencies": true,
+        "correctionActivity": false,
+        "prior": {
+          "subject": "10000000-0000-4000-8000-000000000001",
+          "principalId": "synthetic-capture-principal",
+          "bindingId": "synthetic-binding-a",
+          "incarnationId": "30000000-0000-4000-8000-000000000003",
+          "generation": "1",
+          "sequence": "10",
+          "accumulated": 120
+        }
+      },
+      "sourceFixtureId": "V18-reordered-output"
+    },
+    {
+      "id": "V19-cross-context-higher-number",
+      "expected": "BINDING_REFUSAL",
+      "input": {
+        "snapshot": {
+          "contractRef": {
+            "id": "urn:amharc:w1:clock-authority-contract:1.0.0",
+            "sha256": "c07fc9e62e5138a2c8c35eb924e59b16c1808fc419763cb310222232c08ba6a2"
+          },
+          "subject": {
+            "occurrenceId": "10000000-0000-4000-8000-000000000001",
+            "identityStanding": "provisional",
+            "representation": {
+              "issuer": "urn:amharc:test:capture:installation-a",
+              "localId": "unchanged-local-guid-a"
+            },
+            "resolutionRef": {
+              "id": "urn:amharc:fixture:w1:resolution:1.0.0",
+              "sha256": "960bb672f23b6f5c8d01e2aeff4b366d1540d0d6166a4c2fa33f0eddc98a6707"
+            }
+          },
+          "context": {
+            "semantic": {
+              "id": "urn:amharc:w1:semantic-profile:1.0.0",
+              "sha256": "041f67899c61a2fb93acbb4ea7532c0daa32832f877a491c8073b62b4c74b508"
+            },
+            "identifier": {
+              "id": "urn:amharc:w1:identifier-application:1.0.0",
+              "sha256": "c956baed4ef18c54bcdcf32d1e7019bfe131e655e5609a32ac25c93cf2b650e1"
+            },
+            "format": {
+              "id": "urn:amharc:fixture:w1:format:1.0.0",
+              "sha256": "5fe7b959f147949e872bf23ca36af959a918c2d31055c6285d5a6321bef520b7"
+            },
+            "provenance": {
+              "id": "urn:amharc:w1:material-history:1.0.0",
+              "sha256": "c0c3cc9caaf704f18b004c1e3309d81cc0c23399842f0fa30852494d0b0fd681"
+            },
+            "trustBundle": {
+              "id": "urn:amharc:fixture:w1:trustBundle:1.0.0",
+              "sha256": "50be9f25fc922e698732c73b0550958635faf65013c4b42bd239c6dcaed68e75"
+            }
+          },
+          "authority": {
+            "status": "active",
+            "principalId": "different-principal",
+            "bindingId": "synthetic-binding-a",
+            "incarnationId": "30000000-0000-4000-8000-000000000003",
+            "generation": "1",
+            "sequence": "999999",
+            "capability": "snapshot",
+            "reason": null
+          },
+          "clock": {
+            "domain": "official-match-accumulated",
+            "unit": "seconds",
+            "accumulated": 120,
+            "phase": "playing",
+            "periodKey": "p1",
+            "periodStart": 0,
+            "periodElapsed": 120,
+            "state": "running",
+            "method": "monotonic-live",
+            "uncertaintySeconds": null
+          },
+          "legacyRecording": {
+            "coordinate": "recordingElapsedSeconds",
+            "producerContract": "1.0",
+            "value": 175,
+            "qualification": "legacy-producer-coordinate-not-media-time"
+          },
+          "observedAtUtc": "2026-10-04T10:00:00Z",
+          "activityRef": {
+            "id": "urn:amharc:fixture:w1:baselineActivity:1.0.0",
+            "sha256": "07d0ac1e7f92c8d01b7a5a6525fa05d421b8d95c67830af45f949774cb5052fa"
+          },
+          "attestation": {
+            "keyId": "synthetic-producer-key",
+            "algorithm": "Ed25519",
+            "payloadSha256": "fa7de1ad929624f22f3479cb246e567abff5fdfd7182c2b466d01404a18ee057",
+            "signatureBase64": "yprNXcFEMQp7YWV7ASrnppJG8CMvMhk88FOq+DXROsqAkeDC7oQ4j3DqF9nfay6yi3cpmFG5s6aMbQkOC/8iDg=="
+          }
+        },
+        "requestedSubject": "10000000-0000-4000-8000-000000000001",
+        "availableDependencies": true,
+        "correctionActivity": false
+      },
+      "sourceFixtureId": "V19-cross-context-higher-number"
+    },
+    {
+      "id": "V20-legacy-recording-preserved",
+      "expected": "QUALIFIED",
+      "input": {
+        "snapshot": {
+          "contractRef": {
+            "id": "urn:amharc:w1:clock-authority-contract:1.0.0",
+            "sha256": "c07fc9e62e5138a2c8c35eb924e59b16c1808fc419763cb310222232c08ba6a2"
+          },
+          "subject": {
+            "occurrenceId": "10000000-0000-4000-8000-000000000001",
+            "identityStanding": "provisional",
+            "representation": {
+              "issuer": "urn:amharc:test:capture:installation-a",
+              "localId": "unchanged-local-guid-a"
+            },
+            "resolutionRef": {
+              "id": "urn:amharc:fixture:w1:resolution:1.0.0",
+              "sha256": "960bb672f23b6f5c8d01e2aeff4b366d1540d0d6166a4c2fa33f0eddc98a6707"
+            }
+          },
+          "context": {
+            "semantic": {
+              "id": "urn:amharc:w1:semantic-profile:1.0.0",
+              "sha256": "041f67899c61a2fb93acbb4ea7532c0daa32832f877a491c8073b62b4c74b508"
+            },
+            "identifier": {
+              "id": "urn:amharc:w1:identifier-application:1.0.0",
+              "sha256": "c956baed4ef18c54bcdcf32d1e7019bfe131e655e5609a32ac25c93cf2b650e1"
+            },
+            "format": {
+              "id": "urn:amharc:fixture:w1:format:1.0.0",
+              "sha256": "5fe7b959f147949e872bf23ca36af959a918c2d31055c6285d5a6321bef520b7"
+            },
+            "provenance": {
+              "id": "urn:amharc:w1:material-history:1.0.0",
+              "sha256": "c0c3cc9caaf704f18b004c1e3309d81cc0c23399842f0fa30852494d0b0fd681"
+            },
+            "trustBundle": {
+              "id": "urn:amharc:fixture:w1:trustBundle:1.0.0",
+              "sha256": "50be9f25fc922e698732c73b0550958635faf65013c4b42bd239c6dcaed68e75"
+            }
+          },
+          "authority": {
+            "status": "active",
+            "principalId": "synthetic-capture-principal",
+            "bindingId": "synthetic-binding-a",
+            "incarnationId": "30000000-0000-4000-8000-000000000003",
+            "generation": "1",
+            "sequence": "10",
+            "capability": "snapshot",
+            "reason": null
+          },
+          "clock": {
+            "domain": "official-match-accumulated",
+            "unit": "seconds",
+            "accumulated": 120,
+            "phase": "playing",
+            "periodKey": "p1",
+            "periodStart": 0,
+            "periodElapsed": 120,
+            "state": "running",
+            "method": "monotonic-live",
+            "uncertaintySeconds": null
+          },
+          "legacyRecording": {
+            "coordinate": "recordingElapsedSeconds",
+            "producerContract": "1.0",
+            "value": 175,
+            "qualification": "legacy-producer-coordinate-not-media-time"
+          },
+          "observedAtUtc": "2026-10-04T10:00:00Z",
+          "activityRef": {
+            "id": "urn:amharc:fixture:w1:baselineActivity:1.0.0",
+            "sha256": "07d0ac1e7f92c8d01b7a5a6525fa05d421b8d95c67830af45f949774cb5052fa"
+          },
+          "attestation": {
+            "keyId": "synthetic-producer-key",
+            "algorithm": "Ed25519",
+            "payloadSha256": "ad4fa7a1c4b3b122d3083f40c05156dbae7185b842794c065b4597f2b92d0d69",
+            "signatureBase64": "/p8Jmb/ciR+ybA5LnxEwa3K3a4nyH7iBgJvgllxFZsMq1fySv4KVA1ZkA+x2Kw2Ge789y1E0+HduOSyD/b9cBg=="
+          }
+        },
+        "requestedSubject": "10000000-0000-4000-8000-000000000001",
+        "availableDependencies": true,
+        "correctionActivity": false
+      },
+      "sourceFixtureId": "V20-legacy-recording-preserved"
+    },
+    {
+      "id": "V21-recording-alias-rejected",
+      "expected": "SCHEMA_INVALID",
+      "input": {
+        "snapshot": {
+          "contractRef": {
+            "id": "urn:amharc:w1:clock-authority-contract:1.0.0",
+            "sha256": "c07fc9e62e5138a2c8c35eb924e59b16c1808fc419763cb310222232c08ba6a2"
+          },
+          "subject": {
+            "occurrenceId": "10000000-0000-4000-8000-000000000001",
+            "identityStanding": "provisional",
+            "representation": {
+              "issuer": "urn:amharc:test:capture:installation-a",
+              "localId": "unchanged-local-guid-a"
+            },
+            "resolutionRef": {
+              "id": "urn:amharc:fixture:w1:resolution:1.0.0",
+              "sha256": "960bb672f23b6f5c8d01e2aeff4b366d1540d0d6166a4c2fa33f0eddc98a6707"
+            }
+          },
+          "context": {
+            "semantic": {
+              "id": "urn:amharc:w1:semantic-profile:1.0.0",
+              "sha256": "041f67899c61a2fb93acbb4ea7532c0daa32832f877a491c8073b62b4c74b508"
+            },
+            "identifier": {
+              "id": "urn:amharc:w1:identifier-application:1.0.0",
+              "sha256": "c956baed4ef18c54bcdcf32d1e7019bfe131e655e5609a32ac25c93cf2b650e1"
+            },
+            "format": {
+              "id": "urn:amharc:fixture:w1:format:1.0.0",
+              "sha256": "5fe7b959f147949e872bf23ca36af959a918c2d31055c6285d5a6321bef520b7"
+            },
+            "provenance": {
+              "id": "urn:amharc:w1:material-history:1.0.0",
+              "sha256": "c0c3cc9caaf704f18b004c1e3309d81cc0c23399842f0fa30852494d0b0fd681"
+            },
+            "trustBundle": {
+              "id": "urn:amharc:fixture:w1:trustBundle:1.0.0",
+              "sha256": "50be9f25fc922e698732c73b0550958635faf65013c4b42bd239c6dcaed68e75"
+            }
+          },
+          "authority": {
+            "status": "active",
+            "principalId": "synthetic-capture-principal",
+            "bindingId": "synthetic-binding-a",
+            "incarnationId": "30000000-0000-4000-8000-000000000003",
+            "generation": "1",
+            "sequence": "10",
+            "capability": "snapshot",
+            "reason": null
+          },
+          "clock": {
+            "domain": "official-match-accumulated",
+            "unit": "seconds",
+            "accumulated": 120,
+            "phase": "playing",
+            "periodKey": "p1",
+            "periodStart": 0,
+            "periodElapsed": 120,
+            "state": "running",
+            "method": "monotonic-live",
+            "uncertaintySeconds": null
+          },
+          "legacyRecording": {
+            "coordinate": "Asset elapsed",
+            "producerContract": "1.0",
+            "value": 175,
+            "qualification": "legacy-producer-coordinate-not-media-time"
+          },
+          "observedAtUtc": "2026-10-04T10:00:00Z",
+          "activityRef": {
+            "id": "urn:amharc:fixture:w1:baselineActivity:1.0.0",
+            "sha256": "07d0ac1e7f92c8d01b7a5a6525fa05d421b8d95c67830af45f949774cb5052fa"
+          },
+          "attestation": {
+            "keyId": "synthetic-producer-key",
+            "algorithm": "Ed25519",
+            "payloadSha256": "e62284fa20ad28087e6b4ffb4789e59bda52f693302aa6fd2781659f20c3fcb6",
+            "signatureBase64": "ZE5hPEMoou9Jjlwy4U1UGE9lrkv1YNzv63+QEQf3LEjeHym27iGhMr4xvieAe0pZ2H7jUToiXLBvU6fQysqmAw=="
+          }
+        },
+        "requestedSubject": "10000000-0000-4000-8000-000000000001",
+        "availableDependencies": true,
+        "correctionActivity": false
+      },
+      "sourceFixtureId": "V21-recording-alias-rejected"
+    },
+    {
+      "id": "V22-negative-official-time",
+      "expected": "SCHEMA_INVALID",
+      "input": {
+        "snapshot": {
+          "contractRef": {
+            "id": "urn:amharc:w1:clock-authority-contract:1.0.0",
+            "sha256": "c07fc9e62e5138a2c8c35eb924e59b16c1808fc419763cb310222232c08ba6a2"
+          },
+          "subject": {
+            "occurrenceId": "10000000-0000-4000-8000-000000000001",
+            "identityStanding": "provisional",
+            "representation": {
+              "issuer": "urn:amharc:test:capture:installation-a",
+              "localId": "unchanged-local-guid-a"
+            },
+            "resolutionRef": {
+              "id": "urn:amharc:fixture:w1:resolution:1.0.0",
+              "sha256": "960bb672f23b6f5c8d01e2aeff4b366d1540d0d6166a4c2fa33f0eddc98a6707"
+            }
+          },
+          "context": {
+            "semantic": {
+              "id": "urn:amharc:w1:semantic-profile:1.0.0",
+              "sha256": "041f67899c61a2fb93acbb4ea7532c0daa32832f877a491c8073b62b4c74b508"
+            },
+            "identifier": {
+              "id": "urn:amharc:w1:identifier-application:1.0.0",
+              "sha256": "c956baed4ef18c54bcdcf32d1e7019bfe131e655e5609a32ac25c93cf2b650e1"
+            },
+            "format": {
+              "id": "urn:amharc:fixture:w1:format:1.0.0",
+              "sha256": "5fe7b959f147949e872bf23ca36af959a918c2d31055c6285d5a6321bef520b7"
+            },
+            "provenance": {
+              "id": "urn:amharc:w1:material-history:1.0.0",
+              "sha256": "c0c3cc9caaf704f18b004c1e3309d81cc0c23399842f0fa30852494d0b0fd681"
+            },
+            "trustBundle": {
+              "id": "urn:amharc:fixture:w1:trustBundle:1.0.0",
+              "sha256": "50be9f25fc922e698732c73b0550958635faf65013c4b42bd239c6dcaed68e75"
+            }
+          },
+          "authority": {
+            "status": "active",
+            "principalId": "synthetic-capture-principal",
+            "bindingId": "synthetic-binding-a",
+            "incarnationId": "30000000-0000-4000-8000-000000000003",
+            "generation": "1",
+            "sequence": "10",
+            "capability": "snapshot",
+            "reason": null
+          },
+          "clock": {
+            "domain": "official-match-accumulated",
+            "unit": "seconds",
+            "accumulated": -1,
+            "phase": "playing",
+            "periodKey": "p1",
+            "periodStart": 0,
+            "periodElapsed": 120,
+            "state": "running",
+            "method": "monotonic-live",
+            "uncertaintySeconds": null
+          },
+          "legacyRecording": {
+            "coordinate": "recordingElapsedSeconds",
+            "producerContract": "1.0",
+            "value": 175,
+            "qualification": "legacy-producer-coordinate-not-media-time"
+          },
+          "observedAtUtc": "2026-10-04T10:00:00Z",
+          "activityRef": {
+            "id": "urn:amharc:fixture:w1:baselineActivity:1.0.0",
+            "sha256": "07d0ac1e7f92c8d01b7a5a6525fa05d421b8d95c67830af45f949774cb5052fa"
+          },
+          "attestation": {
+            "keyId": "synthetic-producer-key",
+            "algorithm": "Ed25519",
+            "payloadSha256": "23dd7854ad6b743069d4d402cba1c72c151cef459efb774ff50b84436777241f",
+            "signatureBase64": "sKpxl9sNkfvBqg861ZetwEiDC2OYRDKsltVO6SbqOUfmSnah9k/C0F5Ya7tR/e2yvM7lFMQFfeKzKrgfFZUVDQ=="
+          }
+        },
+        "requestedSubject": "10000000-0000-4000-8000-000000000001",
+        "availableDependencies": true,
+        "correctionActivity": false
+      },
+      "sourceFixtureId": "V22-negative-official-time",
+      "signatureStanding": "Malformed-input fixture; signature cannot establish canonical protocol validity"
+    },
+    {
+      "id": "V23-missing-subject",
+      "expected": "SCHEMA_INVALID",
+      "input": {
+        "snapshot": {
+          "contractRef": {
+            "id": "urn:amharc:w1:clock-authority-contract:1.0.0",
+            "sha256": "c07fc9e62e5138a2c8c35eb924e59b16c1808fc419763cb310222232c08ba6a2"
+          },
+          "context": {
+            "semantic": {
+              "id": "urn:amharc:w1:semantic-profile:1.0.0",
+              "sha256": "041f67899c61a2fb93acbb4ea7532c0daa32832f877a491c8073b62b4c74b508"
+            },
+            "identifier": {
+              "id": "urn:amharc:w1:identifier-application:1.0.0",
+              "sha256": "c956baed4ef18c54bcdcf32d1e7019bfe131e655e5609a32ac25c93cf2b650e1"
+            },
+            "format": {
+              "id": "urn:amharc:fixture:w1:format:1.0.0",
+              "sha256": "5fe7b959f147949e872bf23ca36af959a918c2d31055c6285d5a6321bef520b7"
+            },
+            "provenance": {
+              "id": "urn:amharc:w1:material-history:1.0.0",
+              "sha256": "c0c3cc9caaf704f18b004c1e3309d81cc0c23399842f0fa30852494d0b0fd681"
+            },
+            "trustBundle": {
+              "id": "urn:amharc:fixture:w1:trustBundle:1.0.0",
+              "sha256": "50be9f25fc922e698732c73b0550958635faf65013c4b42bd239c6dcaed68e75"
+            }
+          },
+          "authority": {
+            "status": "active",
+            "principalId": "synthetic-capture-principal",
+            "bindingId": "synthetic-binding-a",
+            "incarnationId": "30000000-0000-4000-8000-000000000003",
+            "generation": "1",
+            "sequence": "10",
+            "capability": "snapshot",
+            "reason": null
+          },
+          "clock": {
+            "domain": "official-match-accumulated",
+            "unit": "seconds",
+            "accumulated": 120,
+            "phase": "playing",
+            "periodKey": "p1",
+            "periodStart": 0,
+            "periodElapsed": 120,
+            "state": "running",
+            "method": "monotonic-live",
+            "uncertaintySeconds": null
+          },
+          "legacyRecording": {
+            "coordinate": "recordingElapsedSeconds",
+            "producerContract": "1.0",
+            "value": 175,
+            "qualification": "legacy-producer-coordinate-not-media-time"
+          },
+          "observedAtUtc": "2026-10-04T10:00:00Z",
+          "activityRef": {
+            "id": "urn:amharc:fixture:w1:baselineActivity:1.0.0",
+            "sha256": "07d0ac1e7f92c8d01b7a5a6525fa05d421b8d95c67830af45f949774cb5052fa"
+          },
+          "attestation": {
+            "keyId": "synthetic-producer-key",
+            "algorithm": "Ed25519",
+            "payloadSha256": "015888a8ba9726d8e82eb74e97741f4ee7c966bda78a56519b6482d0490f330c",
+            "signatureBase64": "PXFY4m4Jw3zEtz04JKnMB4PpX/M3uwe59AJNxlW/Jog24jAJITK4y0uNXmI6nRdQM3FK4jueY4naJNjubmvtCA=="
+          }
+        },
+        "requestedSubject": "10000000-0000-4000-8000-000000000001",
+        "availableDependencies": true,
+        "correctionActivity": false
+      },
+      "sourceFixtureId": "V23-missing-subject"
+    },
+    {
+      "id": "V24-unknown-property",
+      "expected": "SCHEMA_INVALID",
+      "input": {
+        "snapshot": {
+          "contractRef": {
+            "id": "urn:amharc:w1:clock-authority-contract:1.0.0",
+            "sha256": "c07fc9e62e5138a2c8c35eb924e59b16c1808fc419763cb310222232c08ba6a2"
+          },
+          "subject": {
+            "occurrenceId": "10000000-0000-4000-8000-000000000001",
+            "identityStanding": "provisional",
+            "representation": {
+              "issuer": "urn:amharc:test:capture:installation-a",
+              "localId": "unchanged-local-guid-a"
+            },
+            "resolutionRef": {
+              "id": "urn:amharc:fixture:w1:resolution:1.0.0",
+              "sha256": "960bb672f23b6f5c8d01e2aeff4b366d1540d0d6166a4c2fa33f0eddc98a6707"
+            }
+          },
+          "context": {
+            "semantic": {
+              "id": "urn:amharc:w1:semantic-profile:1.0.0",
+              "sha256": "041f67899c61a2fb93acbb4ea7532c0daa32832f877a491c8073b62b4c74b508"
+            },
+            "identifier": {
+              "id": "urn:amharc:w1:identifier-application:1.0.0",
+              "sha256": "c956baed4ef18c54bcdcf32d1e7019bfe131e655e5609a32ac25c93cf2b650e1"
+            },
+            "format": {
+              "id": "urn:amharc:fixture:w1:format:1.0.0",
+              "sha256": "5fe7b959f147949e872bf23ca36af959a918c2d31055c6285d5a6321bef520b7"
+            },
+            "provenance": {
+              "id": "urn:amharc:w1:material-history:1.0.0",
+              "sha256": "c0c3cc9caaf704f18b004c1e3309d81cc0c23399842f0fa30852494d0b0fd681"
+            },
+            "trustBundle": {
+              "id": "urn:amharc:fixture:w1:trustBundle:1.0.0",
+              "sha256": "50be9f25fc922e698732c73b0550958635faf65013c4b42bd239c6dcaed68e75"
+            }
+          },
+          "authority": {
+            "status": "active",
+            "principalId": "synthetic-capture-principal",
+            "bindingId": "synthetic-binding-a",
+            "incarnationId": "30000000-0000-4000-8000-000000000003",
+            "generation": "1",
+            "sequence": "10",
+            "capability": "snapshot",
+            "reason": null
+          },
+          "clock": {
+            "domain": "official-match-accumulated",
+            "unit": "seconds",
+            "accumulated": 120,
+            "phase": "playing",
+            "periodKey": "p1",
+            "periodStart": 0,
+            "periodElapsed": 120,
+            "state": "running",
+            "method": "monotonic-live",
+            "uncertaintySeconds": null
+          },
+          "legacyRecording": {
+            "coordinate": "recordingElapsedSeconds",
+            "producerContract": "1.0",
+            "value": 175,
+            "qualification": "legacy-producer-coordinate-not-media-time"
+          },
+          "observedAtUtc": "2026-10-04T10:00:00Z",
+          "activityRef": {
+            "id": "urn:amharc:fixture:w1:baselineActivity:1.0.0",
+            "sha256": "07d0ac1e7f92c8d01b7a5a6525fa05d421b8d95c67830af45f949774cb5052fa"
+          },
+          "uncontrolledMeaning": true,
+          "attestation": {
+            "keyId": "synthetic-producer-key",
+            "algorithm": "Ed25519",
+            "payloadSha256": "7a3fdb69597c3f325992d9fc2898b55fc81207d13b3e7c8b6fa0195837a6c5ee",
+            "signatureBase64": "cbZTcQfUBXj7G/cyU/bgq9Q32b5F5F2b4hdpG3/5wwFwtmbHWQtjdHv5U8Cw2olnLnTHfDgupxhPlvIuxFKyDw=="
+          }
+        },
+        "requestedSubject": "10000000-0000-4000-8000-000000000001",
+        "availableDependencies": true,
+        "correctionActivity": false
+      },
+      "sourceFixtureId": "V24-unknown-property"
+    },
+    {
+      "id": "V25-unverified-tamper",
+      "expected": "SIGNATURE_REFUSAL",
+      "input": {
+        "snapshot": {
+          "contractRef": {
+            "id": "urn:amharc:w1:clock-authority-contract:1.0.0",
+            "sha256": "c07fc9e62e5138a2c8c35eb924e59b16c1808fc419763cb310222232c08ba6a2"
+          },
+          "subject": {
+            "occurrenceId": "10000000-0000-4000-8000-000000000001",
+            "identityStanding": "provisional",
+            "representation": {
+              "issuer": "urn:amharc:test:capture:installation-a",
+              "localId": "unchanged-local-guid-a"
+            },
+            "resolutionRef": {
+              "id": "urn:amharc:fixture:w1:resolution:1.0.0",
+              "sha256": "960bb672f23b6f5c8d01e2aeff4b366d1540d0d6166a4c2fa33f0eddc98a6707"
+            }
+          },
+          "context": {
+            "semantic": {
+              "id": "urn:amharc:w1:semantic-profile:1.0.0",
+              "sha256": "041f67899c61a2fb93acbb4ea7532c0daa32832f877a491c8073b62b4c74b508"
+            },
+            "identifier": {
+              "id": "urn:amharc:w1:identifier-application:1.0.0",
+              "sha256": "c956baed4ef18c54bcdcf32d1e7019bfe131e655e5609a32ac25c93cf2b650e1"
+            },
+            "format": {
+              "id": "urn:amharc:fixture:w1:format:1.0.0",
+              "sha256": "5fe7b959f147949e872bf23ca36af959a918c2d31055c6285d5a6321bef520b7"
+            },
+            "provenance": {
+              "id": "urn:amharc:w1:material-history:1.0.0",
+              "sha256": "c0c3cc9caaf704f18b004c1e3309d81cc0c23399842f0fa30852494d0b0fd681"
+            },
+            "trustBundle": {
+              "id": "urn:amharc:fixture:w1:trustBundle:1.0.0",
+              "sha256": "50be9f25fc922e698732c73b0550958635faf65013c4b42bd239c6dcaed68e75"
+            }
+          },
+          "authority": {
+            "status": "active",
+            "principalId": "synthetic-capture-principal",
+            "bindingId": "synthetic-binding-a",
+            "incarnationId": "30000000-0000-4000-8000-000000000003",
+            "generation": "1",
+            "sequence": "10",
+            "capability": "snapshot",
+            "reason": null
+          },
+          "clock": {
+            "domain": "official-match-accumulated",
+            "unit": "seconds",
+            "accumulated": 778,
+            "phase": "playing",
+            "periodKey": "p1",
+            "periodStart": 0,
+            "periodElapsed": 120,
+            "state": "running",
+            "method": "monotonic-live",
+            "uncertaintySeconds": null
+          },
+          "legacyRecording": {
+            "coordinate": "recordingElapsedSeconds",
+            "producerContract": "1.0",
+            "value": 175,
+            "qualification": "legacy-producer-coordinate-not-media-time"
+          },
+          "observedAtUtc": "2026-10-04T10:00:00Z",
+          "activityRef": {
+            "id": "urn:amharc:fixture:w1:baselineActivity:1.0.0",
+            "sha256": "07d0ac1e7f92c8d01b7a5a6525fa05d421b8d95c67830af45f949774cb5052fa"
+          },
+          "attestation": {
+            "keyId": "synthetic-producer-key",
+            "algorithm": "Ed25519",
+            "payloadSha256": "4c3f4445da1c933393dabb733833097ef5d1405243851820653a791560cb0beb",
+            "signatureBase64": "9ePUQTkiXlm0GR6g6fFZ+YJ9V1ArfM3lgeG6NYtGhXVyZtXQMdxKD9R51mOTXWreSaOGMeXtcWLyUM/NWpziAQ=="
+          }
+        },
+        "requestedSubject": "10000000-0000-4000-8000-000000000001",
+        "availableDependencies": true,
+        "correctionActivity": false
+      },
+      "sourceFixtureId": "V25-unverified-tamper"
+    },
+    {
+      "id": "V26-untrusted-principal-key",
+      "expected": "SIGNATURE_REFUSAL",
+      "input": {
+        "snapshot": {
+          "contractRef": {
+            "id": "urn:amharc:w1:clock-authority-contract:1.0.0",
+            "sha256": "c07fc9e62e5138a2c8c35eb924e59b16c1808fc419763cb310222232c08ba6a2"
+          },
+          "subject": {
+            "occurrenceId": "10000000-0000-4000-8000-000000000001",
+            "identityStanding": "provisional",
+            "representation": {
+              "issuer": "urn:amharc:test:capture:installation-a",
+              "localId": "unchanged-local-guid-a"
+            },
+            "resolutionRef": {
+              "id": "urn:amharc:fixture:w1:resolution:1.0.0",
+              "sha256": "960bb672f23b6f5c8d01e2aeff4b366d1540d0d6166a4c2fa33f0eddc98a6707"
+            }
+          },
+          "context": {
+            "semantic": {
+              "id": "urn:amharc:w1:semantic-profile:1.0.0",
+              "sha256": "041f67899c61a2fb93acbb4ea7532c0daa32832f877a491c8073b62b4c74b508"
+            },
+            "identifier": {
+              "id": "urn:amharc:w1:identifier-application:1.0.0",
+              "sha256": "c956baed4ef18c54bcdcf32d1e7019bfe131e655e5609a32ac25c93cf2b650e1"
+            },
+            "format": {
+              "id": "urn:amharc:fixture:w1:format:1.0.0",
+              "sha256": "5fe7b959f147949e872bf23ca36af959a918c2d31055c6285d5a6321bef520b7"
+            },
+            "provenance": {
+              "id": "urn:amharc:w1:material-history:1.0.0",
+              "sha256": "c0c3cc9caaf704f18b004c1e3309d81cc0c23399842f0fa30852494d0b0fd681"
+            },
+            "trustBundle": {
+              "id": "urn:amharc:fixture:w1:trustBundle:1.0.0",
+              "sha256": "50be9f25fc922e698732c73b0550958635faf65013c4b42bd239c6dcaed68e75"
+            }
+          },
+          "authority": {
+            "status": "active",
+            "principalId": "synthetic-capture-principal",
+            "bindingId": "synthetic-binding-a",
+            "incarnationId": "30000000-0000-4000-8000-000000000003",
+            "generation": "1",
+            "sequence": "10",
+            "capability": "snapshot",
+            "reason": null
+          },
+          "clock": {
+            "domain": "official-match-accumulated",
+            "unit": "seconds",
+            "accumulated": 120,
+            "phase": "playing",
+            "periodKey": "p1",
+            "periodStart": 0,
+            "periodElapsed": 120,
+            "state": "running",
+            "method": "monotonic-live",
+            "uncertaintySeconds": null
+          },
+          "legacyRecording": {
+            "coordinate": "recordingElapsedSeconds",
+            "producerContract": "1.0",
+            "value": 175,
+            "qualification": "legacy-producer-coordinate-not-media-time"
+          },
+          "observedAtUtc": "2026-10-04T10:00:00Z",
+          "activityRef": {
+            "id": "urn:amharc:fixture:w1:baselineActivity:1.0.0",
+            "sha256": "07d0ac1e7f92c8d01b7a5a6525fa05d421b8d95c67830af45f949774cb5052fa"
+          },
+          "attestation": {
+            "keyId": "self-appointed-key",
+            "algorithm": "Ed25519",
+            "payloadSha256": "ad4fa7a1c4b3b122d3083f40c05156dbae7185b842794c065b4597f2b92d0d69",
+            "signatureBase64": "/p8Jmb/ciR+ybA5LnxEwa3K3a4nyH7iBgJvgllxFZsMq1fySv4KVA1ZkA+x2Kw2Ge789y1E0+HduOSyD/b9cBg=="
+          }
+        },
+        "requestedSubject": "10000000-0000-4000-8000-000000000001",
+        "availableDependencies": true,
+        "correctionActivity": false
+      },
+      "sourceFixtureId": "V26-untrusted-principal-key"
+    },
+    {
+      "id": "V27-running-without-active-authority",
+      "expected": "AUTHORITY_REFUSAL",
+      "input": {
+        "snapshot": {
+          "contractRef": {
+            "id": "urn:amharc:w1:clock-authority-contract:1.0.0",
+            "sha256": "c07fc9e62e5138a2c8c35eb924e59b16c1808fc419763cb310222232c08ba6a2"
+          },
+          "subject": {
+            "occurrenceId": "10000000-0000-4000-8000-000000000001",
+            "identityStanding": "provisional",
+            "representation": {
+              "issuer": "urn:amharc:test:capture:installation-a",
+              "localId": "unchanged-local-guid-a"
+            },
+            "resolutionRef": {
+              "id": "urn:amharc:fixture:w1:resolution:1.0.0",
+              "sha256": "960bb672f23b6f5c8d01e2aeff4b366d1540d0d6166a4c2fa33f0eddc98a6707"
+            }
+          },
+          "context": {
+            "semantic": {
+              "id": "urn:amharc:w1:semantic-profile:1.0.0",
+              "sha256": "041f67899c61a2fb93acbb4ea7532c0daa32832f877a491c8073b62b4c74b508"
+            },
+            "identifier": {
+              "id": "urn:amharc:w1:identifier-application:1.0.0",
+              "sha256": "c956baed4ef18c54bcdcf32d1e7019bfe131e655e5609a32ac25c93cf2b650e1"
+            },
+            "format": {
+              "id": "urn:amharc:fixture:w1:format:1.0.0",
+              "sha256": "5fe7b959f147949e872bf23ca36af959a918c2d31055c6285d5a6321bef520b7"
+            },
+            "provenance": {
+              "id": "urn:amharc:w1:material-history:1.0.0",
+              "sha256": "c0c3cc9caaf704f18b004c1e3309d81cc0c23399842f0fa30852494d0b0fd681"
+            },
+            "trustBundle": {
+              "id": "urn:amharc:fixture:w1:trustBundle:1.0.0",
+              "sha256": "50be9f25fc922e698732c73b0550958635faf65013c4b42bd239c6dcaed68e75"
+            }
+          },
+          "authority": {
+            "status": "gap",
+            "principalId": "synthetic-capture-principal",
+            "bindingId": "synthetic-binding-a",
+            "incarnationId": "30000000-0000-4000-8000-000000000003",
+            "generation": "1",
+            "sequence": "10",
+            "capability": "snapshot",
+            "reason": "missing"
+          },
+          "clock": {
+            "domain": "official-match-accumulated",
+            "unit": "seconds",
+            "accumulated": 120,
+            "phase": "playing",
+            "periodKey": "p1",
+            "periodStart": 0,
+            "periodElapsed": 120,
+            "state": "running",
+            "method": "monotonic-live",
+            "uncertaintySeconds": null
+          },
+          "legacyRecording": {
+            "coordinate": "recordingElapsedSeconds",
+            "producerContract": "1.0",
+            "value": 175,
+            "qualification": "legacy-producer-coordinate-not-media-time"
+          },
+          "observedAtUtc": "2026-10-04T10:00:00Z",
+          "activityRef": {
+            "id": "urn:amharc:fixture:w1:baselineActivity:1.0.0",
+            "sha256": "07d0ac1e7f92c8d01b7a5a6525fa05d421b8d95c67830af45f949774cb5052fa"
+          },
+          "attestation": {
+            "keyId": "synthetic-producer-key",
+            "algorithm": "Ed25519",
+            "payloadSha256": "1ab4993d5a1379a2b6319d2bab19ae6545abbed123a43b0854c304d0e9ee9ad0",
+            "signatureBase64": "KxQES1dOV/47wCHRagftdA/StKrxiylOYDXwOK3awvvLsOI7vT5r+aTQ9AhOjRtzXkUvDR6aldgFzg9iMLtzCQ=="
+          }
+        },
+        "requestedSubject": "10000000-0000-4000-8000-000000000001",
+        "availableDependencies": true,
+        "correctionActivity": false
+      },
+      "sourceFixtureId": "V27-running-without-active-authority"
+    },
+    {
+      "id": "V28-interval-running",
+      "expected": "TEMPORAL_REFUSAL",
+      "input": {
+        "snapshot": {
+          "contractRef": {
+            "id": "urn:amharc:w1:clock-authority-contract:1.0.0",
+            "sha256": "c07fc9e62e5138a2c8c35eb924e59b16c1808fc419763cb310222232c08ba6a2"
+          },
+          "subject": {
+            "occurrenceId": "10000000-0000-4000-8000-000000000001",
+            "identityStanding": "provisional",
+            "representation": {
+              "issuer": "urn:amharc:test:capture:installation-a",
+              "localId": "unchanged-local-guid-a"
+            },
+            "resolutionRef": {
+              "id": "urn:amharc:fixture:w1:resolution:1.0.0",
+              "sha256": "960bb672f23b6f5c8d01e2aeff4b366d1540d0d6166a4c2fa33f0eddc98a6707"
+            }
+          },
+          "context": {
+            "semantic": {
+              "id": "urn:amharc:w1:semantic-profile:1.0.0",
+              "sha256": "041f67899c61a2fb93acbb4ea7532c0daa32832f877a491c8073b62b4c74b508"
+            },
+            "identifier": {
+              "id": "urn:amharc:w1:identifier-application:1.0.0",
+              "sha256": "c956baed4ef18c54bcdcf32d1e7019bfe131e655e5609a32ac25c93cf2b650e1"
+            },
+            "format": {
+              "id": "urn:amharc:fixture:w1:format:1.0.0",
+              "sha256": "5fe7b959f147949e872bf23ca36af959a918c2d31055c6285d5a6321bef520b7"
+            },
+            "provenance": {
+              "id": "urn:amharc:w1:material-history:1.0.0",
+              "sha256": "c0c3cc9caaf704f18b004c1e3309d81cc0c23399842f0fa30852494d0b0fd681"
+            },
+            "trustBundle": {
+              "id": "urn:amharc:fixture:w1:trustBundle:1.0.0",
+              "sha256": "50be9f25fc922e698732c73b0550958635faf65013c4b42bd239c6dcaed68e75"
+            }
+          },
+          "authority": {
+            "status": "active",
+            "principalId": "synthetic-capture-principal",
+            "bindingId": "synthetic-binding-a",
+            "incarnationId": "30000000-0000-4000-8000-000000000003",
+            "generation": "1",
+            "sequence": "10",
+            "capability": "snapshot",
+            "reason": null
+          },
+          "clock": {
+            "domain": "official-match-accumulated",
+            "unit": "seconds",
+            "accumulated": 120,
+            "phase": "interval",
+            "periodKey": "p1",
+            "periodStart": 0,
+            "periodElapsed": 120,
+            "state": "running",
+            "method": "monotonic-live",
+            "uncertaintySeconds": null
+          },
+          "legacyRecording": {
+            "coordinate": "recordingElapsedSeconds",
+            "producerContract": "1.0",
+            "value": 175,
+            "qualification": "legacy-producer-coordinate-not-media-time"
+          },
+          "observedAtUtc": "2026-10-04T10:00:00Z",
+          "activityRef": {
+            "id": "urn:amharc:fixture:w1:baselineActivity:1.0.0",
+            "sha256": "07d0ac1e7f92c8d01b7a5a6525fa05d421b8d95c67830af45f949774cb5052fa"
+          },
+          "attestation": {
+            "keyId": "synthetic-producer-key",
+            "algorithm": "Ed25519",
+            "payloadSha256": "5bcf3a37dc44147d121de5ba06540135661960ed91711d0518318e7348b574ab",
+            "signatureBase64": "TSmGLEnwgJi8Ch6V1YIjvNUokMSyJPnJVwdHIqwcpxOuuwNXmTrzOwnZYGR7Ot2hZLmN4gW2cXJqb4HLqNBXBw=="
+          }
+        },
+        "requestedSubject": "10000000-0000-4000-8000-000000000001",
+        "availableDependencies": true,
+        "correctionActivity": false
+      },
+      "sourceFixtureId": "V28-interval-running"
+    },
+    {
+      "id": "V29-legacy-checkpoint-unknown-binding",
+      "expected": "LEGACY_ASSURANCE_GAP",
+      "input": {
+        "snapshot": {
+          "contractRef": {
+            "id": "urn:amharc:w1:clock-authority-contract:1.0.0",
+            "sha256": "c07fc9e62e5138a2c8c35eb924e59b16c1808fc419763cb310222232c08ba6a2"
+          },
+          "subject": {
+            "occurrenceId": "10000000-0000-4000-8000-000000000001",
+            "identityStanding": "provisional",
+            "representation": {
+              "issuer": "urn:amharc:test:capture:installation-a",
+              "localId": "unchanged-local-guid-a"
+            },
+            "resolutionRef": {
+              "id": "urn:amharc:fixture:w1:resolution:1.0.0",
+              "sha256": "960bb672f23b6f5c8d01e2aeff4b366d1540d0d6166a4c2fa33f0eddc98a6707"
+            }
+          },
+          "context": {
+            "semantic": {
+              "id": "urn:amharc:w1:semantic-profile:1.0.0",
+              "sha256": "041f67899c61a2fb93acbb4ea7532c0daa32832f877a491c8073b62b4c74b508"
+            },
+            "identifier": {
+              "id": "urn:amharc:w1:identifier-application:1.0.0",
+              "sha256": "c956baed4ef18c54bcdcf32d1e7019bfe131e655e5609a32ac25c93cf2b650e1"
+            },
+            "format": {
+              "id": "urn:amharc:fixture:w1:format:1.0.0",
+              "sha256": "5fe7b959f147949e872bf23ca36af959a918c2d31055c6285d5a6321bef520b7"
+            },
+            "provenance": {
+              "id": "urn:amharc:w1:material-history:1.0.0",
+              "sha256": "c0c3cc9caaf704f18b004c1e3309d81cc0c23399842f0fa30852494d0b0fd681"
+            },
+            "trustBundle": {
+              "id": "urn:amharc:fixture:w1:trustBundle:1.0.0",
+              "sha256": "50be9f25fc922e698732c73b0550958635faf65013c4b42bd239c6dcaed68e75"
+            }
+          },
+          "authority": {
+            "status": "gap",
+            "principalId": "synthetic-capture-principal",
+            "bindingId": "synthetic-binding-a",
+            "incarnationId": "30000000-0000-4000-8000-000000000003",
+            "generation": "1",
+            "sequence": "10",
+            "capability": "snapshot",
+            "reason": "legacy-checkpoint-unknown-binding"
+          },
+          "clock": {
+            "domain": "official-match-accumulated",
+            "unit": "seconds",
+            "accumulated": 120,
+            "phase": "playing",
+            "periodKey": "p1",
+            "periodStart": 0,
+            "periodElapsed": 120,
+            "state": "withheld",
+            "method": "checkpoint-restored",
+            "uncertaintySeconds": null
+          },
+          "legacyRecording": {
+            "coordinate": "recordingElapsedSeconds",
+            "producerContract": "1.0",
+            "value": 175,
+            "qualification": "legacy-producer-coordinate-not-media-time"
+          },
+          "observedAtUtc": "2026-10-04T10:00:00Z",
+          "activityRef": {
+            "id": "urn:amharc:fixture:w1:baselineActivity:1.0.0",
+            "sha256": "07d0ac1e7f92c8d01b7a5a6525fa05d421b8d95c67830af45f949774cb5052fa"
+          },
+          "attestation": {
+            "keyId": "synthetic-producer-key",
+            "algorithm": "Ed25519",
+            "payloadSha256": "e359ffd077fc9be59efea83a1dcac25903dce6867de12ef0a45cd452112e9e85",
+            "signatureBase64": "2vcSBwC12h7U1TYj7nvmhdJHJgunGvuGK9qlwmEl2UrmN8eMWQkKFxorGufXuvAU2/N9Sgp89BJpQzcu/eGSDA=="
+          }
+        },
+        "requestedSubject": "10000000-0000-4000-8000-000000000001",
+        "availableDependencies": true,
+        "correctionActivity": false
+      },
+      "sourceFixtureId": "V29-legacy-checkpoint-unknown-binding"
+    },
+    {
+      "id": "V30-utc-reconstruction-not-continuity",
+      "expected": "QUALIFIED_RECONSTRUCTION",
+      "input": {
+        "snapshot": {
+          "contractRef": {
+            "id": "urn:amharc:w1:clock-authority-contract:1.0.0",
+            "sha256": "c07fc9e62e5138a2c8c35eb924e59b16c1808fc419763cb310222232c08ba6a2"
+          },
+          "subject": {
+            "occurrenceId": "10000000-0000-4000-8000-000000000001",
+            "identityStanding": "provisional",
+            "representation": {
+              "issuer": "urn:amharc:test:capture:installation-a",
+              "localId": "unchanged-local-guid-a"
+            },
+            "resolutionRef": {
+              "id": "urn:amharc:fixture:w1:resolution:1.0.0",
+              "sha256": "960bb672f23b6f5c8d01e2aeff4b366d1540d0d6166a4c2fa33f0eddc98a6707"
+            }
+          },
+          "context": {
+            "semantic": {
+              "id": "urn:amharc:w1:semantic-profile:1.0.0",
+              "sha256": "041f67899c61a2fb93acbb4ea7532c0daa32832f877a491c8073b62b4c74b508"
+            },
+            "identifier": {
+              "id": "urn:amharc:w1:identifier-application:1.0.0",
+              "sha256": "c956baed4ef18c54bcdcf32d1e7019bfe131e655e5609a32ac25c93cf2b650e1"
+            },
+            "format": {
+              "id": "urn:amharc:fixture:w1:format:1.0.0",
+              "sha256": "5fe7b959f147949e872bf23ca36af959a918c2d31055c6285d5a6321bef520b7"
+            },
+            "provenance": {
+              "id": "urn:amharc:w1:material-history:1.0.0",
+              "sha256": "c0c3cc9caaf704f18b004c1e3309d81cc0c23399842f0fa30852494d0b0fd681"
+            },
+            "trustBundle": {
+              "id": "urn:amharc:fixture:w1:trustBundle:1.0.0",
+              "sha256": "50be9f25fc922e698732c73b0550958635faf65013c4b42bd239c6dcaed68e75"
+            }
+          },
+          "authority": {
+            "status": "active",
+            "principalId": "synthetic-capture-principal",
+            "bindingId": "synthetic-binding-a",
+            "incarnationId": "30000000-0000-4000-8000-000000000003",
+            "generation": "1",
+            "sequence": "10",
+            "capability": "snapshot",
+            "reason": null
+          },
+          "clock": {
+            "domain": "official-match-accumulated",
+            "unit": "seconds",
+            "accumulated": 120,
+            "phase": "playing",
+            "periodKey": "p1",
+            "periodStart": 0,
+            "periodElapsed": 120,
+            "state": "paused",
+            "method": "utc-reconstructed",
+            "uncertaintySeconds": null
+          },
+          "legacyRecording": {
+            "coordinate": "recordingElapsedSeconds",
+            "producerContract": "1.0",
+            "value": 175,
+            "qualification": "legacy-producer-coordinate-not-media-time"
+          },
+          "observedAtUtc": "2026-10-04T10:00:00Z",
+          "activityRef": {
+            "id": "urn:amharc:fixture:w1:baselineActivity:1.0.0",
+            "sha256": "07d0ac1e7f92c8d01b7a5a6525fa05d421b8d95c67830af45f949774cb5052fa"
+          },
+          "attestation": {
+            "keyId": "synthetic-producer-key",
+            "algorithm": "Ed25519",
+            "payloadSha256": "e58ada4750c21c2e127c2a9719ebba4d6e1e3134ab03a987ad059f33ed673e11",
+            "signatureBase64": "6YK0hf4LOt0WYBttnREAnx/rSR4jWgn/WNp5B5zj/a/oqdEyeyOHQhG2S/FOc+Is5/zclQym4NE+UPL/5FaxBA=="
+          }
+        },
+        "requestedSubject": "10000000-0000-4000-8000-000000000001",
+        "availableDependencies": true,
+        "correctionActivity": false
+      },
+      "sourceFixtureId": "V30-utc-reconstruction-not-continuity"
+    },
+    {
+      "id": "V31-large-scoped-sequence",
+      "expected": "QUALIFIED",
+      "input": {
+        "snapshot": {
+          "contractRef": {
+            "id": "urn:amharc:w1:clock-authority-contract:1.0.0",
+            "sha256": "c07fc9e62e5138a2c8c35eb924e59b16c1808fc419763cb310222232c08ba6a2"
+          },
+          "subject": {
+            "occurrenceId": "10000000-0000-4000-8000-000000000001",
+            "identityStanding": "provisional",
+            "representation": {
+              "issuer": "urn:amharc:test:capture:installation-a",
+              "localId": "unchanged-local-guid-a"
+            },
+            "resolutionRef": {
+              "id": "urn:amharc:fixture:w1:resolution:1.0.0",
+              "sha256": "960bb672f23b6f5c8d01e2aeff4b366d1540d0d6166a4c2fa33f0eddc98a6707"
+            }
+          },
+          "context": {
+            "semantic": {
+              "id": "urn:amharc:w1:semantic-profile:1.0.0",
+              "sha256": "041f67899c61a2fb93acbb4ea7532c0daa32832f877a491c8073b62b4c74b508"
+            },
+            "identifier": {
+              "id": "urn:amharc:w1:identifier-application:1.0.0",
+              "sha256": "c956baed4ef18c54bcdcf32d1e7019bfe131e655e5609a32ac25c93cf2b650e1"
+            },
+            "format": {
+              "id": "urn:amharc:fixture:w1:format:1.0.0",
+              "sha256": "5fe7b959f147949e872bf23ca36af959a918c2d31055c6285d5a6321bef520b7"
+            },
+            "provenance": {
+              "id": "urn:amharc:w1:material-history:1.0.0",
+              "sha256": "c0c3cc9caaf704f18b004c1e3309d81cc0c23399842f0fa30852494d0b0fd681"
+            },
+            "trustBundle": {
+              "id": "urn:amharc:fixture:w1:trustBundle:1.0.0",
+              "sha256": "50be9f25fc922e698732c73b0550958635faf65013c4b42bd239c6dcaed68e75"
+            }
+          },
+          "authority": {
+            "status": "active",
+            "principalId": "synthetic-capture-principal",
+            "bindingId": "synthetic-binding-a",
+            "incarnationId": "30000000-0000-4000-8000-000000000003",
+            "generation": "1",
+            "sequence": "9007199254740993",
+            "capability": "snapshot",
+            "reason": null
+          },
+          "clock": {
+            "domain": "official-match-accumulated",
+            "unit": "seconds",
+            "accumulated": 120,
+            "phase": "playing",
+            "periodKey": "p1",
+            "periodStart": 0,
+            "periodElapsed": 120,
+            "state": "running",
+            "method": "monotonic-live",
+            "uncertaintySeconds": null
+          },
+          "legacyRecording": {
+            "coordinate": "recordingElapsedSeconds",
+            "producerContract": "1.0",
+            "value": 175,
+            "qualification": "legacy-producer-coordinate-not-media-time"
+          },
+          "observedAtUtc": "2026-10-04T10:00:00Z",
+          "activityRef": {
+            "id": "urn:amharc:fixture:w1:baselineActivity:1.0.0",
+            "sha256": "07d0ac1e7f92c8d01b7a5a6525fa05d421b8d95c67830af45f949774cb5052fa"
+          },
+          "attestation": {
+            "keyId": "synthetic-producer-key",
+            "algorithm": "Ed25519",
+            "payloadSha256": "2c79ddade55a1e88ab4619ff22ac479aee00b6a88aa11fed7511d57259163cd5",
+            "signatureBase64": "r7VNFE+6S6dfXlCdxANuTMiFOJQ0+u6UG6xg/PKDtXsUHmKHYacMtO4sbytbc6ACS38kc0tt31SkdzXecLBJBA=="
+          }
+        },
+        "requestedSubject": "10000000-0000-4000-8000-000000000001",
+        "availableDependencies": true,
+        "correctionActivity": false
+      },
+      "sourceFixtureId": "V31-large-scoped-sequence"
+    },
+    {
+      "id": "V32-invalid-canonical-uuid",
+      "expected": "SCHEMA_INVALID",
+      "input": {
+        "snapshot": {
+          "contractRef": {
+            "id": "urn:amharc:w1:clock-authority-contract:1.0.0",
+            "sha256": "c07fc9e62e5138a2c8c35eb924e59b16c1808fc419763cb310222232c08ba6a2"
+          },
+          "subject": {
+            "occurrenceId": "10000000-0000-1000-8000-000000000001",
+            "identityStanding": "provisional",
+            "representation": {
+              "issuer": "urn:amharc:test:capture:installation-a",
+              "localId": "unchanged-local-guid-a"
+            },
+            "resolutionRef": {
+              "id": "urn:amharc:fixture:w1:resolution:1.0.0",
+              "sha256": "960bb672f23b6f5c8d01e2aeff4b366d1540d0d6166a4c2fa33f0eddc98a6707"
+            }
+          },
+          "context": {
+            "semantic": {
+              "id": "urn:amharc:w1:semantic-profile:1.0.0",
+              "sha256": "041f67899c61a2fb93acbb4ea7532c0daa32832f877a491c8073b62b4c74b508"
+            },
+            "identifier": {
+              "id": "urn:amharc:w1:identifier-application:1.0.0",
+              "sha256": "c956baed4ef18c54bcdcf32d1e7019bfe131e655e5609a32ac25c93cf2b650e1"
+            },
+            "format": {
+              "id": "urn:amharc:fixture:w1:format:1.0.0",
+              "sha256": "5fe7b959f147949e872bf23ca36af959a918c2d31055c6285d5a6321bef520b7"
+            },
+            "provenance": {
+              "id": "urn:amharc:w1:material-history:1.0.0",
+              "sha256": "c0c3cc9caaf704f18b004c1e3309d81cc0c23399842f0fa30852494d0b0fd681"
+            },
+            "trustBundle": {
+              "id": "urn:amharc:fixture:w1:trustBundle:1.0.0",
+              "sha256": "50be9f25fc922e698732c73b0550958635faf65013c4b42bd239c6dcaed68e75"
+            }
+          },
+          "authority": {
+            "status": "active",
+            "principalId": "synthetic-capture-principal",
+            "bindingId": "synthetic-binding-a",
+            "incarnationId": "30000000-0000-4000-8000-000000000003",
+            "generation": "1",
+            "sequence": "10",
+            "capability": "snapshot",
+            "reason": null
+          },
+          "clock": {
+            "domain": "official-match-accumulated",
+            "unit": "seconds",
+            "accumulated": 120,
+            "phase": "playing",
+            "periodKey": "p1",
+            "periodStart": 0,
+            "periodElapsed": 120,
+            "state": "running",
+            "method": "monotonic-live",
+            "uncertaintySeconds": null
+          },
+          "legacyRecording": {
+            "coordinate": "recordingElapsedSeconds",
+            "producerContract": "1.0",
+            "value": 175,
+            "qualification": "legacy-producer-coordinate-not-media-time"
+          },
+          "observedAtUtc": "2026-10-04T10:00:00Z",
+          "activityRef": {
+            "id": "urn:amharc:fixture:w1:baselineActivity:1.0.0",
+            "sha256": "07d0ac1e7f92c8d01b7a5a6525fa05d421b8d95c67830af45f949774cb5052fa"
+          },
+          "attestation": {
+            "keyId": "synthetic-producer-key",
+            "algorithm": "Ed25519",
+            "payloadSha256": "07724bb4abfe0d9f26a790851a3ab3fe94556c74d71398bca3ba345bc80cdb1e",
+            "signatureBase64": "oLvsszwORC4dbDzY2WOTiNRkxgci2IGZZCDejDKWsiekiUirld1HUPYv/9NIx0VixFOsc2M1CUgrJDOzC95tDA=="
+          }
+        },
+        "requestedSubject": "10000000-0000-4000-8000-000000000001",
+        "availableDependencies": true,
+        "correctionActivity": false
+      },
+      "sourceFixtureId": "V32-invalid-canonical-uuid"
+    },
+    {
+      "id": "V33-complete-scoped-trust-required",
+      "expected": "AUTHORITY_GAP",
+      "input": {
+        "snapshot": {
+          "contractRef": {
+            "id": "urn:amharc:w1:clock-authority-contract:1.0.0",
+            "sha256": "c07fc9e62e5138a2c8c35eb924e59b16c1808fc419763cb310222232c08ba6a2"
+          },
+          "subject": {
+            "occurrenceId": "10000000-0000-4000-8000-000000000001",
+            "identityStanding": "provisional",
+            "representation": {
+              "issuer": "urn:amharc:test:capture:installation-a",
+              "localId": "unchanged-local-guid-a"
+            },
+            "resolutionRef": {
+              "id": "urn:amharc:fixture:w1:resolution:1.0.0",
+              "sha256": "960bb672f23b6f5c8d01e2aeff4b366d1540d0d6166a4c2fa33f0eddc98a6707"
+            }
+          },
+          "context": {
+            "semantic": {
+              "id": "urn:amharc:w1:semantic-profile:1.0.0",
+              "sha256": "041f67899c61a2fb93acbb4ea7532c0daa32832f877a491c8073b62b4c74b508"
+            },
+            "identifier": {
+              "id": "urn:amharc:w1:identifier-application:1.0.0",
+              "sha256": "c956baed4ef18c54bcdcf32d1e7019bfe131e655e5609a32ac25c93cf2b650e1"
+            },
+            "format": {
+              "id": "urn:amharc:fixture:w1:format:1.0.0",
+              "sha256": "5fe7b959f147949e872bf23ca36af959a918c2d31055c6285d5a6321bef520b7"
+            },
+            "provenance": {
+              "id": "urn:amharc:w1:material-history:1.0.0",
+              "sha256": "c0c3cc9caaf704f18b004c1e3309d81cc0c23399842f0fa30852494d0b0fd681"
+            },
+            "trustBundle": {
+              "id": "urn:amharc:fixture:w1:trustBundle:1.0.0",
+              "sha256": "50be9f25fc922e698732c73b0550958635faf65013c4b42bd239c6dcaed68e75"
+            }
+          },
+          "authority": {
+            "status": "active",
+            "principalId": "synthetic-capture-principal",
+            "bindingId": "synthetic-binding-a",
+            "incarnationId": "30000000-0000-4000-8000-000000000003",
+            "generation": "1",
+            "sequence": "10",
+            "capability": "snapshot",
+            "reason": null
+          },
+          "clock": {
+            "domain": "official-match-accumulated",
+            "unit": "seconds",
+            "accumulated": 120,
+            "phase": "playing",
+            "periodKey": "p1",
+            "periodStart": 0,
+            "periodElapsed": 120,
+            "state": "running",
+            "method": "monotonic-live",
+            "uncertaintySeconds": null
+          },
+          "legacyRecording": {
+            "coordinate": "recordingElapsedSeconds",
+            "producerContract": "1.0",
+            "value": 175,
+            "qualification": "legacy-producer-coordinate-not-media-time"
+          },
+          "observedAtUtc": "2026-10-04T10:00:00Z",
+          "activityRef": {
+            "id": "urn:amharc:fixture:w1:baselineActivity:1.0.0",
+            "sha256": "07d0ac1e7f92c8d01b7a5a6525fa05d421b8d95c67830af45f949774cb5052fa"
+          },
+          "attestation": {
+            "keyId": "synthetic-producer-key",
+            "algorithm": "Ed25519",
+            "payloadSha256": "ad4fa7a1c4b3b122d3083f40c05156dbae7185b842794c065b4597f2b92d0d69",
+            "signatureBase64": "/p8Jmb/ciR+ybA5LnxEwa3K3a4nyH7iBgJvgllxFZsMq1fySv4KVA1ZkA+x2Kw2Ge789y1E0+HduOSyD/b9cBg=="
+          }
+        },
+        "requestedSubject": "10000000-0000-4000-8000-000000000001",
+        "availableDependencies": true,
+        "correctionActivity": false,
+        "controlPlaneClosureEstablished": false
+      },
+      "sourceFixtureId": "V33-complete-scoped-trust-required"
+    },
+    {
+      "id": "V34-duplicate-output-idempotent",
+      "expected": "REPLAY_NO_NEW_ACTIVITY",
+      "input": {
+        "snapshot": {
+          "contractRef": {
+            "id": "urn:amharc:w1:clock-authority-contract:1.0.0",
+            "sha256": "c07fc9e62e5138a2c8c35eb924e59b16c1808fc419763cb310222232c08ba6a2"
+          },
+          "subject": {
+            "occurrenceId": "10000000-0000-4000-8000-000000000001",
+            "identityStanding": "provisional",
+            "representation": {
+              "issuer": "urn:amharc:test:capture:installation-a",
+              "localId": "unchanged-local-guid-a"
+            },
+            "resolutionRef": {
+              "id": "urn:amharc:fixture:w1:resolution:1.0.0",
+              "sha256": "960bb672f23b6f5c8d01e2aeff4b366d1540d0d6166a4c2fa33f0eddc98a6707"
+            }
+          },
+          "context": {
+            "semantic": {
+              "id": "urn:amharc:w1:semantic-profile:1.0.0",
+              "sha256": "041f67899c61a2fb93acbb4ea7532c0daa32832f877a491c8073b62b4c74b508"
+            },
+            "identifier": {
+              "id": "urn:amharc:w1:identifier-application:1.0.0",
+              "sha256": "c956baed4ef18c54bcdcf32d1e7019bfe131e655e5609a32ac25c93cf2b650e1"
+            },
+            "format": {
+              "id": "urn:amharc:fixture:w1:format:1.0.0",
+              "sha256": "5fe7b959f147949e872bf23ca36af959a918c2d31055c6285d5a6321bef520b7"
+            },
+            "provenance": {
+              "id": "urn:amharc:w1:material-history:1.0.0",
+              "sha256": "c0c3cc9caaf704f18b004c1e3309d81cc0c23399842f0fa30852494d0b0fd681"
+            },
+            "trustBundle": {
+              "id": "urn:amharc:fixture:w1:trustBundle:1.0.0",
+              "sha256": "50be9f25fc922e698732c73b0550958635faf65013c4b42bd239c6dcaed68e75"
+            }
+          },
+          "authority": {
+            "status": "active",
+            "principalId": "synthetic-capture-principal",
+            "bindingId": "synthetic-binding-a",
+            "incarnationId": "30000000-0000-4000-8000-000000000003",
+            "generation": "1",
+            "sequence": "10",
+            "capability": "snapshot",
+            "reason": null
+          },
+          "clock": {
+            "domain": "official-match-accumulated",
+            "unit": "seconds",
+            "accumulated": 120,
+            "phase": "playing",
+            "periodKey": "p1",
+            "periodStart": 0,
+            "periodElapsed": 120,
+            "state": "running",
+            "method": "monotonic-live",
+            "uncertaintySeconds": null
+          },
+          "legacyRecording": {
+            "coordinate": "recordingElapsedSeconds",
+            "producerContract": "1.0",
+            "value": 175,
+            "qualification": "legacy-producer-coordinate-not-media-time"
+          },
+          "observedAtUtc": "2026-10-04T10:00:00Z",
+          "activityRef": {
+            "id": "urn:amharc:fixture:w1:baselineActivity:1.0.0",
+            "sha256": "07d0ac1e7f92c8d01b7a5a6525fa05d421b8d95c67830af45f949774cb5052fa"
+          },
+          "attestation": {
+            "keyId": "synthetic-producer-key",
+            "algorithm": "Ed25519",
+            "payloadSha256": "ad4fa7a1c4b3b122d3083f40c05156dbae7185b842794c065b4597f2b92d0d69",
+            "signatureBase64": "/p8Jmb/ciR+ybA5LnxEwa3K3a4nyH7iBgJvgllxFZsMq1fySv4KVA1ZkA+x2Kw2Ge789y1E0+HduOSyD/b9cBg=="
+          }
+        },
+        "requestedSubject": "10000000-0000-4000-8000-000000000001",
+        "availableDependencies": true,
+        "correctionActivity": false,
+        "replay": true
+      },
+      "sourceFixtureId": "V34-duplicate-output-idempotent"
+    },
+    {
+      "id": "V35-same-order-different-payload",
+      "expected": "AUTHORITY_CONFLICT",
+      "input": {
+        "snapshot": {
+          "contractRef": {
+            "id": "urn:amharc:w1:clock-authority-contract:1.0.0",
+            "sha256": "c07fc9e62e5138a2c8c35eb924e59b16c1808fc419763cb310222232c08ba6a2"
+          },
+          "subject": {
+            "occurrenceId": "10000000-0000-4000-8000-000000000001",
+            "identityStanding": "provisional",
+            "representation": {
+              "issuer": "urn:amharc:test:capture:installation-a",
+              "localId": "unchanged-local-guid-a"
+            },
+            "resolutionRef": {
+              "id": "urn:amharc:fixture:w1:resolution:1.0.0",
+              "sha256": "960bb672f23b6f5c8d01e2aeff4b366d1540d0d6166a4c2fa33f0eddc98a6707"
+            }
+          },
+          "context": {
+            "semantic": {
+              "id": "urn:amharc:w1:semantic-profile:1.0.0",
+              "sha256": "041f67899c61a2fb93acbb4ea7532c0daa32832f877a491c8073b62b4c74b508"
+            },
+            "identifier": {
+              "id": "urn:amharc:w1:identifier-application:1.0.0",
+              "sha256": "c956baed4ef18c54bcdcf32d1e7019bfe131e655e5609a32ac25c93cf2b650e1"
+            },
+            "format": {
+              "id": "urn:amharc:fixture:w1:format:1.0.0",
+              "sha256": "5fe7b959f147949e872bf23ca36af959a918c2d31055c6285d5a6321bef520b7"
+            },
+            "provenance": {
+              "id": "urn:amharc:w1:material-history:1.0.0",
+              "sha256": "c0c3cc9caaf704f18b004c1e3309d81cc0c23399842f0fa30852494d0b0fd681"
+            },
+            "trustBundle": {
+              "id": "urn:amharc:fixture:w1:trustBundle:1.0.0",
+              "sha256": "50be9f25fc922e698732c73b0550958635faf65013c4b42bd239c6dcaed68e75"
+            }
+          },
+          "authority": {
+            "status": "active",
+            "principalId": "synthetic-capture-principal",
+            "bindingId": "synthetic-binding-a",
+            "incarnationId": "30000000-0000-4000-8000-000000000003",
+            "generation": "1",
+            "sequence": "10",
+            "capability": "snapshot",
+            "reason": null
+          },
+          "clock": {
+            "domain": "official-match-accumulated",
+            "unit": "seconds",
+            "accumulated": 125,
+            "phase": "playing",
+            "periodKey": "p1",
+            "periodStart": 0,
+            "periodElapsed": 125,
+            "state": "running",
+            "method": "monotonic-live",
+            "uncertaintySeconds": null
+          },
+          "legacyRecording": {
+            "coordinate": "recordingElapsedSeconds",
+            "producerContract": "1.0",
+            "value": 175,
+            "qualification": "legacy-producer-coordinate-not-media-time"
+          },
+          "observedAtUtc": "2026-10-04T10:00:00Z",
+          "activityRef": {
+            "id": "urn:amharc:fixture:w1:baselineActivity:1.0.0",
+            "sha256": "07d0ac1e7f92c8d01b7a5a6525fa05d421b8d95c67830af45f949774cb5052fa"
+          },
+          "attestation": {
+            "keyId": "synthetic-producer-key",
+            "algorithm": "Ed25519",
+            "payloadSha256": "4e04a4fff830a6bf777f443167a624cad39e3943af6ce0f4ca24646f605f2eb5",
+            "signatureBase64": "4suT2sv9K0O9/FajQUgJq3+9qHLAT9MQ5QsvMgBt8PD4xL8wqupwOQhuJ+PUxm0qcpeGOdyr7CDSZaSEJ4t9Bg=="
+          }
+        },
+        "requestedSubject": "10000000-0000-4000-8000-000000000001",
+        "availableDependencies": true,
+        "correctionActivity": false,
+        "sameOrderPriorDifferentPayload": true
+      },
+      "sourceFixtureId": "V35-same-order-different-payload"
+    },
+    {
+      "id": "V36-unresolved-correspondence",
+      "expected": "SUBJECT_REFUSAL",
+      "input": {
+        "snapshot": {
+          "contractRef": {
+            "id": "urn:amharc:w1:clock-authority-contract:1.0.0",
+            "sha256": "c07fc9e62e5138a2c8c35eb924e59b16c1808fc419763cb310222232c08ba6a2"
+          },
+          "subject": {
+            "occurrenceId": "10000000-0000-4000-8000-000000000001",
+            "identityStanding": "provisional",
+            "representation": {
+              "issuer": "urn:amharc:test:capture:installation-a",
+              "localId": "unchanged-local-guid-a"
+            },
+            "resolutionRef": {
+              "id": "urn:amharc:fixture:w1:resolution:1.0.0",
+              "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+            }
+          },
+          "context": {
+            "semantic": {
+              "id": "urn:amharc:w1:semantic-profile:1.0.0",
+              "sha256": "041f67899c61a2fb93acbb4ea7532c0daa32832f877a491c8073b62b4c74b508"
+            },
+            "identifier": {
+              "id": "urn:amharc:w1:identifier-application:1.0.0",
+              "sha256": "c956baed4ef18c54bcdcf32d1e7019bfe131e655e5609a32ac25c93cf2b650e1"
+            },
+            "format": {
+              "id": "urn:amharc:fixture:w1:format:1.0.0",
+              "sha256": "5fe7b959f147949e872bf23ca36af959a918c2d31055c6285d5a6321bef520b7"
+            },
+            "provenance": {
+              "id": "urn:amharc:w1:material-history:1.0.0",
+              "sha256": "c0c3cc9caaf704f18b004c1e3309d81cc0c23399842f0fa30852494d0b0fd681"
+            },
+            "trustBundle": {
+              "id": "urn:amharc:fixture:w1:trustBundle:1.0.0",
+              "sha256": "50be9f25fc922e698732c73b0550958635faf65013c4b42bd239c6dcaed68e75"
+            }
+          },
+          "authority": {
+            "status": "active",
+            "principalId": "synthetic-capture-principal",
+            "bindingId": "synthetic-binding-a",
+            "incarnationId": "30000000-0000-4000-8000-000000000003",
+            "generation": "1",
+            "sequence": "10",
+            "capability": "snapshot",
+            "reason": null
+          },
+          "clock": {
+            "domain": "official-match-accumulated",
+            "unit": "seconds",
+            "accumulated": 120,
+            "phase": "playing",
+            "periodKey": "p1",
+            "periodStart": 0,
+            "periodElapsed": 120,
+            "state": "running",
+            "method": "monotonic-live",
+            "uncertaintySeconds": null
+          },
+          "legacyRecording": {
+            "coordinate": "recordingElapsedSeconds",
+            "producerContract": "1.0",
+            "value": 175,
+            "qualification": "legacy-producer-coordinate-not-media-time"
+          },
+          "observedAtUtc": "2026-10-04T10:00:00Z",
+          "activityRef": {
+            "id": "urn:amharc:fixture:w1:baselineActivity:1.0.0",
+            "sha256": "07d0ac1e7f92c8d01b7a5a6525fa05d421b8d95c67830af45f949774cb5052fa"
+          },
+          "attestation": {
+            "keyId": "synthetic-producer-key",
+            "algorithm": "Ed25519",
+            "payloadSha256": "d621ae808664920dbc8295f9c8ab3555705cbc18b81d0402188ef8d9470da048",
+            "signatureBase64": "4HkxSMhWleYWhasACRCGHKCjeWeyHosvQ5Dg8QA0ipn2cn2f+kIYd27RPsGoHtrhr9Ito5pxxpVlDCTAwl8VCA=="
+          }
+        },
+        "requestedSubject": "10000000-0000-4000-8000-000000000001",
+        "availableDependencies": true,
+        "correctionActivity": false
+      }
+    },
+    {
+      "id": "V37-unresolved-material-history",
+      "expected": "HISTORY_REFUSAL",
+      "input": {
+        "snapshot": {
+          "contractRef": {
+            "id": "urn:amharc:w1:clock-authority-contract:1.0.0",
+            "sha256": "c07fc9e62e5138a2c8c35eb924e59b16c1808fc419763cb310222232c08ba6a2"
+          },
+          "subject": {
+            "occurrenceId": "10000000-0000-4000-8000-000000000001",
+            "identityStanding": "provisional",
+            "representation": {
+              "issuer": "urn:amharc:test:capture:installation-a",
+              "localId": "unchanged-local-guid-a"
+            },
+            "resolutionRef": {
+              "id": "urn:amharc:fixture:w1:resolution:1.0.0",
+              "sha256": "960bb672f23b6f5c8d01e2aeff4b366d1540d0d6166a4c2fa33f0eddc98a6707"
+            }
+          },
+          "context": {
+            "semantic": {
+              "id": "urn:amharc:w1:semantic-profile:1.0.0",
+              "sha256": "041f67899c61a2fb93acbb4ea7532c0daa32832f877a491c8073b62b4c74b508"
+            },
+            "identifier": {
+              "id": "urn:amharc:w1:identifier-application:1.0.0",
+              "sha256": "c956baed4ef18c54bcdcf32d1e7019bfe131e655e5609a32ac25c93cf2b650e1"
+            },
+            "format": {
+              "id": "urn:amharc:fixture:w1:format:1.0.0",
+              "sha256": "5fe7b959f147949e872bf23ca36af959a918c2d31055c6285d5a6321bef520b7"
+            },
+            "provenance": {
+              "id": "urn:amharc:w1:material-history:1.0.0",
+              "sha256": "c0c3cc9caaf704f18b004c1e3309d81cc0c23399842f0fa30852494d0b0fd681"
+            },
+            "trustBundle": {
+              "id": "urn:amharc:fixture:w1:trustBundle:1.0.0",
+              "sha256": "50be9f25fc922e698732c73b0550958635faf65013c4b42bd239c6dcaed68e75"
+            }
+          },
+          "authority": {
+            "status": "active",
+            "principalId": "synthetic-capture-principal",
+            "bindingId": "synthetic-binding-a",
+            "incarnationId": "30000000-0000-4000-8000-000000000003",
+            "generation": "1",
+            "sequence": "10",
+            "capability": "snapshot",
+            "reason": null
+          },
+          "clock": {
+            "domain": "official-match-accumulated",
+            "unit": "seconds",
+            "accumulated": 120,
+            "phase": "playing",
+            "periodKey": "p1",
+            "periodStart": 0,
+            "periodElapsed": 120,
+            "state": "running",
+            "method": "monotonic-live",
+            "uncertaintySeconds": null
+          },
+          "legacyRecording": {
+            "coordinate": "recordingElapsedSeconds",
+            "producerContract": "1.0",
+            "value": 175,
+            "qualification": "legacy-producer-coordinate-not-media-time"
+          },
+          "observedAtUtc": "2026-10-04T10:00:00Z",
+          "activityRef": {
+            "id": "urn:amharc:fixture:w1:baselineActivity:1.0.0",
+            "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+          },
+          "attestation": {
+            "keyId": "synthetic-producer-key",
+            "algorithm": "Ed25519",
+            "payloadSha256": "b1daf9a26bba1997a51884da1c2704d2d2db6a61a4ca9759f5593347d63103aa",
+            "signatureBase64": "SIyz7bjLVvOswH+f/v27wo7cAznvqWgwfpbUyHDUMJ3LuAXMmoVPjidL/w5oNSnjizgDMkZ6meeRQYLRIJBvDg=="
+          }
+        },
+        "requestedSubject": "10000000-0000-4000-8000-000000000001",
+        "availableDependencies": true,
+        "correctionActivity": false
+      }
+    },
+    {
+      "id": "V38-snapshot-emission-is-not-advance",
+      "expected": "CAPABILITY_REFUSAL",
+      "input": {
+        "snapshot": {
+          "contractRef": {
+            "id": "urn:amharc:w1:clock-authority-contract:1.0.0",
+            "sha256": "c07fc9e62e5138a2c8c35eb924e59b16c1808fc419763cb310222232c08ba6a2"
+          },
+          "subject": {
+            "occurrenceId": "10000000-0000-4000-8000-000000000001",
+            "identityStanding": "provisional",
+            "representation": {
+              "issuer": "urn:amharc:test:capture:installation-a",
+              "localId": "unchanged-local-guid-a"
+            },
+            "resolutionRef": {
+              "id": "urn:amharc:fixture:w1:resolution:1.0.0",
+              "sha256": "960bb672f23b6f5c8d01e2aeff4b366d1540d0d6166a4c2fa33f0eddc98a6707"
+            }
+          },
+          "context": {
+            "semantic": {
+              "id": "urn:amharc:w1:semantic-profile:1.0.0",
+              "sha256": "041f67899c61a2fb93acbb4ea7532c0daa32832f877a491c8073b62b4c74b508"
+            },
+            "identifier": {
+              "id": "urn:amharc:w1:identifier-application:1.0.0",
+              "sha256": "c956baed4ef18c54bcdcf32d1e7019bfe131e655e5609a32ac25c93cf2b650e1"
+            },
+            "format": {
+              "id": "urn:amharc:fixture:w1:format:1.0.0",
+              "sha256": "5fe7b959f147949e872bf23ca36af959a918c2d31055c6285d5a6321bef520b7"
+            },
+            "provenance": {
+              "id": "urn:amharc:w1:material-history:1.0.0",
+              "sha256": "c0c3cc9caaf704f18b004c1e3309d81cc0c23399842f0fa30852494d0b0fd681"
+            },
+            "trustBundle": {
+              "id": "urn:amharc:fixture:w1:snapshotOnlyTrust:1.0.0",
+              "sha256": "b65189a93b7f4b7370c8f5f4c0eded77b05c2e3425050ee76c767f562df80a10"
+            }
+          },
+          "authority": {
+            "status": "active",
+            "principalId": "synthetic-capture-principal",
+            "bindingId": "synthetic-binding-a",
+            "incarnationId": "30000000-0000-4000-8000-000000000003",
+            "generation": "1",
+            "sequence": "10",
+            "capability": "snapshot",
+            "reason": null
+          },
+          "clock": {
+            "domain": "official-match-accumulated",
+            "unit": "seconds",
+            "accumulated": 120,
+            "phase": "playing",
+            "periodKey": "p1",
+            "periodStart": 0,
+            "periodElapsed": 120,
+            "state": "running",
+            "method": "monotonic-live",
+            "uncertaintySeconds": null
+          },
+          "legacyRecording": {
+            "coordinate": "recordingElapsedSeconds",
+            "producerContract": "1.0",
+            "value": 175,
+            "qualification": "legacy-producer-coordinate-not-media-time"
+          },
+          "observedAtUtc": "2026-10-04T10:00:00Z",
+          "activityRef": {
+            "id": "urn:amharc:fixture:w1:baselineActivity:1.0.0",
+            "sha256": "07d0ac1e7f92c8d01b7a5a6525fa05d421b8d95c67830af45f949774cb5052fa"
+          },
+          "attestation": {
+            "keyId": "synthetic-producer-key",
+            "algorithm": "Ed25519",
+            "payloadSha256": "eaa48571bded1240ca74b7dc1f565525ca2784ecb7c95b354d34117af60bd9fe",
+            "signatureBase64": "DfnHElEGEZKZ020H0/EMQS0WQPJS4diba/ZdYd1i1tP9x4KNTpDB+pqFxE3FNMEtUT6Gzd7an06/bXkqv8FiAg=="
+          }
+        },
+        "requestedSubject": "10000000-0000-4000-8000-000000000001",
+        "availableDependencies": true,
+        "correctionActivity": false
+      }
+    },
+    {
+      "id": "V39-gap-reason-required",
+      "expected": "AUTHORITY_REFUSAL",
+      "input": {
+        "snapshot": {
+          "contractRef": {
+            "id": "urn:amharc:w1:clock-authority-contract:1.0.0",
+            "sha256": "c07fc9e62e5138a2c8c35eb924e59b16c1808fc419763cb310222232c08ba6a2"
+          },
+          "subject": {
+            "occurrenceId": "10000000-0000-4000-8000-000000000001",
+            "identityStanding": "provisional",
+            "representation": {
+              "issuer": "urn:amharc:test:capture:installation-a",
+              "localId": "unchanged-local-guid-a"
+            },
+            "resolutionRef": {
+              "id": "urn:amharc:fixture:w1:resolution:1.0.0",
+              "sha256": "960bb672f23b6f5c8d01e2aeff4b366d1540d0d6166a4c2fa33f0eddc98a6707"
+            }
+          },
+          "context": {
+            "semantic": {
+              "id": "urn:amharc:w1:semantic-profile:1.0.0",
+              "sha256": "041f67899c61a2fb93acbb4ea7532c0daa32832f877a491c8073b62b4c74b508"
+            },
+            "identifier": {
+              "id": "urn:amharc:w1:identifier-application:1.0.0",
+              "sha256": "c956baed4ef18c54bcdcf32d1e7019bfe131e655e5609a32ac25c93cf2b650e1"
+            },
+            "format": {
+              "id": "urn:amharc:fixture:w1:format:1.0.0",
+              "sha256": "5fe7b959f147949e872bf23ca36af959a918c2d31055c6285d5a6321bef520b7"
+            },
+            "provenance": {
+              "id": "urn:amharc:w1:material-history:1.0.0",
+              "sha256": "c0c3cc9caaf704f18b004c1e3309d81cc0c23399842f0fa30852494d0b0fd681"
+            },
+            "trustBundle": {
+              "id": "urn:amharc:fixture:w1:trustBundle:1.0.0",
+              "sha256": "50be9f25fc922e698732c73b0550958635faf65013c4b42bd239c6dcaed68e75"
+            }
+          },
+          "authority": {
+            "status": "gap",
+            "principalId": "synthetic-capture-principal",
+            "bindingId": "synthetic-binding-a",
+            "incarnationId": "30000000-0000-4000-8000-000000000003",
+            "generation": "1",
+            "sequence": "10",
+            "capability": "snapshot",
+            "reason": null
+          },
+          "clock": {
+            "domain": "official-match-accumulated",
+            "unit": "seconds",
+            "accumulated": 120,
+            "phase": "playing",
+            "periodKey": "p1",
+            "periodStart": 0,
+            "periodElapsed": 120,
+            "state": "withheld",
+            "method": "monotonic-live",
+            "uncertaintySeconds": null
+          },
+          "legacyRecording": {
+            "coordinate": "recordingElapsedSeconds",
+            "producerContract": "1.0",
+            "value": 175,
+            "qualification": "legacy-producer-coordinate-not-media-time"
+          },
+          "observedAtUtc": "2026-10-04T10:00:00Z",
+          "activityRef": {
+            "id": "urn:amharc:fixture:w1:baselineActivity:1.0.0",
+            "sha256": "07d0ac1e7f92c8d01b7a5a6525fa05d421b8d95c67830af45f949774cb5052fa"
+          },
+          "attestation": {
+            "keyId": "synthetic-producer-key",
+            "algorithm": "Ed25519",
+            "payloadSha256": "85fdeb050e4f783c46afb1e8af31957fd75bb24d6b545f85190da6173c66c652",
+            "signatureBase64": "5ldCuT+5Ad9AL0QuEFtThTgCcslgyVwguY9n1zaWmjZleeh5OW0O8fDilEJHnRCl66yg2K+s5dijoFpgsTwnCA=="
+          }
+        },
+        "requestedSubject": "10000000-0000-4000-8000-000000000001",
+        "availableDependencies": true,
+        "correctionActivity": false
+      }
+    }
+  ],
+  "cryptographicInteroperability": [
+    {
+      "id": "C01-basic",
+      "rawJson": "{\"b\":2,\"a\":1}",
+      "expected": "VALID",
+      "canonicalUtf8Hex": "7b2261223a312c2262223a327d",
+      "sha256Hex": "43258cff783fe7036d8a43033f830adfc60ec037382473548ac742b888292777",
+      "signedBytesHex": "34333235386366663738336665373033366438613433303333663833306164666336306563303337333832343733353438616337343262383838323932373737",
+      "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAoBhO/Nt/TUPYApnbD8YxdtHhOheg2z44tL2ozk4uq6k=\n-----END PUBLIC KEY-----\n",
+      "signatureBase64": "VpYKdb9qWIbDEnAulaBMkjavwmLhzxoUw4xCEgk7FWw38lGwubHJmj7EbAaUYVnYer0Jyy+/sykYW/RCKCCQBQ=="
+    },
+    {
+      "id": "C02-unicode",
+      "rawJson": "{\"z\":\"é😀\",\"a\":[\"\\u2028\",\"\\u2029\",\"/\"],\"\\ue000\":1,\"😀\":2}",
+      "expected": "VALID",
+      "canonicalUtf8Hex": "7b2261223a5b22e280a8222c22e280a9222c222f225d2c227a223a22c3a9f09f9880222c22f09f9880223a322c22ee8080223a317d",
+      "sha256Hex": "2156ae07f9cb9dd1920ffa55bb7dcbadb111bff6657be8f8c70217736d884e9d",
+      "signedBytesHex": "32313536616530376639636239646431393230666661353562623764636261646231313162666636363537626538663863373032313737333664383834653964",
+      "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAoBhO/Nt/TUPYApnbD8YxdtHhOheg2z44tL2ozk4uq6k=\n-----END PUBLIC KEY-----\n",
+      "signatureBase64": "hC8v30lu2G8dP+c3pWPv3SLX1wJwICHU/zstjHNXXW2YVNqNK6KT5Gpw2SbYLme3ybSm7ceSl3RfaySDUFzuDQ=="
+    },
+    {
+      "id": "C03-escapes",
+      "rawJson": "{\"value\":\"\\u0000\\b\\t\\n\\f\\r\\u001f\\\\\\\"\"}",
+      "expected": "VALID",
+      "canonicalUtf8Hex": "7b2276616c7565223a225c75303030305c625c745c6e5c665c725c75303031665c5c5c22227d",
+      "sha256Hex": "dfdfbb219b52c1a0d4feb5db793eac8cc1ed38762c7380974566d61272b331b4",
+      "signedBytesHex": "64666466626232313962353263316130643466656235646237393365616338636331656433383736326337333830393734353636643631323732623333316234",
+      "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAoBhO/Nt/TUPYApnbD8YxdtHhOheg2z44tL2ozk4uq6k=\n-----END PUBLIC KEY-----\n",
+      "signatureBase64": "1W1UZPW1gUwBfcuYqac7d0P7XcwGW0RkDvA5hWvxU0wEOb9ANZ7EdsKgE1yOBkUwSogW+2UHwP05fYFoh1mTDw=="
+    },
+    {
+      "id": "C04-integer-maximum",
+      "rawJson": "{\"order\":\"9007199254740993\",\"n\":2147483647}",
+      "expected": "VALID",
+      "canonicalUtf8Hex": "7b226e223a323134373438333634372c226f72646572223a2239303037313939323534373430393933227d",
+      "sha256Hex": "3e7321c7b193816518952b7cfd9f380ba1e245f4ccfbbe7ffbdc9bec67e26a93",
+      "signedBytesHex": "33653733323163376231393338313635313839353262376366643966333830626131653234356634636366626265376666626463396265633637653236613933",
+      "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAoBhO/Nt/TUPYApnbD8YxdtHhOheg2z44tL2ozk4uq6k=\n-----END PUBLIC KEY-----\n",
+      "signatureBase64": "PWvjzXpJ1HNnRzh7jDsSVAuDo2tdRA6yHNvSNXY870IcbPJbIx7Q0Un+Bl9K+jqJUj2aWczZOs3176JvWeZ8AA=="
+    },
+    {
+      "id": "C05-array-order",
+      "rawJson": "{\"items\":[3,1,2,null,true,false]}",
+      "expected": "VALID",
+      "canonicalUtf8Hex": "7b226974656d73223a5b332c312c322c6e756c6c2c747275652c66616c73655d7d",
+      "sha256Hex": "9cdaf7ab3252f36c38ec441115d0e22e1bbcd15d763daf4163873dd1b8bd7fff",
+      "signedBytesHex": "39636461663761623332353266333663333865633434313131356430653232653162626364313564373633646166343136333837336464316238626437666666",
+      "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAoBhO/Nt/TUPYApnbD8YxdtHhOheg2z44tL2ozk4uq6k=\n-----END PUBLIC KEY-----\n",
+      "signatureBase64": "88sjR4i4TL2eTgJVKCaonQ+phsRoTxpmAsKMsGCagR3ddF18bMafeJ43cuKy6y0JU7pc41/WiXBGu0tKI8fKDA=="
+    },
+    {
+      "id": "C06-numeric-equivalence",
+      "rawJson": "{\"n\":1e2,\"m\":1.0}",
+      "expected": "VALID",
+      "canonicalUtf8Hex": "7b226d223a312c226e223a3130307d",
+      "sha256Hex": "236ee68d583d607ad4bab40f4a36773fddbfbb5589ad74c3e3b5e14ed282b368",
+      "signedBytesHex": "32333665653638643538336436303761643462616234306634613336373733666464626662623535383961643734633365336235653134656432383262333638",
+      "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAoBhO/Nt/TUPYApnbD8YxdtHhOheg2z44tL2ozk4uq6k=\n-----END PUBLIC KEY-----\n",
+      "signatureBase64": "AnqrxY4ptbtbnXKH/szucQlH1QODlsoQ1TGMqn7hCJRtMCH9vAvTiWx7ZJZLb1nN1VGBhXkUWdzHR6N6bWDCAg=="
+    },
+    {
+      "id": "C07-envelope",
+      "rawJson": "{\"contractRef\":{\"id\":\"urn:amharc:w1:clock-authority-contract:1.0.0\",\"sha256\":\"c07fc9e62e5138a2c8c35eb924e59b16c1808fc419763cb310222232c08ba6a2\"},\"subject\":{\"occurrenceId\":\"10000000-0000-4000-8000-000000000001\",\"identityStanding\":\"provisional\",\"representation\":{\"issuer\":\"urn:amharc:test:capture:installation-a\",\"localId\":\"unchanged-local-guid-a\"},\"resolutionRef\":{\"id\":\"urn:amharc:fixture:w1:resolution:1.0.0\",\"sha256\":\"960bb672f23b6f5c8d01e2aeff4b366d1540d0d6166a4c2fa33f0eddc98a6707\"}},\"context\":{\"semantic\":{\"id\":\"urn:amharc:w1:semantic-profile:1.0.0\",\"sha256\":\"041f67899c61a2fb93acbb4ea7532c0daa32832f877a491c8073b62b4c74b508\"},\"identifier\":{\"id\":\"urn:amharc:w1:identifier-application:1.0.0\",\"sha256\":\"c956baed4ef18c54bcdcf32d1e7019bfe131e655e5609a32ac25c93cf2b650e1\"},\"format\":{\"id\":\"urn:amharc:fixture:w1:format:1.0.0\",\"sha256\":\"5fe7b959f147949e872bf23ca36af959a918c2d31055c6285d5a6321bef520b7\"},\"provenance\":{\"id\":\"urn:amharc:w1:material-history:1.0.0\",\"sha256\":\"c0c3cc9caaf704f18b004c1e3309d81cc0c23399842f0fa30852494d0b0fd681\"},\"trustBundle\":{\"id\":\"urn:amharc:fixture:w1:trustBundle:1.0.0\",\"sha256\":\"50be9f25fc922e698732c73b0550958635faf65013c4b42bd239c6dcaed68e75\"}},\"authority\":{\"status\":\"active\",\"principalId\":\"synthetic-capture-principal\",\"bindingId\":\"synthetic-binding-a\",\"incarnationId\":\"30000000-0000-4000-8000-000000000003\",\"generation\":\"1\",\"sequence\":\"10\",\"capability\":\"snapshot\",\"reason\":null},\"clock\":{\"domain\":\"official-match-accumulated\",\"unit\":\"seconds\",\"accumulated\":120,\"phase\":\"playing\",\"periodKey\":\"p1\",\"periodStart\":0,\"periodElapsed\":120,\"state\":\"running\",\"method\":\"monotonic-live\",\"uncertaintySeconds\":null},\"legacyRecording\":{\"coordinate\":\"recordingElapsedSeconds\",\"producerContract\":\"1.0\",\"value\":175,\"qualification\":\"legacy-producer-coordinate-not-media-time\"},\"observedAtUtc\":\"2026-10-04T10:00:00Z\",\"activityRef\":{\"id\":\"urn:amharc:fixture:w1:baselineActivity:1.0.0\",\"sha256\":\"07d0ac1e7f92c8d01b7a5a6525fa05d421b8d95c67830af45f949774cb5052fa\"}}",
+      "expected": "VALID",
+      "canonicalUtf8Hex": "7b226163746976697479526566223a7b226964223a2275726e3a616d686172633a666978747572653a77313a626173656c696e6541637469766974793a312e302e30222c22736861323536223a2230376430616331653766393263386430316237613561363532356661303564343231623864393563363738333061663435663934393737346362353035326661227d2c22617574686f72697479223a7b2262696e64696e674964223a2273796e7468657469632d62696e64696e672d61222c226361706162696c697479223a22736e617073686f74222c2267656e65726174696f6e223a2231222c22696e6361726e6174696f6e4964223a2233303030303030302d303030302d343030302d383030302d303030303030303030303033222c227072696e636970616c4964223a2273796e7468657469632d636170747572652d7072696e636970616c222c22726561736f6e223a6e756c6c2c2273657175656e6365223a223130222c22737461747573223a22616374697665227d2c22636c6f636b223a7b22616363756d756c61746564223a3132302c22646f6d61696e223a226f6666696369616c2d6d617463682d616363756d756c61746564222c226d6574686f64223a226d6f6e6f746f6e69632d6c697665222c22706572696f64456c6170736564223a3132302c22706572696f644b6579223a227031222c22706572696f645374617274223a302c227068617365223a22706c6179696e67222c227374617465223a2272756e6e696e67222c22756e6365727461696e74795365636f6e6473223a6e756c6c2c22756e6974223a227365636f6e6473227d2c22636f6e74657874223a7b22666f726d6174223a7b226964223a2275726e3a616d686172633a666978747572653a77313a666f726d61743a312e302e30222c22736861323536223a2235666537623935396631343739343965383732626632336361333661663935396139313863326433313035356336323835643561363332316265663532306237227d2c226964656e746966696572223a7b226964223a2275726e3a616d686172633a77313a6964656e7469666965722d6170706c69636174696f6e3a312e302e30222c22736861323536223a2263393536626165643465663138633534626364636633326431653730313962666531333165363535653536303961333261633235633933636632623635306531227d2c2270726f76656e616e6365223a7b226964223a2275726e3a616d686172633a77313a6d6174657269616c2d686973746f72793a312e302e30222c22736861323536223a2263306333636339636161663730346631386230303463316533333039643831636330633233333939383432663066613330383532343934643062306664363831227d2c2273656d616e746963223a7b226964223a2275726e3a616d686172633a77313a73656d616e7469632d70726f66696c653a312e302e30222c22736861323536223a2230343166363738393963363161326662393361636262346561373533326330646161333238333266383737613439316338303733623632623463373462353038227d2c22747275737442756e646c65223a7b226964223a2275726e3a616d686172633a666978747572653a77313a747275737442756e646c653a312e302e30222c22736861323536223a2235306265396632356663393232653639383733326337336230353530393538363335666166363530313363346234326264323339633664636165643638653735227d7d2c22636f6e7472616374526566223a7b226964223a2275726e3a616d686172633a77313a636c6f636b2d617574686f726974792d636f6e74726163743a312e302e30222c22736861323536223a2263303766633965363265353133386132633863333565623932346535396231366331383038666334313937363363623331303232323233326330386261366132227d2c226c65676163795265636f7264696e67223a7b22636f6f7264696e617465223a227265636f7264696e67456c61707365645365636f6e6473222c2270726f6475636572436f6e7472616374223a22312e30222c227175616c696669636174696f6e223a226c65676163792d70726f64756365722d636f6f7264696e6174652d6e6f742d6d656469612d74696d65222c2276616c7565223a3137357d2c226f627365727665644174557463223a22323032362d31302d30345431303a30303a30305a222c227375626a656374223a7b226964656e746974795374616e64696e67223a2270726f766973696f6e616c222c226f6363757272656e63654964223a2231303030303030302d303030302d343030302d383030302d303030303030303030303031222c22726570726573656e746174696f6e223a7b22697373756572223a2275726e3a616d686172633a746573743a636170747572653a696e7374616c6c6174696f6e2d61222c226c6f63616c4964223a22756e6368616e6765642d6c6f63616c2d677569642d61227d2c227265736f6c7574696f6e526566223a7b226964223a2275726e3a616d686172633a666978747572653a77313a7265736f6c7574696f6e3a312e302e30222c22736861323536223a2239363062623637326632336236663563386430316532616566663462333636643135343064306436313636613463326661333366306564646339386136373037227d7d7d",
+      "sha256Hex": "ad4fa7a1c4b3b122d3083f40c05156dbae7185b842794c065b4597f2b92d0d69",
+      "signedBytesHex": "61643466613761316334623362313232643330383366343063303531353664626165373138356238343237393463303635623435393766326239326430643639",
+      "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAoBhO/Nt/TUPYApnbD8YxdtHhOheg2z44tL2ozk4uq6k=\n-----END PUBLIC KEY-----\n",
+      "signatureBase64": "/p8Jmb/ciR+ybA5LnxEwa3K3a4nyH7iBgJvgllxFZsMq1fySv4KVA1ZkA+x2Kw2Ge789y1E0+HduOSyD/b9cBg=="
+    },
+    {
+      "id": "C08-tampered-signature",
+      "rawJson": "{\"b\":2,\"a\":1}",
+      "expected": "SIGNATURE_REFUSAL",
+      "canonicalUtf8Hex": "7b2261223a312c2262223a327d",
+      "sha256Hex": "43258cff783fe7036d8a43033f830adfc60ec037382473548ac742b888292777",
+      "signedBytesHex": "34333235386366663738336665373033366438613433303333663833306164666336306563303337333832343733353438616337343262383838323932373737",
+      "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAoBhO/Nt/TUPYApnbD8YxdtHhOheg2z44tL2ozk4uq6k=\n-----END PUBLIC KEY-----\n",
+      "signatureBase64": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "id": "C09-duplicate-keys",
+      "rawJson": "{\"a\":1,\"a\":2}",
+      "expected": "REJECT"
+    },
+    {
+      "id": "C10-lone-surrogate",
+      "rawJson": "{\"s\":\"\\ud800\"}",
+      "expected": "REJECT"
+    },
+    {
+      "id": "C11-fraction",
+      "rawJson": "{\"n\":1.5}",
+      "expected": "REJECT"
+    },
+    {
+      "id": "C12-negative-zero",
+      "rawJson": "{\"n\":-0}",
+      "expected": "REJECT"
+    },
+    {
+      "id": "C13-number-overflow",
+      "rawJson": "{\"n\":2147483648}",
+      "expected": "REJECT"
+    },
+    {
+      "id": "C14-negative-number",
+      "rawJson": "{\"n\":-1}",
+      "expected": "REJECT"
+    }
+  ]
+}
