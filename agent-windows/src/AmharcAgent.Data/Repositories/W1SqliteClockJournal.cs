@@ -26,6 +26,10 @@ public sealed class W1SqliteClockJournal : IW1ClockJournal
             CREATE TABLE IF NOT EXISTS W1ClockActivities(
               Id TEXT PRIMARY KEY, Subject TEXT NOT NULL, OperationKey TEXT NOT NULL,
               InputSha256 TEXT NOT NULL, Json TEXT NOT NULL, UNIQUE(Subject, OperationKey));
+            CREATE TRIGGER IF NOT EXISTS W1ClockActivities_no_update BEFORE UPDATE ON W1ClockActivities
+              BEGIN SELECT RAISE(ABORT,'W1_HISTORY_IMMUTABLE'); END;
+            CREATE TRIGGER IF NOT EXISTS W1ClockActivities_no_delete BEFORE DELETE ON W1ClockActivities
+              BEGIN SELECT RAISE(ABORT,'W1_HISTORY_IMMUTABLE'); END;
             """;
         cmd.ExecuteNonQuery();
     }
@@ -114,5 +118,17 @@ public sealed class W1SqliteClockJournal : IW1ClockJournal
         context.ExecuteNonQuery();
         _beforeCommitFault?.Invoke();
         tx.Commit();
+    }
+
+    public IReadOnlyList<W1JournalActivity> ReadActivities(string subject)
+    {
+        using var c = Open();
+        using var cmd = c.CreateCommand();
+        cmd.CommandText = "SELECT Id,Subject,OperationKey,InputSha256,Json FROM W1ClockActivities WHERE Subject=$s";
+        cmd.Parameters.AddWithValue("$s", subject);
+        using var r = cmd.ExecuteReader();
+        var result = new List<W1JournalActivity>();
+        while (r.Read()) result.Add(new(r.GetString(0), r.GetString(1), r.GetString(2), r.GetString(3), r.GetString(4)));
+        return result;
     }
 }

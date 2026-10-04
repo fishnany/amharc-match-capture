@@ -38,4 +38,9 @@ public sealed class W1DependencyResolver
 
     public static W1Reference Reference(JsonNode node) =>
         new(node["id"]!.GetValue<string>(), node["sha256"]!.GetValue<string>());
+
+    public object Export() => _bytes.Select(p => new {
+        reference = new { id = p.Key.Id, sha256 = p.Key.Sha256 },
+        bytesBase64 = Convert.ToBase64String(p.Value)
+    }).ToArray();
 }

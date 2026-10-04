@@ -34,7 +34,10 @@ type MatchFormValues = z.infer<typeof matchSchema>;
 
 export default function MatchSetup() {
   const [, setLocation] = useLocation();
-  const createMatch = useCreateMatch();
+  // One mounted operator creation intent retains its key across network retries.
+  // Legacy Capture ignores this header; W1 development composition requires it.
+  const [creationOperationKey] = React.useState(() => crypto.randomUUID());
+  const createMatch = useCreateMatch({ request: { headers: { "Idempotency-Key": creationOperationKey } } });
   const { data: cameras } = useGetCameras();
 
   const form = useForm<MatchFormValues>({

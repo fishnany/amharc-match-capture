@@ -16,7 +16,9 @@ public class MatchesController(
     ILiveReadinessService liveReadiness,
     IAmharcCommandDispatcher commandDispatcher,
     IOverlayService overlay,
-    ILogger<MatchesController> logger) : ControllerBase
+    ILogger<MatchesController> logger,
+    AmharcAgent.Api.W1.W1DevelopmentApplication? w1 = null,
+    AmharcAgent.Data.AmharcDbContext? w1Db = null) : ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> GetMatches(
@@ -117,10 +119,23 @@ public class MatchesController(
             UpdatedAt = now
         };
 
-        var created =
-            await repo.CreateAsync(
-                match,
-                ct);
+        Match created;
+        if (w1 is not null)
+        {
+            var key = Request.Headers["Idempotency-Key"].ToString();
+            if (string.IsNullOrWhiteSpace(key))
+                return BadRequest(new { code = "W1_LOGICAL_CREATION_KEY_REQUIRED" });
+            try
+            {
+                created = await w1.CreateAsync(w1Db
+                    ?? throw new InvalidOperationException("W1_PERSISTENCE_UNRESOLVED"), match, key, ct);
+            }
+            catch (InvalidOperationException e) { return Conflict(new { code = e.Message }); }
+        }
+        else
+        {
+            created = await repo.CreateAsync(match, ct);
+        }
 
         return CreatedAtAction(
             nameof(GetMatch),

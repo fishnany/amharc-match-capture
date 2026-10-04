@@ -72,7 +72,8 @@ public sealed class W1SubjectBoundRuntime
             throw new InvalidOperationException("W1_SUBJECT_REFUSAL");
     }
 
-    public void AdoptVerifiedDevelopmentGrant(string subject, W1VerifiedDevelopmentGrant verifiedGrant, string operationKey)
+    public void AdoptVerifiedDevelopmentGrant(string subject, W1VerifiedDevelopmentGrant verifiedGrant, string operationKey,
+        W1Reference? initialHistoricalTrust = null)
     {
         lock (_gate)
         {
@@ -86,6 +87,7 @@ public sealed class W1SubjectBoundRuntime
             var previous = _grant;
             var previousEvidence = _grantEvidence;
             var previousStatus = _status;
+            var previousContext = (JsonObject)_context.DeepClone();
             if (_grant is not null &&
                 (_grant["principalId"]!.GetValue<string>() != grant["principalId"]!.GetValue<string>() ||
                  _grant["bindingId"]!.GetValue<string>() != grant["bindingId"]!.GetValue<string>()))
@@ -101,8 +103,19 @@ public sealed class W1SubjectBoundRuntime
                 _status = "gap";
                 return;
             }
-            try { Require("snapshot"); Material("binding activation", operationKey, _clock, "explicit development grant"); }
-            catch { _grant = previous; _grantEvidence = previousEvidence; _status = previousStatus; throw; }
+            try
+            {
+                if (initialHistoricalTrust is not null && _revision == 0)
+                {
+                    var bytes = System.Text.Encoding.UTF8.GetBytes(_grantEvidence.ToJsonString());
+                    var actual = new W1Reference(_grantEvidence["identifier"]!.GetValue<string>(),
+                        Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(bytes)).ToLowerInvariant());
+                    if (actual != initialHistoricalTrust) throw new InvalidOperationException("W1_HISTORICAL_CONTEXT_REFUSAL");
+                    _context["trustBundle"] = JsonSerializerNode(actual);
+                }
+                Require("snapshot"); Material("binding activation", operationKey, _clock, "explicit development grant");
+            }
+            catch { _grant = previous; _grantEvidence = previousEvidence; _status = previousStatus; _context = previousContext; throw; }
         }
     }
 
@@ -198,6 +211,10 @@ public sealed class W1SubjectBoundRuntime
             ["priorSeconds"] = _clock["accumulated"]!.DeepClone(), ["newSeconds"] = next["accumulated"]!.DeepClone(),
             ["requiredCapability"] = operation == "correct" ? "correct" : null,
             ["inputRevision"] = _revision.ToString(), ["inputActivity"] = _historyId,
+            ["parentRef"] = _historyId is null ? null : JsonSerializerNode(
+                W1MaterialChain.Reference(_journal.ReadActivity(_historyId)
+                    ?? throw new InvalidOperationException("W1_HISTORY_UNRESOLVED"))),
+            ["baselineStanding"] = _historyId is null ? "governed-development-baseline" : null,
             ["priorState"] = _clock.DeepClone(), ["newState"] = next.DeepClone(),
             ["exactContext"] = _context.DeepClone(), ["historicalGrant"] = _grant?.DeepClone(),
             ["historicalGrantEvidence"] = _grantEvidence?.DeepClone(),
@@ -213,8 +230,10 @@ public sealed class W1SubjectBoundRuntime
             ["historicalGrant"] = _grant?.DeepClone(), ["status"] = _status,
             ["historicalGrantEvidence"] = _grantEvidence?.DeepClone()
         };
+        var material = new W1JournalActivity(id, Subject, operationKey, inputHash, activity.ToJsonString());
+        context["activityRef"] = JsonSerializerNode(W1MaterialChain.Reference(material));
         _journal.Commit(_revision, new(Subject, _revision + 1, "1.0.0", context.ToJsonString(), id),
-            new(id, Subject, operationKey, inputHash, activity.ToJsonString()));
+            material);
         _revision++; _historyId = id; _clock = (JsonObject)next.DeepClone();
     }
 
@@ -227,6 +246,12 @@ public sealed class W1SubjectBoundRuntime
             var stored = _journal.Read(Subject) ?? throw new InvalidOperationException("W1_LEGACY_ASSURANCE_GAP");
             if (stored.WriterVersion != "1.0.0") throw new InvalidOperationException("W1_LEGACY_ASSURANCE_GAP");
             var c = JsonNode.Parse(stored.ContextJson)!;
+            var head = W1MaterialChain.CurrentHead(_journal, stored, historicalDependencies);
+            if (c["activityRef"] is null || W1DependencyResolver.Reference(c["activityRef"]!) != head)
+                throw new InvalidOperationException("W1_RECOVERY_HEAD_DIGEST_REFUSAL");
+            if (W1MaterialChain.Validate(head, Subject, _context, historicalDependencies, historicalVerifier)
+                != "QUALIFIED")
+                throw new InvalidOperationException("W1_LEGACY_ASSURANCE_GAP");
             if (c["subject"]?["occurrenceId"]?.GetValue<string>() != Subject ||
                 c["context"]!.ToJsonString() != _context.ToJsonString() ||
                 _journal.ReadActivity(stored.ActivityId) is not { } activity ||
@@ -295,6 +320,9 @@ public sealed class W1SubjectBoundRuntime
                     System.Text.Encoding.UTF8.GetBytes(activity.Json))).ToLowerInvariant());
         }
     }
+
+    private static JsonObject JsonSerializerNode(W1Reference r) =>
+        new() { ["id"] = r.Id, ["sha256"] = r.Sha256 };
 
     public T CaptureCoherently<T>(string subject, Func<JsonObject, W1Reference, T> produce)
     {
