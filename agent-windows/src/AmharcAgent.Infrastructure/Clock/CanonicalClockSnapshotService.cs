@@ -17,17 +17,13 @@ public sealed class CanonicalClockSnapshotService(
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(matchId);
 
-        var state =
-            clock.State;
-
-        var sequence =
-            authorityContext.NextSequence();
-
-        return ClockSnapshotV1Adapter.FromClockState(
-            state,
-            matchId,
-            authorityContext.Authority,
-            authorityContext.AuthorityEpoch,
-            sequence);
+        if (clock is not ISubjectBoundClockService bound)
+            throw new InvalidOperationException("CLOCK_SUBJECT_CONTEXT_UNAVAILABLE");
+        // Sequence allocation is inside the same consequential read boundary.
+        // A wrong subject cannot consume an order or publish relabelled state.
+        return bound.ReadFor(matchId, state =>
+            ClockSnapshotV1Adapter.FromClockState(
+                state, matchId, authorityContext.Authority,
+                authorityContext.AuthorityEpoch, authorityContext.NextSequence()));
     }
 }

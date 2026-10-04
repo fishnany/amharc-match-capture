@@ -13,7 +13,7 @@ namespace AmharcAgent.Infrastructure.Clock;
 /// - Match clock: pauses during half-time, can be corrected by operator.
 /// - Recording clock: starts with recording, NEVER pauses, not affected by corrections.
 /// </summary>
-public class MatchClockService : IMatchClockService, IDisposable
+public class MatchClockService : IMatchClockService, ISubjectBoundClockService, IDisposable
 {
     private readonly IMatchClockStateStore _stateStore;
     private readonly ILogger<MatchClockService> _logger;
@@ -23,6 +23,78 @@ public class MatchClockService : IMatchClockService, IDisposable
 
     private readonly System.Threading.Timer _timer;
     private readonly object _lock = new();
+    private string? _boundLocalMatchId;
+    private bool _contextEnded;
+    private readonly SemaphoreSlim _commandGate = new(1, 1);
+
+    private sealed class CommandLease(SemaphoreSlim gate) : IAsyncDisposable
+    {
+        private int _released;
+        public ValueTask DisposeAsync()
+        {
+            if (Interlocked.Exchange(ref _released, 1) == 0) gate.Release();
+            return ValueTask.CompletedTask;
+        }
+    }
+
+    public async ValueTask<IAsyncDisposable> EnterCommandAsync(
+        string localMatchId, bool isStart, CancellationToken ct = default)
+    {
+        await _commandGate.WaitAsync(ct);
+        try
+        {
+            lock (_lock) { if (!isStart) RequireSubject(localMatchId); }
+            return new CommandLease(_commandGate);
+        }
+        catch { _commandGate.Release(); throw; }
+    }
+
+    public void StartFor(string localMatchId)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(localMatchId);
+        lock (_lock)
+        {
+            if (_boundLocalMatchId is not null && !_contextEnded)
+                throw new InvalidOperationException("CLOCK_ALREADY_BOUND: explicitly end/reset the previous context.");
+            _boundLocalMatchId = localMatchId;
+            _contextEnded = false;
+            Start();
+        }
+    }
+
+    public void ApplyFor(string localMatchId, Action action)
+    {
+        lock (_lock)
+        {
+            RequireSubject(localMatchId);
+            action();
+        }
+    }
+
+    public void EndSubject(string localMatchId)
+    {
+        lock (_lock)
+        {
+            RequireSubject(localMatchId);
+            Pause();
+            _contextEnded = true;
+        }
+    }
+
+    public T ReadFor<T>(string localMatchId, Func<ClockState, T> capture)
+    {
+        lock (_lock)
+        {
+            RequireSubject(localMatchId);
+            return capture(BuildState());
+        }
+    }
+
+    private void RequireSubject(string localMatchId)
+    {
+        if (_boundLocalMatchId is null || !StringComparer.Ordinal.Equals(_boundLocalMatchId, localMatchId))
+            throw new InvalidOperationException("CLOCK_SUBJECT_REFUSAL");
+    }
 
     private readonly List<ClockCorrectionEntry> _auditLog = new();
 
@@ -49,7 +121,10 @@ public class MatchClockService : IMatchClockService, IDisposable
             Timeout.Infinite);
     }
 
-    public ClockState State => BuildState();
+    public ClockState State
+    {
+        get { lock (_lock) return BuildState(); }
+    }
 
     public void Start()
     {
@@ -135,6 +210,7 @@ public class MatchClockService : IMatchClockService, IDisposable
             _isRunning = false;
             _currentPeriod = 0;
             _periodStartTotalMatchElapsedSeconds = null;
+            _boundLocalMatchId = null;
 
             _timer.Change(
                 Timeout.Infinite,
@@ -228,7 +304,11 @@ public class MatchClockService : IMatchClockService, IDisposable
 
     public void MarkFullTime()
     {
-        Pause();
+        lock (_lock)
+        {
+            Pause();
+            _contextEnded = true;
+        }
 
         _logger.LogInformation(
             "Full time");
@@ -244,6 +324,7 @@ public class MatchClockService : IMatchClockService, IDisposable
 
         lock (_lock)
         {
+            RequireSubject(matchId);
             state = BuildState();
         }
 
@@ -263,7 +344,7 @@ public class MatchClockService : IMatchClockService, IDisposable
                 CurrentPeriod =
                     state.CurrentPeriod,
                 PeriodStartTotalMatchElapsedSeconds =
-                    _periodStartTotalMatchElapsedSeconds,
+                    state.PeriodStartTotalMatchElapsedSeconds,
                 ClockMode =
                     state.ClockMode,
                 PersistedAt =
@@ -301,6 +382,8 @@ public class MatchClockService : IMatchClockService, IDisposable
 
             return false;
         }
+        if (!StringComparer.Ordinal.Equals(persisted.MatchId, matchId))
+            throw new InvalidOperationException("CLOCK_CHECKPOINT_SUBJECT_REFUSAL");
 
         var now =
             DateTimeOffset.UtcNow;
@@ -313,6 +396,9 @@ public class MatchClockService : IMatchClockService, IDisposable
 
         lock (_lock)
         {
+            if (_boundLocalMatchId is not null && _boundLocalMatchId != persisted.MatchId)
+                throw new InvalidOperationException("CLOCK_SUBJECT_REFUSAL");
+            _boundLocalMatchId = persisted.MatchId;
             _matchStopwatch.Reset();
             _recordingStopwatch.Reset();
 

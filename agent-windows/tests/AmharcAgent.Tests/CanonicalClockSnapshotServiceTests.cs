@@ -51,6 +51,7 @@ public class CanonicalClockSnapshotServiceTests
             .Setup(a => a.NextSequence())
             .Returns(42);
 
+        W1ClockTestBinding.Attach(clock);
         var sut =
             new CanonicalClockSnapshotService(
                 clock.Object,
@@ -117,6 +118,7 @@ public class CanonicalClockSnapshotServiceTests
             .Returns(1)
             .Returns(2);
 
+        W1ClockTestBinding.Attach(clock);
         var sut =
             new CanonicalClockSnapshotService(
                 clock.Object,

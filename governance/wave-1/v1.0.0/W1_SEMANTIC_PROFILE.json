@@ -1,0 +1,66 @@
+{
+  "identifier": "urn:amharc:w1:semantic-profile:1.0.0",
+  "title": "W1 SEMANTIC PROFILE",
+  "version": "1.0.0",
+  "controlledPath": "governance/wave-1/v1.0.0/W1_SEMANTIC_PROFILE.json",
+  "owner": "Competent AMHARC Architecture Owner",
+  "steward": "AMHARC Ontology governance steward",
+  "implementationResponsibilities": {
+    "capture": "producer / initial prospective allocator implementation location",
+    "tagger": "isolated read-only qualified consumer",
+    "transformer": "NONE"
+  },
+  "sourceArchitecture": {
+    "repository": "fishnany/amharc-ontology",
+    "revision": "ff9ac2234dfb4032bf87f700ec8188e1af339649",
+    "tree": "f9d96a8c0bc68fd77777415a436a76994ec39913"
+  },
+  "directionEvidence": {
+    "file": "Pasted--AMHARC-WAVE-1-CONSOLIDATED-ARCHITECTURE-OWNER-DIRECTIO_1791109470766.txt",
+    "sha256": "08c9aa269d43b1413916d36ceed24fd63f9f1adeb634f65a513d2d441646cf94",
+    "standing": "approves finalisation direction, NOT this exact publication"
+  },
+  "statusRule": "Controlled specification on competent Owner-authorised verified publication; candidate before that event",
+  "effectivityRule": "Effective for W1 DEVELOPMENT / CONFORMANCE at the verified Owner-authorised atomic publication revision; no invented date or containing hash",
+  "operationalApplicability": "NOT established by publication; exact real format, issuer/allocator, principal/grant, policy and deployment applicability required before corresponding real use",
+  "implementationAuthorisation": "NONE conveyed by this specification or its publication",
+  "subject": "Match Occurrence is operational root; Fixture, Session, Run and representation are distinct",
+  "correspondence": "Explicit issuer-qualified resolution record; no equality/similarity/import inference; reversals preserve prior effectivity and basis",
+  "canonicalIdentity": "Accepted ADR-AMHARC-006 Profile v1; provisionally allocated occurrence remains the same occurrence ID on confirmation",
+  "officialTime": {
+    "domain": "official-match-accumulated",
+    "unit": "seconds",
+    "coordinate": "non-negative accumulated playing time under exact Match Format",
+    "corrections": "Only explicit authorised attributable correction may reduce time; prior value and provenance remain",
+    "period": "Explicit format period key and known accumulated start boundary; elapsed = accumulated - boundary; never infer later-period boundary",
+    "intervals": "No playing-time accumulation in preplay, interval or completed phase"
+  },
+  "formatApplicability": "Consume externally supplied exact format/period records; no hard-coded p1/p2, count, duration or competition rules. No general Match Format authoring platform.",
+  "formatGovernance": "Real governed format is NOT required for generic fail-closed development; REQUIRED for the operational use depending on that format.",
+  "legacyRecording": "Copy current producer recordingElapsedSeconds unchanged, with v1/legacy qualification; not Run elapsed, Session elapsed, Asset time, footage duration or Match Time",
+  "authority": {
+    "principal": "governed operational responsibility, not process instance or application name",
+    "binding": "exact subject/domain/capability/effectivity grant and complete scoped control-plane evidence",
+    "incarnation": "execution lifetime; restart creates another incarnation and needs explicit eligibility, never automatic binding carry-over",
+    "ordering": "generation/sequence compare only within same subject/principal/binding/incarnation; decimal strings avoid JS precision loss",
+    "capabilities": [
+      "advance",
+      "pause-resume",
+      "correct",
+      "period-transition",
+      "snapshot",
+      "checkpoint",
+      "recover"
+    ],
+    "activation": "explicit approved activation baseline; no election, reconnect promotion or general transfer",
+    "gap": "no eligible verifiable authority; withhold official progression; last observation stays historical",
+    "conflict": "unresolved governance-incompatible competing grants; no arbitrary winner"
+  },
+  "observer": "Tagger read-only; no reducer clock overwrite, score effect, Event acceptance or authority promotion; label last observed as-of, not guaranteed current",
+  "missingness": "Required omission invalid; null is explicit unavailable/unknown in the field's stated domain. For Gap/Conflict, nonempty reason plus withheld state mandatory. Unsupported dependency quarantines without default substitution.",
+  "quality": "UTC observation is not monotonic observation; checkpoint restore/UTC reconstruction remain distinct and uncertainty may be unknown",
+  "offline": "Exact content-addressed local dependency bundle only; no latest/default/network fallback; incomplete scope or expired trust bundle withholds authority",
+  "authorityInterpretation": "Envelope capability snapshot means emission ONLY. Advance/pause-resume/correct/period-transition/checkpoint/recover eligibility is established separately in exact material activity / grant context; never inferred from snapshot permission.",
+  "qualification": "Emission integrity, state-transition authority, applicability, observation currentness, identity resolution, history support and Event acceptance are separate findings.",
+  "betaMaturity": "Capture Beta/active development; Tagger Beta/field-test capable with limited live-match use; neither production/Foundation conformance established"
+}

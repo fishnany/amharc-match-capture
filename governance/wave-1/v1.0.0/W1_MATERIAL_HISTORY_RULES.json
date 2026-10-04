@@ -1,0 +1,77 @@
+{
+  "identifier": "urn:amharc:w1:material-history:1.0.0",
+  "title": "W1 MATERIAL HISTORY RULES",
+  "version": "1.0.0",
+  "controlledPath": "governance/wave-1/v1.0.0/W1_MATERIAL_HISTORY_RULES.json",
+  "owner": "Competent AMHARC Architecture Owner",
+  "steward": "AMHARC Ontology governance steward",
+  "implementationResponsibilities": {
+    "capture": "producer / initial prospective allocator implementation location",
+    "tagger": "isolated read-only qualified consumer",
+    "transformer": "NONE"
+  },
+  "sourceArchitecture": {
+    "repository": "fishnany/amharc-ontology",
+    "revision": "ff9ac2234dfb4032bf87f700ec8188e1af339649",
+    "tree": "f9d96a8c0bc68fd77777415a436a76994ec39913"
+  },
+  "directionEvidence": {
+    "file": "Pasted--AMHARC-WAVE-1-CONSOLIDATED-ARCHITECTURE-OWNER-DIRECTIO_1791109470766.txt",
+    "sha256": "08c9aa269d43b1413916d36ceed24fd63f9f1adeb634f65a513d2d441646cf94",
+    "standing": "approves finalisation direction, NOT this exact publication"
+  },
+  "statusRule": "Controlled specification on competent Owner-authorised verified publication; candidate before that event",
+  "effectivityRule": "Effective for W1 DEVELOPMENT / CONFORMANCE at the verified Owner-authorised atomic publication revision; no invented date or containing hash",
+  "operationalApplicability": "NOT established by publication; exact real format, issuer/allocator, principal/grant, policy and deployment applicability required before corresponding real use",
+  "implementationAuthorisation": "NONE conveyed by this specification or its publication",
+  "activities": [
+    "logical occurrence creation",
+    "representation resolution",
+    "binding activation",
+    "clock correction",
+    "period transition",
+    "checkpoint",
+    "recovery",
+    "qualified consumer adjudication"
+  ],
+  "materialRecord": [
+    "activityId",
+    "logicalOperationKey",
+    "subject",
+    "representation/resolution",
+    "actor/process/build",
+    "input revisions",
+    "exact Semantic/Contract/format/binding/policy context",
+    "output revisions",
+    "operation and domain-qualified times",
+    "effectivity",
+    "uncertainty/missingness",
+    "source basis",
+    "retention/handling applicability"
+  ],
+  "relationships": "retain exact input/output and prior/new correction values; activity retry does not create independent material event; current projection does not overwrite history",
+  "checkpoint": "atomically bind subject/context/incarnation/order/state and material activity reference; acknowledge only declared storage state; no persisted claim from memory-only acceptance",
+  "recovery": "verify stored subject and exact historical dependency set; new activity/new incarnation; explicit eligibility required; unknown old binding stays LEGACY ASSURANCE GAP",
+  "authorityProof": "principal snapshot signature is not grant authority; separate competent grant decision and complete scoped control-plane bundle required",
+  "privacy": "necessary/permissible retained context and relationships only; payload retention not perpetual; policy periods/legal bases/permissions not invented",
+  "acceptance": "material provenance, operational use and observer conformance do not confer canonical Event acceptance",
+  "semanticDependency": {
+    "id": "urn:amharc:w1:semantic-profile:1.0.0",
+    "sha256": "041f67899c61a2fb93acbb4ea7532c0daa32832f877a491c8073b62b4c74b508"
+  },
+  "identifierDependency": {
+    "id": "urn:amharc:w1:identifier-application:1.0.0",
+    "sha256": "c956baed4ef18c54bcdcf32d1e7019bfe131e655e5609a32ac25c93cf2b650e1"
+  },
+  "perActivityEligibility": {
+    "activation": "competent subject/domain/capability/effectivity grant plus explicit baseline and eligible incarnation",
+    "advance": "applicable advance capability and monotonic-live baseline; observations alone cannot prove historical continuity",
+    "pauseResume": "pause-resume capability",
+    "correction": "correct capability; attributable prior/new values and basis",
+    "periodTransition": "period-transition capability; exact format and known boundary",
+    "checkpoint": "checkpoint capability; atomic subject/context/state/history and declared acknowledgement level",
+    "recovery": "recover capability plus explicit restart eligibility and new incarnation/activity; qualified reconstruction"
+  },
+  "materialRelationships": "Preserve exact activity inputs, outputs, source actor/process/build and governed historical dependencies, including series membership/head-selection where material. Tick observations reference the current material baseline; no universal event-sourcing mandate.",
+  "stateAssurance": "Missing transition proof is a scoped authority/history gap even if snapshot emission is permitted. Observer may retain a historical qualified claim but cannot promote it to eligible progress."
+}

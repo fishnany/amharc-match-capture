@@ -1,0 +1,395 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amharc:w1:clock-envelope-schema:1.0.0",
+  "title": "AMHARC W1 governed clock envelope — v1.0.0",
+  "$comment": "{\"identifier\":\"urn:amharc:w1:clock-envelope-schema:1.0.0\",\"title\":\"W1 CLOCK ENVELOPE SCHEMA\",\"version\":\"1.0.0\",\"controlledPath\":\"governance/wave-1/v1.0.0/W1_CLOCK_ENVELOPE_SCHEMA.json\",\"owner\":\"Competent AMHARC Architecture Owner\",\"steward\":\"AMHARC Ontology governance steward\",\"implementationResponsibilities\":{\"capture\":\"producer / initial prospective allocator implementation location\",\"tagger\":\"isolated read-only qualified consumer\",\"transformer\":\"NONE\"},\"sourceArchitecture\":{\"repository\":\"fishnany/amharc-ontology\",\"revision\":\"ff9ac2234dfb4032bf87f700ec8188e1af339649\",\"tree\":\"f9d96a8c0bc68fd77777415a436a76994ec39913\"},\"directionEvidence\":{\"file\":\"Pasted--AMHARC-WAVE-1-CONSOLIDATED-ARCHITECTURE-OWNER-DIRECTIO_1791109470766.txt\",\"sha256\":\"08c9aa269d43b1413916d36ceed24fd63f9f1adeb634f65a513d2d441646cf94\",\"standing\":\"approves finalisation direction, NOT this exact publication\"},\"statusRule\":\"Controlled specification on competent Owner-authorised verified publication; candidate before that event\",\"effectivityRule\":\"Effective for W1 DEVELOPMENT / CONFORMANCE at the verified Owner-authorised atomic publication revision; no invented date or containing hash\",\"operationalApplicability\":\"NOT established by publication; exact real format, issuer/allocator, principal/grant, policy and deployment applicability required before corresponding real use\",\"implementationAuthorisation\":\"NONE conveyed by this specification or its publication\"}",
+  "type": "object",
+  "properties": {
+    "contractRef": {
+      "$ref": "#/$defs/exactRef"
+    },
+    "subject": {
+      "type": "object",
+      "properties": {
+        "occurrenceId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+        },
+        "identityStanding": {
+          "enum": [
+            "provisional",
+            "confirmed"
+          ]
+        },
+        "representation": {
+          "type": "object",
+          "properties": {
+            "issuer": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            },
+            "localId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            }
+          },
+          "required": [
+            "issuer",
+            "localId"
+          ],
+          "additionalProperties": false
+        },
+        "resolutionRef": {
+          "$ref": "#/$defs/exactRef"
+        }
+      },
+      "required": [
+        "occurrenceId",
+        "identityStanding",
+        "representation",
+        "resolutionRef"
+      ],
+      "additionalProperties": false
+    },
+    "context": {
+      "type": "object",
+      "properties": {
+        "semantic": {
+          "$ref": "#/$defs/exactRef"
+        },
+        "identifier": {
+          "$ref": "#/$defs/exactRef"
+        },
+        "format": {
+          "$ref": "#/$defs/exactRef"
+        },
+        "provenance": {
+          "$ref": "#/$defs/exactRef"
+        },
+        "trustBundle": {
+          "$ref": "#/$defs/exactRef"
+        }
+      },
+      "required": [
+        "semantic",
+        "identifier",
+        "format",
+        "provenance",
+        "trustBundle"
+      ],
+      "additionalProperties": false
+    },
+    "authority": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "enum": [
+            "active",
+            "gap",
+            "conflict"
+          ]
+        },
+        "principalId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bindingId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "incarnationId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "generation": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^(0|[1-9][0-9]*)$",
+              "maxLength": 64
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sequence": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^(0|[1-9][0-9]*)$",
+              "maxLength": 64
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "capability": {
+          "enum": [
+            "snapshot",
+            null
+          ]
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "status",
+        "principalId",
+        "bindingId",
+        "incarnationId",
+        "generation",
+        "sequence",
+        "capability",
+        "reason"
+      ],
+      "additionalProperties": false
+    },
+    "clock": {
+      "type": "object",
+      "properties": {
+        "domain": {
+          "const": "official-match-accumulated"
+        },
+        "unit": {
+          "const": "seconds"
+        },
+        "accumulated": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2147483647
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "phase": {
+          "enum": [
+            "preplay",
+            "playing",
+            "interval",
+            "completed",
+            "unknown"
+          ]
+        },
+        "periodKey": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "periodStart": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2147483647
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "periodElapsed": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2147483647
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "state": {
+          "enum": [
+            "running",
+            "paused",
+            "withheld"
+          ]
+        },
+        "method": {
+          "enum": [
+            "monotonic-live",
+            "checkpoint-restored",
+            "utc-reconstructed",
+            "unknown"
+          ]
+        },
+        "uncertaintySeconds": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2147483647
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "domain",
+        "unit",
+        "accumulated",
+        "phase",
+        "periodKey",
+        "periodStart",
+        "periodElapsed",
+        "state",
+        "method",
+        "uncertaintySeconds"
+      ],
+      "additionalProperties": false
+    },
+    "legacyRecording": {
+      "type": "object",
+      "properties": {
+        "coordinate": {
+          "const": "recordingElapsedSeconds"
+        },
+        "producerContract": {
+          "const": "1.0"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2147483647
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "qualification": {
+          "const": "legacy-producer-coordinate-not-media-time"
+        }
+      },
+      "required": [
+        "coordinate",
+        "producerContract",
+        "value",
+        "qualification"
+      ],
+      "additionalProperties": false
+    },
+    "observedAtUtc": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "Z$"
+    },
+    "activityRef": {
+      "$ref": "#/$defs/exactRef"
+    },
+    "attestation": {
+      "type": "object",
+      "properties": {
+        "keyId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "algorithm": {
+          "const": "Ed25519"
+        },
+        "payloadSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "signatureBase64": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9+/]{86}==$"
+        }
+      },
+      "required": [
+        "keyId",
+        "algorithm",
+        "payloadSha256",
+        "signatureBase64"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "contractRef",
+    "subject",
+    "context",
+    "authority",
+    "clock",
+    "legacyRecording",
+    "observedAtUtc",
+    "activityRef",
+    "attestation"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "exactRef": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "required": [
+        "id",
+        "sha256"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

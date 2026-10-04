@@ -349,7 +349,9 @@ public class MatchesController(
     [HttpGet("{matchId}/clock")]
     public IActionResult GetClock(
         string matchId) =>
-        Ok(clock.State);
+        Ok((clock as ISubjectBoundClockService ??
+            throw new InvalidOperationException("CLOCK_SUBJECT_CONTEXT_UNAVAILABLE"))
+            .ReadFor(matchId, state => state));
 
     [HttpGet("{matchId}/clock/snapshot")]
     public IActionResult GetClockSnapshot(

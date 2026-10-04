@@ -17,6 +17,22 @@ namespace AmharcAgent.Data.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.0");
 
+            modelBuilder.Entity("AmharcAgent.Core.Domain.W1OccurrenceCreation", b =>
+                {
+                    b.Property<string>("Issuer").HasMaxLength(512).HasColumnType("TEXT");
+                    b.Property<string>("OperationKey").HasMaxLength(512).HasColumnType("TEXT");
+                    b.Property<string>("OccurrenceId").IsRequired().HasMaxLength(36).HasColumnType("TEXT");
+                    b.Property<string>("LocalMatchId").IsRequired().HasColumnType("TEXT");
+                    b.Property<string>("RequestSha256").IsRequired().HasMaxLength(64).HasColumnType("TEXT");
+                    b.Property<string>("MaterialActivityJson").IsRequired().HasColumnType("TEXT");
+                    b.Property<DateTimeOffset>("CreatedAt").HasColumnType("TEXT");
+                    b.Property<DateTimeOffset>("UpdatedAt").HasColumnType("TEXT");
+                    b.HasKey("Issuer", "OperationKey");
+                    b.HasIndex("OccurrenceId").IsUnique();
+                    b.HasIndex("Issuer", "LocalMatchId").IsUnique();
+                    b.ToTable("W1OccurrenceCreations");
+                });
+
             modelBuilder.Entity("AmharcAgent.Core.Domain.Camera", b =>
                 {
                     b.Property<string>("CameraId")
