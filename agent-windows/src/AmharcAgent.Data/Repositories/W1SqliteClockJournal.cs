@@ -116,6 +116,14 @@ public sealed class W1SqliteClockJournal : IW1ClockJournal
         context.Parameters.AddWithValue("$j", state.ContextJson);
         context.Parameters.AddWithValue("$i", state.ActivityId);
         context.ExecuteNonQuery();
+        if (System.Text.Json.Nodes.JsonNode.Parse(state.ContextJson)?["matchSetup"] is not null)
+        {
+            using var setup = c.CreateCommand();
+            setup.Transaction = tx;
+            setup.CommandText = "UPDATE w1_setup_subjects SET activated=1 WHERE occurrence_id=$s";
+            setup.Parameters.AddWithValue("$s", state.Subject);
+            if (setup.ExecuteNonQuery() != 1) throw new InvalidOperationException("W1_MATCH_SETUP_UNRESOLVED");
+        }
         _beforeCommitFault?.Invoke();
         tx.Commit();
     }

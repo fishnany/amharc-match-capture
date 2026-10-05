@@ -18,6 +18,8 @@ public sealed class W1SubjectBoundRuntime
     private readonly JsonObject _identity;
     private JsonObject _context;
     private readonly JsonObject _format;
+    private readonly W1OrderedMatchFormat? _orderedFormat;
+    private readonly JsonObject? _matchSetup;
     private JsonObject _clock = new() {
         ["domain"] = "official-match-accumulated", ["unit"] = "seconds",
         ["accumulated"] = 0, ["phase"] = "playing", ["periodKey"] = "p1",
@@ -37,21 +39,34 @@ public sealed class W1SubjectBoundRuntime
 
     public W1SubjectBoundRuntime(JsonObject resolvedIdentity, JsonObject exactContext,
         IW1ClockJournal journal, string actor, string build, string initialPeriodKey,
-        W1DependencyResolver dependencies, TimeProvider? time = null)
+        W1DependencyResolver dependencies, TimeProvider? time = null, JsonObject? matchSetup = null)
     {
         if (string.IsNullOrWhiteSpace(actor) || string.IsNullOrWhiteSpace(build))
             throw new ArgumentException("Explicit process/build attribution is required.");
         _identity = (JsonObject)resolvedIdentity.DeepClone();
         _context = (JsonObject)exactContext.DeepClone();
         var controlled = dependencies.Resolve(W1ControlledReferences.Manifest)["exactDependencies"]!;
-        foreach (var name in new[] { "semantic", "identifier", "provenance", "format" })
+        foreach (var name in new[] { "semantic", "identifier", "provenance" })
         {
             var reference = W1DependencyResolver.Reference(_context[name]!);
             if (reference != W1DependencyResolver.Reference(controlled[name]!))
                 throw new InvalidOperationException("W1_CONTROLLED_CONTEXT_REFUSAL");
             _ = dependencies.Resolve(reference);
         }
+        W1ControlledReferences.AdmitFormat(dependencies, _context["format"]!);
         _format = dependencies.Resolve(W1DependencyResolver.Reference(_context["format"]!));
+        if (_format["catalogueFamily"] is not null)
+        {
+            _orderedFormat = new(_format);
+            _matchSetup = matchSetup is null ? throw new InvalidOperationException("W1_MATCH_SETUP_UNRESOLVED") :
+                (JsonObject)matchSetup.DeepClone();
+            if (W1DependencyResolver.Reference(_matchSetup["formatRef"]!) != W1DependencyResolver.Reference(_context["format"]!) ||
+                W1MatchSetupAdmission.Text(_matchSetup["canonicalOccurrenceId"]) != Subject ||
+                initialPeriodKey != _orderedFormat.InitialPeriod)
+                throw new InvalidOperationException("W1_MATCH_SETUP_CONTEXT_REFUSAL");
+            _clock["phase"] = "preplay";
+            _clock["periodChain"] = new JsonArray(new JsonObject { ["periodKey"] = initialPeriodKey, ["periodStartSeconds"] = 0 });
+        }
         var resolution = dependencies.Resolve(W1DependencyResolver.Reference(_identity["resolutionRef"]!));
         if (resolution["occurrenceId"]!.GetValue<string>() != Subject ||
             !JsonNode.DeepEquals(resolution["representation"], _identity["representation"]) ||
@@ -153,17 +168,27 @@ public sealed class W1SubjectBoundRuntime
 
     public void Transition(string subject, string operation, string operationKey,
         int? correctedSeconds = null, string? periodKey = null,
-        IReadOnlySet<string>? applicablePeriodKeys = null, string basis = "")
+        IReadOnlySet<string>? applicablePeriodKeys = null, string basis = "", string? extraTimeCondition = null)
     {
         lock (_gate)
         {
             SubjectGuard(subject);
             var capability = operation switch {
                 "correct" => "correct", "pause" or "resume" => "pause-resume",
-                "period" => "period-transition", "checkpoint" => "checkpoint",
+                "period" => "period-transition", "complete" when _orderedFormat is not null => "period-transition",
+                "checkpoint" => "checkpoint",
                 _ => throw new ArgumentException("Unsupported bounded W1 operation")
             };
             Require(capability);
+            if (_orderedFormat is not null)
+            {
+                var completed = _clock["phase"]!.GetValue<string>() == "completed";
+                if (completed && operation is "resume" or "period" or "complete" or "correct")
+                    throw new InvalidOperationException("ALREADY_COMPLETED");
+                if (operation is "period" or "complete")
+                    _orderedFormat.Admit(_clock["periodKey"]!.GetValue<string>(),
+                        operation == "period" ? "NEXT_PERIOD" : "COMPLETE", periodKey, completed, true, extraTimeCondition);
+            }
             var next = (JsonObject)_clock.DeepClone();
             switch (operation)
             {
@@ -174,14 +199,24 @@ public sealed class W1SubjectBoundRuntime
                     next["periodElapsed"] = correctedSeconds.Value - next["periodStart"]!.GetValue<int>();
                     break;
                 case "pause": next["state"] = "paused"; break;
-                case "resume": Require("advance"); next["state"] = "running"; break;
+                case "resume":
+                    Require("advance"); next["state"] = "running";
+                    if (_orderedFormat is not null) next["phase"] = "playing";
+                    break;
                 case "period":
                     if (periodKey is null || !((JsonArray)_format["periods"]!).Any(p => p!["key"]!.GetValue<string>() == periodKey))
                         throw new InvalidOperationException("W1_FORMAT_UNRESOLVED");
                     next["periodKey"] = periodKey;
                     next["periodStart"] = next["accumulated"]!.GetValue<int>();
                     next["periodElapsed"] = 0;
+                    if (_orderedFormat is not null)
+                    {
+                        next["state"] = "paused"; next["phase"] = "interval";
+                        ((JsonArray)next["periodChain"]!).Add(new JsonObject {
+                            ["periodKey"] = periodKey, ["periodStartSeconds"] = next["periodStart"]!.DeepClone() });
+                    }
                     break;
+                case "complete": next["state"] = "paused"; next["phase"] = "completed"; break;
             }
             Material(operation, operationKey, next, basis);
             _lastMonotonic = _time.GetTimestamp();
@@ -230,6 +265,7 @@ public sealed class W1SubjectBoundRuntime
             ["historicalGrant"] = _grant?.DeepClone(), ["status"] = _status,
             ["historicalGrantEvidence"] = _grantEvidence?.DeepClone()
         };
+        if (_matchSetup is not null) context["matchSetup"] = _matchSetup.DeepClone();
         var material = new W1JournalActivity(id, Subject, operationKey, inputHash, activity.ToJsonString());
         context["activityRef"] = JsonSerializerNode(W1MaterialChain.Reference(material));
         _journal.Commit(_revision, new(Subject, _revision + 1, "1.0.0", context.ToJsonString(), id),
@@ -246,6 +282,16 @@ public sealed class W1SubjectBoundRuntime
             var stored = _journal.Read(Subject) ?? throw new InvalidOperationException("W1_LEGACY_ASSURANCE_GAP");
             if (stored.WriterVersion != "1.0.0") throw new InvalidOperationException("W1_LEGACY_ASSURANCE_GAP");
             var c = JsonNode.Parse(stored.ContextJson)!;
+            W1MatchSetupAdmission? recoveryAdmission = null;
+            if (_orderedFormat is not null)
+            {
+                // Resolve persisted checkpoint bytes, not the already resolved
+                // current binding. No governed/in-memory recovery mutation yet.
+                recoveryAdmission = new(historicalDependencies);
+                _ = recoveryAdmission.ResolveRecoveryFormat(c["matchSetup"]?["formatRef"]);
+                if (!JsonNode.DeepEquals(c["matchSetup"], _matchSetup))
+                    throw new InvalidOperationException("CHECKPOINT_CONTEXT_MISMATCH");
+            }
             var head = W1MaterialChain.CurrentHead(_journal, stored, historicalDependencies);
             if (c["activityRef"] is null || W1DependencyResolver.Reference(c["activityRef"]!) != head)
                 throw new InvalidOperationException("W1_RECOVERY_HEAD_DIGEST_REFUSAL");
@@ -274,6 +320,21 @@ public sealed class W1SubjectBoundRuntime
                 oldTime >= DateTimeOffset.Parse(oldGrant["effectiveUntil"]!.GetValue<string>()))
                 throw new InvalidOperationException("W1_HISTORICAL_ELIGIBILITY_REFUSAL");
             var next = (JsonObject)c["clock"]!.DeepClone();
+            if (_orderedFormat is not null)
+            {
+                var checkpoint = (JsonObject)c["matchSetup"]!.DeepClone();
+                checkpoint["subject"] = Subject;
+                checkpoint["historyFormatRef"] = _matchSetup["formatRef"]!.DeepClone();
+                checkpoint["historyAssignmentRef"] = _matchSetup["assignmentRef"]!.DeepClone();
+                checkpoint["currentPeriodKey"] = next["periodKey"]!.DeepClone();
+                checkpoint["periodChain"] = next["periodChain"]!.DeepClone();
+                checkpoint["accumulatedSeconds"] = next["accumulated"]!.DeepClone();
+                checkpoint["periodStartSeconds"] = next["periodStart"]!.DeepClone();
+                checkpoint["periodElapsedSeconds"] = next["periodElapsed"]!.DeepClone();
+                var context = (JsonObject)_matchSetup.DeepClone();
+                context["subject"] = Subject;
+                recoveryAdmission!.AdmitRecovery(checkpoint, context, true);
+            }
             next["state"] = "paused"; next["method"] = "utc-reconstructed";
             next["uncertaintySeconds"] = null;
             var oldRevision = _revision;
@@ -294,6 +355,10 @@ public sealed class W1SubjectBoundRuntime
         lock (_gate)
         {
             SubjectGuard(subject); Require("snapshot");
+            var clock = (JsonObject)_clock.DeepClone();
+            // Period lineage is checkpoint/material evidence, not an extension of
+            // the unchanged normative Clock Envelope.
+            clock.Remove("periodChain");
             return new JsonObject {
                 ["subject"] = _identity.DeepClone(), ["context"] = _context.DeepClone(),
                 ["authority"] = new JsonObject {
@@ -302,7 +367,7 @@ public sealed class W1SubjectBoundRuntime
                     ["generation"] = "1", ["sequence"] = (++_sequence).ToString(), ["capability"] = "snapshot",
                     ["reason"] = _status == "active" ? null : "eligibility-not-established"
                 },
-                ["clock"] = _clock.DeepClone(), ["observedAtUtc"] = _time.GetUtcNow().UtcDateTime.ToString("O"),
+                ["clock"] = clock, ["observedAtUtc"] = _time.GetUtcNow().UtcDateTime.ToString("O"),
                 ["activityId"] = _historyId
             };
         }
