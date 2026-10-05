@@ -285,11 +285,22 @@ public sealed class W13BComposedJourneyTests
                     checkpoint["clock"]!["phase"] = "playing";
                 }
                 SeedCheckpoint(checkpoint); // Explicitly seeded corrupt synthetic fixture, BEFORE refusal snapshot.
-                await CheckRefusal("actual-persisted-" + frozen[number - 1]!["id"]!.GetValue<string>(),
+                // The directly overwritten period/checkpoint no longer matches
+                // its immutable material head. Preserve this distinct safeguard
+                // case; it is NOT the relationship-consistent frozen vector 60.
+                await CheckRefusal(number == 60 ? "actual-persisted-multi-fault-material-integrity" :
+                        "actual-persisted-" + frozen[number - 1]!["id"]!.GetValue<string>(),
                     "/api/w1-development/command/" + subject,
                     new JsonObject { ["operation"] = "recover", ["operationKey"] = Guid.NewGuid().ToString() },
-                    frozen[number - 1]!["expected"]!["reasonCode"]!.GetValue<string>());
+                    number == 60 ? "W1_RECOVERY_RELATIONSHIP_REFUSAL" :
+                        frozen[number - 1]!["expected"]!["reasonCode"]!.GetValue<string>());
             }
+            // Invoke the accepted atomic-append fixture and its valid control
+            // for actual relationship-consistent vector-60 Restore coverage.
+            // Its assertions preserve exact closure/material relationships and
+            // durable AND in-memory no-mutation on RECOVERY_PERIOD_INVALID.
+            AmharcAgent.Tests.W13BSingleFaultRecoveryTests.RunRelationshipConsistentRecoveryFixture(
+                root, Path.Combine(evidence, "composed-vector-60-single-fault"));
             SeedCheckpoint(JsonNode.Parse(stored.ContextJson)!.AsObject());
             // Restore an independently constructed composition/incarnation using
             // the exact exported local closure, never an ID/default fallback.
