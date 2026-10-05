@@ -26,6 +26,7 @@ public sealed class W1DevelopmentApplication
     private JsonObject? _identity, _grant;
     private W1GovernedClockProducer? _producer;
     private bool _conflict;
+    private bool _assuranceFixturePrepared;
 
     public W1DevelopmentApplication(IConfiguration configuration, TimeProvider? time = null)
     {
@@ -138,6 +139,7 @@ public sealed class W1DevelopmentApplication
     {
         lock (_gate)
         {
+            if (_assuranceFixturePrepared) throw new InvalidOperationException("W1_ASSURANCE_RESTART_REQUIRED");
             var runtime = Bound(subject);
             var proof = externallySignedBundle["governanceProof"]!;
             var digest = W1CanonicalJson.Digest(externallySignedBundle.ToJsonString(), "governanceProof");
@@ -164,6 +166,7 @@ public sealed class W1DevelopmentApplication
     {
         lock (_gate)
         {
+            if (_assuranceFixturePrepared) throw new InvalidOperationException("W1_ASSURANCE_RESTART_REQUIRED");
             var runtime = Bound(subject);
             if (operation == "tick") runtime.Tick(subject);
             else if (operation == "recover") runtime.Restore(subject, key, new(_anchor!), _dependencies);
@@ -182,6 +185,27 @@ public sealed class W1DevelopmentApplication
                 }
                 runtime.Transition(subject, operation, key, seconds, period, basis: basis, extraTimeCondition: condition);
             }
+        }
+    }
+
+    /// <summary>Persist one explicitly gated TEST_ONLY premise, never a verdict.
+    /// After a successful append this process cannot issue another clock command:
+    /// recovery must use a fresh incarnation bound to the persisted checkpoint.</summary>
+    public object PrepareInstalledAssuranceFixture(string subject, string scenario, string operationKey,
+        W1MatchSetupApplication setups)
+    {
+        lock (_gate)
+        {
+            if (!_configuration.GetValue<bool>("W1:DevelopmentOnly") ||
+                !_configuration.GetValue<bool>("W1:MatchSetupConformance") ||
+                !_configuration.GetValue<bool>("W1:InstalledAssuranceFixtures"))
+                throw new InvalidOperationException("W1_ASSURANCE_FIXTURES_DISABLED");
+            Bound(subject);
+            var setup = setups.RequireSyntheticSubject(subject);
+            var result = W1InstalledAssuranceFixture.Prepare(subject, scenario, operationKey,
+                _journal, _dependencies, _anchor!, _time, setup);
+            _assuranceFixturePrepared = true;
+            return result;
         }
     }
 
