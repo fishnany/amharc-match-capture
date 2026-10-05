@@ -50,7 +50,7 @@ public sealed class W1DevelopmentClockController(
     [HttpPost("command/{subject}")]
     public IActionResult Command(string subject, [FromBody] W1DevelopmentCommand command) =>
         Run(app => { app.Command(subject, command.Operation, command.OperationKey, command.Seconds,
-            command.Period, command.Basis); return new { completed = true }; });
+            command.Period, command.Basis, command.ExtraTimeDecisionRef); return new { completed = true }; });
 }
 public sealed record W1DevelopmentCommand(string Operation, string OperationKey,
-    int? Seconds = null, string? Period = null, string Basis = "");
+    int? Seconds = null, string? Period = null, string Basis = "", JsonObject? ExtraTimeDecisionRef = null);

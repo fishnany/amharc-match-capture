@@ -96,6 +96,44 @@ public sealed class W1DevelopmentApplication
         }
     }
 
+    public object PrepareMatchSetup(JsonObject setup, JsonArray durableClosure)
+    {
+        lock (_gate)
+        {
+            if (!_configuration.GetValue<bool>("W1:MatchSetupConformance"))
+                throw new InvalidOperationException("W1_MATCH_SETUP_DISABLED");
+            if (_runtime is not null) throw new InvalidOperationException("W1_ALREADY_BOUND");
+            foreach (var document in durableClosure.Cast<JsonObject>())
+            {
+                var bytes = W1CanonicalJson.Canonicalize(document.ToJsonString());
+                _dependencies.Add(new(document["identifier"]!.GetValue<string>(),
+                    Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant()), bytes);
+            }
+            var subject = setup["canonicalOccurrenceId"]!.GetValue<string>();
+            var resolution = (JsonObject)setup["captureResolution"]!;
+            var resolutionRef = new W1Reference(resolution["identifier"]!.GetValue<string>(),
+                W1CanonicalJson.Digest(resolution.ToJsonString()));
+            _identity = new JsonObject { ["occurrenceId"] = subject,
+                ["representation"] = setup["captureRepresentation"]!.DeepClone(),
+                ["identityStanding"] = "provisional", ["resolutionRef"] = Ref(resolutionRef) };
+            var refs = _dependencies.Resolve(W1ControlledReferences.Manifest)["exactDependencies"]!;
+            var context = new JsonObject();
+            foreach (var name in new[] { "semantic", "identifier", "provenance" })
+                context[name] = refs[name]!.DeepClone();
+            context["format"] = Ref(W1DependencyResolver.Reference(setup["formatRef"]!));
+            var stored = _journal.Read(subject);
+            context["trustBundle"] = stored is null
+                ? Ref(new("urn:amharc:development:pending-trust:" + subject, new string('0', 64)))
+                : JsonNode.Parse(stored.ContextJson)!["context"]!["trustBundle"]!.DeepClone();
+            _anchor = new(_anchorPem, new HashSet<string> { subject }, "official-match-accumulated");
+            var ordered = new W1OrderedMatchFormat((JsonObject)setup["format"]!);
+            _runtime = new(_identity, context, _journal, _actor, _build, ordered.InitialPeriod,
+                _dependencies, _time, setup);
+            return new { subject, incarnationId = _runtime.IncarnationId, resolutionRef,
+                standing = "development/conformance-only" };
+        }
+    }
+
     public void Activate(string subject, JsonObject externallySignedBundle, string operationKey)
     {
         lock (_gate)
@@ -121,14 +159,29 @@ public sealed class W1DevelopmentApplication
         }
     }
 
-    public void Command(string subject, string operation, string key, int? seconds = null, string? period = null, string basis = "")
+    public void Command(string subject, string operation, string key, int? seconds = null, string? period = null,
+        string basis = "", JsonObject? extraTimeDecisionRef = null)
     {
         lock (_gate)
         {
             var runtime = Bound(subject);
             if (operation == "tick") runtime.Tick(subject);
             else if (operation == "recover") runtime.Restore(subject, key, new(_anchor!), _dependencies);
-            else runtime.Transition(subject, operation, key, seconds, period, basis: basis);
+            else
+            {
+                string? condition = null;
+                if (extraTimeDecisionRef is not null)
+                {
+                    var decision = _dependencies.Resolve(W1DependencyResolver.Reference(extraTimeDecisionRef));
+                    if (decision["standing"]?.GetValue<string>().StartsWith("TEST_ONLY", StringComparison.Ordinal) != true)
+                        throw new InvalidOperationException("ET_DECISION_UNPROVEN");
+                    condition = decision["role"]?.GetValue<string>() switch {
+                        "et-invoked" => "EXTRA_TIME_INVOKED",
+                        "et-not-invoked" => "EXTRA_TIME_NOT_INVOKED", _ => null
+                    };
+                }
+                runtime.Transition(subject, operation, key, seconds, period, basis: basis, extraTimeCondition: condition);
+            }
         }
     }
 

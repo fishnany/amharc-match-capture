@@ -7,7 +7,11 @@ public static class W1DevelopmentServices
     {
         // Two independent gates. No private fixture key or authority is shipped/enabled.
         if (environment.IsDevelopment() && configuration.GetValue<bool>("W1:DevelopmentOnly"))
+        {
             services.AddSingleton<W1DevelopmentApplication>();
+            if (configuration.GetValue<bool>("W1:MatchSetupConformance"))
+                services.AddSingleton<W1MatchSetupApplication>();
+        }
         return services;
     }
 }
