@@ -47,6 +47,13 @@ public sealed class W13BSingleFaultRecoveryTests
             ?? throw new InvalidOperationException("Explicit isolated candidate root required");
         var evidence = Environment.GetEnvironmentVariable("W13B_SINGLEFAULT_EVIDENCE")
             ?? throw new InvalidOperationException("Explicit separate evidence directory required");
+        RunRelationshipConsistentRecoveryFixture(root, evidence);
+    }
+
+    // TEST_ONLY reuse by the composed driver. Separate evidence directories
+    // avoid parallel tests overwriting each other's independently built fixtures.
+    internal static void RunRelationshipConsistentRecoveryFixture(string root, string evidence)
+    {
         Directory.CreateDirectory(evidence);
         var scratch = Path.Combine(Path.GetTempPath(), "w13b-single-fault-" + Guid.NewGuid());
         Directory.CreateDirectory(scratch);
