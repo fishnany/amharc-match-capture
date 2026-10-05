@@ -51,6 +51,22 @@ public sealed class W1MatchSetupApplication
             return W1SqliteMatchSetupLedger.Failure(request, digest, e.Message);
         }
     }
+    public JsonObject RequireSyntheticSubject(string subject)
+    {
+        var setup = Ledger.Read(subject);
+        if (setup is null ||
+            W1MatchSetupAdmission.Text(setup["canonicalOccurrenceId"]) != subject ||
+            W1MatchSetupAdmission.Text(setup["handlingApplicability"]) != "synthetic/test-local only" ||
+            W1MatchSetupAdmission.Text(setup["taggerRepresentation"]?["issuer"]) != _originIssuer ||
+            W1MatchSetupAdmission.Text(setup["captureRepresentation"]?["issuer"]) !=
+                W1MatchSetupAdmission.Text(setup["captureResolution"]?["representation"]?["issuer"]) ||
+            W1MatchSetupAdmission.Text(setup["captureResolution"]?["standing"])
+                .StartsWith("TEST_ONLY", StringComparison.Ordinal) != true ||
+            W1MatchSetupAdmission.Text(setup["taggerResolution"]?["standing"])
+                .StartsWith("TEST_ONLY", StringComparison.Ordinal) != true)
+            throw new InvalidOperationException("W1_ASSURANCE_SYNTHETIC_CONTEXT_REFUSAL");
+        return setup;
+    }
     private bool ApplicableBasis(JsonObject request)
     {
         try
